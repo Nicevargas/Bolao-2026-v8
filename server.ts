@@ -9,7 +9,7 @@ import crypto from 'crypto';
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT || 3000);
+const PORT = 3000;
 
 app.use(express.json());
 
@@ -105,11 +105,7 @@ const defaultMatchesSeed = [
 ];
 
 // Offline In-Memory Fallbacks (simulating Supabase triggers and columns)
-let inMemoryParticipantes = [
-  { id: 'u1', nome: 'Camila Lima', email: 'camis_lima@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC51EMHkXhwLsSNjr44kljRrs3Jn_GVgy0yF15ev1GhzxheBOpDcbGsWP90MdrvCO3Fh_Chbxi29HNWjILqXf14bWGPuIWqotGqyTNl_2lWDbRo6ZLY_y_wLeh1neFgiuIJbJY8203ZzBPim-neTAs4fB0VFHlHGbVgOkHcdiBcjLbiV2U_C-zerQm2bXKBJOPs0hTEw8Cwyx1aRhiRGzV52N_HzzUT5FzqerSu60ediDjvUVBzM3j4zxYDQtIwZIPRRmKeKFa9oz4', created_at: new Date().toISOString() },
-  { id: 'u2', nome: 'Amanda Martins', email: 'amanda_swim@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFkrb0jVNFpqaB8RreYPLFSVunrsD6ZCgZSKXivGLymDo7h6a4nZ6C2Vww8jNpwNX5z7I8NzL04v5p-4WBUjfnFiRVy80F14ffpUN3VUrMk0MRLPilm4uIh08JC9lvdB2qRutBr3KMSgk5THaExcfBHPTuRnTFst6zzagenVuSXzzVBuxe6WEGcwKVUBVvOPdksivyn-C-MArCbifSZE22ezPsnc-NJyEUxMd6efrZ5v15b9-DVe4bxVeCUhXf2Pd60VxGTrVH-9g', created_at: new Date().toISOString() },
-  { id: 'u3', nome: 'Lucas Pereira', email: 'lucas_p@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCHy3_AT-Isoaf2ZarhDiGYh-nelgP_kFkVUEGqVNOSlJgQzAUGO7jlPg3_wcnWlZlUjaKESBvgDTLRcdFEXcAT31jsQxy76OQp8z8Xmcgk_Nde9NEzXty5Hj-z-PrVEGsXBWsOJHyM_v01sRY-v4eS6zVVM2Wk2x2GrNzO0vO38Z6hSMQPEpYXIbvZNVqNpkoL3hB0-W81siXYkATZ9ElbjDgYcHfrEwmpESlOZ-mJSxcVBwMaLzy8uvunz2wR3vK4SBlmzwF1iJU', created_at: new Date().toISOString() }
-];
+let inMemoryParticipantes: Array<{ id: string; nome: string; email: string; avatar_url: string; created_at: string }> = [];
 
 let inMemoryJogos = [...defaultMatchesSeed];
 
@@ -269,18 +265,6 @@ async function seedCloudDatabase() {
       await supabase.from('jogos').insert(insertGames);
       console.log('✔ Banquete de jogos reais semeado no Supabase com sucesso!');
     }
-
-    // 2. Seed default participants
-    const { data: existingProfiles } = await supabase.from('participantes').select('id');
-    if (!existingProfiles || existingProfiles.length === 0) {
-      const inserts = [
-        { nome: 'Camila Lima', email: 'camis_lima@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC51EMHkXhwLsSNjr44kljRrs3Jn_GVgy0yF15ev1GhzxheBOpDcbGsWP90MdrvCO3Fh_Chbxi29HNWjILqXf14bWGPuIWqotGqyTNl_2lWDbRo6ZLY_y_wLeh1neFgiuIJbJY8203ZzBPim-neTAs4fB0VFHlHGbVgOkHcdiBcjLbiV2U_C-zerQm2bXKBJOPs0hTEw8Cwyx1aRhiRGzV52N_HzzUT5FzqerSu60ediDjvUVBzM3j4zxYDQtIwZIPRRmKeKFa9oz4' },
-        { nome: 'Amanda Martins', email: 'amanda_swim@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFkrb0jVNFpqaB8RreYPLFSVunrsD6ZCgZSKXivGLymDo7h6a4nZ6C2Vww8jNpwNX5z7I8NzL04v5p-4WBUjfnFiRVy80F14ffpUN3VUrMk0MRLPilm4uIh08JC9lvdB2qRutBr3KMSgk5THaExcfBHPTuRnTFst6zzagenVuSXzzVBuxe6WEGcwKVUBVvOPdksivyn-C-MArCbifSZE22ezPsnc-NJyEUxMd6efrZ5v15b9-DVe4bxVeCUhXf2Pd60VxGTrVH-9g' },
-        { nome: 'Lucas Pereira', email: 'lucas_p@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCHy3_AT-Isoaf2ZarhDiGYh-nelgP_kFkVUEGqVNOSlJgQzAUGO7jlPg3_wcnWlZlUjaKESBvgDTLRcdFEXcAT31jsQxy76OQp8z8Xmcgk_Nde9NEzXty5Hj-z-PrVEGsXBWsOJHyM_v01sRY-v4eS6zVVM2Wk2x2GrNzO0vO38Z6hSMQPEpYXIbvZNVqNpkoL3hB0-W81siXYkATZ9ElbjDgYcHfrEwmpESlOZ-mJSxcVBwMaLzy8uvunz2wR3vK4SBlmzwF1iJU' }
-      ];
-      await supabase.from('participantes').insert(inserts);
-      console.log('✔ Participantes default semeados no Supabase!');
-    }
   } catch (err: any) {
     console.warn('Boot seeding alert (Supabase tables might not be fully migrated yet):', err.message);
   }
@@ -299,6 +283,78 @@ function cleanAvatarUrl(url: string | null | undefined): string {
 }
 
 // Real Authentication Endpoints
+app.post('/api/auth/verify', async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'E-mail é obrigatório para verificação.' });
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+
+  if (supabase) {
+    try {
+      const { data: profile, error } = await supabase
+        .from('participantes')
+        .select('*')
+        .eq('email', trimmedEmail)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!profile) {
+        return res.json({ exists: false });
+      }
+
+      const { data: rankingView } = await supabase.from('view_ranking').select('*').eq('email', trimmedEmail).maybeSingle();
+
+      return res.json({
+        exists: true,
+        user: {
+          id: profile.id,
+          name: profile.nome || 'Apostador',
+          email: trimmedEmail,
+          avatar_url: cleanAvatarUrl(profile.avatar_url),
+          points: rankingView?.total_pontos || 0,
+          exacts: rankingView?.placares_exatos || 0,
+          accuracy: rankingView?.acertos_resultado ? Math.round((rankingView.acertos_resultado / 4) * 100) : 0,
+          rank: 12,
+          isLoggedIn: true
+        }
+      });
+    } catch (err: any) {
+      console.error('Falha na verificação de sessão com Supabase:', err);
+      return res.status(500).json({ error: 'Falha na verificação de sessão.' });
+    }
+  }
+
+  const localPart = inMemoryParticipantes.find(p => p.email.toLowerCase() === trimmedEmail);
+  if (!localPart) {
+    return res.json({ exists: false });
+  }
+
+  const memoryRankings = getMemoryRanking();
+  const index = memoryRankings.findIndex(r => r.email.toLowerCase() === trimmedEmail);
+  const stats = memoryRankings[index] || { total_pontos: 0, placares_exatos: 0, acertos_resultado: 0 };
+
+  return res.json({
+    exists: true,
+    user: {
+      id: localPart.id,
+      name: localPart.nome,
+      email: localPart.email,
+      avatar_url: cleanAvatarUrl(localPart.avatar_url),
+      points: stats.total_pontos,
+      exacts: stats.placares_exatos,
+      accuracy: stats.acertos_resultado ? Math.round((stats.acertos_resultado / 4) * 100) : 0,
+      rank: index >= 0 ? index + 1 : inMemoryParticipantes.length,
+      isLoggedIn: true,
+      simulated: true
+    }
+  });
+});
+
 app.post('/api/auth/signup', async (req, res) => {
   const { email, password, nome, avatarUrl } = req.body;
   
@@ -1706,9 +1762,4 @@ async function startServer() {
   });
 }
 
-if (!process.env.VERCEL) {
-  startServer();
-}
-
-export { app };
-export default app;
+startServer();

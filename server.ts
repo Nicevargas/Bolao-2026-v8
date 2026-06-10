@@ -13,10 +13,22 @@ const PORT = 3000;
 app.use(express.json());
 
 // Initialize Supabase safely
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
-const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
-const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null;
+let supabase: any = null;
+let isSupabaseConfigured = false;
+let supabaseUrl = '';
+try {
+  supabaseUrl = (process.env.SUPABASE_URL || '').trim();
+  const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
+  if (supabaseUrl && supabaseKey) {
+    if (!supabaseUrl.startsWith('http')) {
+      throw new Error('A URL do Supabase precisa começar com http:// ou https://');
+    }
+    supabase = createClient(supabaseUrl, supabaseKey);
+    isSupabaseConfigured = true;
+  }
+} catch (err: any) {
+  console.error('Falha crítica ao inicializar Supabase:', err.message);
+}
 
 // Initialize Gemini safely
 const isGeminiConfigured = !!process.env.GEMINI_API_KEY;
@@ -129,6 +141,58 @@ function calculateScore(golsT1: number | null, golsT2: number | null, palpiteT1:
   if (placar_exato) pontos += 1;
 
   return pontos;
+}
+
+// Helper to parse match times into actual Javascript Date objects
+function parseMatchDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  
+  if (!isNaN(Date.parse(dateStr))) {
+    return new Date(dateStr);
+  }
+  
+  const currentYear = 2026;
+  const clean = dateStr.toUpperCase().trim();
+  
+  const regex = /(\d+)\s+DE\s+([A-ZÇÃÕÉÍÓÚ]+)(?:\s*-\s*|\s+)(\d+):(\d+)/i;
+  const match = clean.match(regex);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const monthStr = match[2];
+    const hour = parseInt(match[3], 10);
+    const minute = parseInt(match[4], 10);
+    
+    const months: Record<string, number> = {
+      'JANEIRO': 0, 'FEVEREIRO': 1, 'MARÇO': 2, 'ABRIL': 3, 'MAIO': 4, 'JUNHO': 5,
+      'JULHO': 6, 'AGOSTO': 7, 'SETEMBRO': 8, 'OUTUBRO': 9, 'NOVEMBRO': 10, 'DEZEMBRO': 11
+    };
+    
+    const month = months[monthStr] !== undefined ? months[monthStr] : 5;
+    return new Date(currentYear, month, day, hour, minute, 0);
+  }
+  
+  const dmyRegex = /(\d+)\/(\d+)\/(\d+)(?:\s+|\s*-\s*)(\d+):(\d+)/;
+  const dmyMatch = clean.match(dmyRegex);
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1], 10);
+    const month = parseInt(dmyMatch[2], 10) - 1;
+    const year = parseInt(dmyMatch[3], 10);
+    const hour = parseInt(dmyMatch[4], 10);
+    const minute = parseInt(dmyMatch[5], 10);
+    return new Date(year, month, day, hour, minute, 0);
+  }
+
+  const dmySimpleRegex = /(\d+)\/(\d+)(?:\s+|\s*-\s*)(\d+):(\d+)/;
+  const dmySimpleMatch = clean.match(dmySimpleRegex);
+  if (dmySimpleMatch) {
+    const day = parseInt(dmySimpleMatch[1], 10);
+    const month = parseInt(dmySimpleMatch[2], 10) - 1;
+    const hour = parseInt(dmySimpleMatch[3], 10);
+    const minute = parseInt(dmySimpleMatch[4], 10);
+    return new Date(currentYear, month, day, hour, minute, 0);
+  }
+  
+  return new Date();
 }
 
 // Memory database synchronization logic mimicking PostgreSQL Trigger Automation
@@ -500,6 +564,39 @@ app.post('/api/guesses', async (req, res) => {
 
   const hScore = Number(homeScore);
   const aScore = Number(awayScore);
+
+  // Validate date & finalized status (locked if finished or starting in < 1 hour)
+  let gameObj: any = null;
+  if (supabase) {
+    try {
+      const { data: dbGame } = await supabase.from('jogos').select('*').eq('id', matchId).single();
+      if (dbGame) {
+        gameObj = dbGame;
+      }
+    } catch (err) {
+      console.warn('Erro ao buscar jogo no Supabase para validar palpite:', err);
+    }
+  }
+
+  if (!gameObj) {
+    gameObj = inMemoryJogos.find(g => g.id === matchId);
+  }
+
+  if (!gameObj) {
+    return res.status(404).json({ error: 'Jogo não encontrado para salvar seu palpite.' });
+  }
+
+  const now = new Date();
+  const matchDate = parseMatchDate(gameObj.data_jogo || gameObj.date);
+  const oneHour = 60 * 60 * 1000;
+
+  if (gameObj.finalizado) {
+    return res.status(400).json({ error: 'Este jogo já foi encerrado. Não é possível alterar seu palpite.' });
+  }
+
+  if (now.getTime() > matchDate.getTime() - oneHour) {
+    return res.status(400).json({ error: 'Prazo esgotado! Só é permitido salvar ou alterar palpites até 1 hora antes do início do jogo.' });
+  }
 
   if (supabase) {
     try {

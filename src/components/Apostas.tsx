@@ -2,6 +2,57 @@ import React, { useState } from 'react';
 import { Loader2, Check } from 'lucide-react';
 import { Match } from '../types';
 
+function parseMatchDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  
+  if (!isNaN(Date.parse(dateStr))) {
+    return new Date(dateStr);
+  }
+  
+  const currentYear = 2026;
+  const clean = dateStr.toUpperCase().trim();
+  
+  const regex = /(\d+)\s+DE\s+([A-ZÇÃÕÉÍÓÚ]+)(?:\s*-\s*|\s+)(\d+):(\d+)/i;
+  const match = clean.match(regex);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const monthStr = match[2];
+    const hour = parseInt(match[3], 10);
+    const minute = parseInt(match[4], 10);
+    
+    const months: Record<string, number> = {
+      'JANEIRO': 0, 'FEVEREIRO': 1, 'MARÇO': 2, 'ABRIL': 3, 'MAIO': 4, 'JUNHO': 5,
+      'JULHO': 6, 'AGOSTO': 7, 'SETEMBRO': 8, 'OUTUBRO': 9, 'NOVEMBRO': 10, 'DEZEMBRO': 11
+    };
+    
+    const month = months[monthStr] !== undefined ? months[monthStr] : 5;
+    return new Date(currentYear, month, day, hour, minute, 0);
+  }
+  
+  const dmyRegex = /(\d+)\/(\d+)\/(\d+)(?:\s+|\s*-\s*)(\d+):(\d+)/;
+  const dmyMatch = clean.match(dmyRegex);
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1], 10);
+    const month = parseInt(dmyMatch[2], 10) - 1;
+    const year = parseInt(dmyMatch[3], 10);
+    const hour = parseInt(dmyMatch[4], 10);
+    const minute = parseInt(dmyMatch[5], 10);
+    return new Date(year, month, day, hour, minute, 0);
+  }
+
+  const dmySimpleRegex = /(\d+)\/(\d+)(?:\s+|\s*-\s*)(\d+):(\d+)/;
+  const dmySimpleMatch = clean.match(dmySimpleRegex);
+  if (dmySimpleMatch) {
+    const day = parseInt(dmySimpleMatch[1], 10);
+    const month = parseInt(dmySimpleMatch[2], 10) - 1;
+    const hour = parseInt(dmySimpleMatch[3], 10);
+    const minute = parseInt(dmySimpleMatch[4], 10);
+    return new Date(currentYear, month, day, hour, minute, 0);
+  }
+  
+  return new Date();
+}
+
 interface ApostasProps {
   matches: Match[];
   onSaveGuess: (matchId: string, homeScore: number, awayScore: number) => void;
@@ -72,6 +123,16 @@ export default function Apostas({ matches, onSaveGuess }: ApostasProps) {
           const currentScores = scores[match.id] || { home: '', away: '' };
           const isValid = currentScores.home !== '' && currentScores.away !== '';
 
+          // Calculate locking status: finished or starting in < 1 hour
+          const isFinished = match.status === 'ENCERRADO' || match.status === 'PONTUADO';
+          const isLocked = (() => {
+            if (isFinished) return true;
+            const now = new Date();
+            const matchDate = parseMatchDate(match.date);
+            const oneHour = 60 * 60 * 1000;
+            return now.getTime() > matchDate.getTime() - oneHour;
+          })();
+
           return (
             <div
               key={match.id}
@@ -100,8 +161,9 @@ export default function Apostas({ matches, onSaveGuess }: ApostasProps) {
                     pattern="[0-9]*"
                     inputMode="numeric"
                     placeholder="0"
+                    disabled={isLocked}
                     onFocus={(e) => e.target.select()}
-                    className="w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 bg-surface-container-high border-2 border-primary/20 rounded-xl text-center font-extrabold text-xl sm:text-2xl md:text-3xl text-on-surface focus:border-secondary focus:outline-none transition-all placeholder:opacity-30"
+                    className="w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 bg-surface-container-high border-2 border-primary/20 rounded-xl text-center font-extrabold text-xl sm:text-2xl md:text-3xl text-on-surface focus:border-secondary focus:outline-none transition-all placeholder:opacity-30 disabled:opacity-40 disabled:cursor-not-allowed"
                     value={currentScores.home}
                     onChange={(e) => handleScoreChange(match.id, 'home', e.target.value)}
                   />
@@ -111,8 +173,9 @@ export default function Apostas({ matches, onSaveGuess }: ApostasProps) {
                     pattern="[0-9]*"
                     inputMode="numeric"
                     placeholder="0"
+                    disabled={isLocked}
                     onFocus={(e) => e.target.select()}
-                    className="w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 bg-surface-container-high border-2 border-primary/20 rounded-xl text-center font-extrabold text-xl sm:text-2xl md:text-3xl text-on-surface focus:border-secondary focus:outline-none transition-all placeholder:opacity-30"
+                    className="w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 bg-surface-container-high border-2 border-primary/20 rounded-xl text-center font-extrabold text-xl sm:text-2xl md:text-3xl text-on-surface focus:border-secondary focus:outline-none transition-all placeholder:opacity-30 disabled:opacity-40 disabled:cursor-not-allowed"
                     value={currentScores.away}
                     onChange={(e) => handleScoreChange(match.id, 'away', e.target.value)}
                   />
@@ -143,23 +206,44 @@ export default function Apostas({ matches, onSaveGuess }: ApostasProps) {
                   <span className="text-[10px] md:text-xs font-extrabold text-tertiary uppercase tracking-wider">
                     {match.location}
                   </span>
+                  {isFinished ? (
+                    <span className="text-[10px] md:text-xs font-extrabold text-slate-500 uppercase tracking-widest mt-1 block">
+                      🔒 Jogo Encerrado
+                    </span>
+                  ) : isLocked ? (
+                    <span className="text-[10px] md:text-xs font-extrabold text-amber-500 uppercase tracking-widest mt-1 block animate-pulse">
+                      🔒 Bloqueado (Limite: 1h antes)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] md:text-xs font-extrabold text-[#8ce000] uppercase tracking-widest mt-1 block">
+                      🟢 Palpites Abertos
+                    </span>
+                  )}
                 </div>
 
                 <button
-                  disabled={!isValid || status === 'saving'}
+                  disabled={!isValid || status === 'saving' || isLocked}
                   onClick={() => handleSave(match.id)}
-                  className={`w-full sm:w-auto px-6 py-2.5 rounded-full font-bold text-xs shadow-md transition-all uppercase tracking-wider cursor-pointer ${
-                    status === 'saved'
-                      ? 'bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.4)]'
-                      : 'bg-secondary-container text-on-secondary-container hover:bg-secondary-container/90 active:scale-95 disabled:opacity-40 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(255,0,140,0.3)]'
+                  className={`w-full sm:w-auto px-6 py-2.5 rounded-full font-bold text-xs shadow-md transition-all uppercase tracking-wider ${
+                    isLocked
+                      ? 'bg-white/5 text-on-surface-variant/40 border border-white/5 cursor-not-allowed scale-100 shadow-none'
+                      : status === 'saved'
+                        ? 'bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] cursor-pointer'
+                        : 'bg-secondary-container text-on-secondary-container hover:bg-secondary-container/90 active:scale-95 disabled:opacity-40 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(255,0,140,0.3)] cursor-pointer'
                   }`}
                 >
-                  <span className="flex items-center justify-center gap-1.5">
-                    {status === 'saving' && <Loader2 size={14} className="animate-spin" />}
-                    {status === 'saved' && <Check size={14} />}
-                    {status === 'idle' && 'Salvar Palpite'}
-                    {status === 'saving' && 'Salvando...'}
-                    {status === 'saved' && 'Salvo!'}
+                  <span className="flex items-center justify-center gap-1.5 font-bold uppercase tracking-wider">
+                    {isLocked ? (
+                      'Bloqueado'
+                    ) : (
+                      <>
+                        {status === 'saving' && <Loader2 size={14} className="animate-spin" />}
+                        {status === 'saved' && <Check size={14} />}
+                        {status === 'idle' && 'Salvar Palpite'}
+                        {status === 'saving' && 'Salvando...'}
+                        {status === 'saved' && 'Salvo!'}
+                      </>
+                    )}
                   </span>
                 </button>
               </div>

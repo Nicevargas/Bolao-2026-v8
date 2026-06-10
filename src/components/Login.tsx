@@ -47,7 +47,15 @@ export default function Login({ onLogin }: LoginProps) {
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      let data: any;
+      const responseText = await res.text();
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseErr) {
+        console.error('Resposta não-JSON do servidor:', responseText);
+        throw new Error(`Erro de servidor (não retornou JSON válido). Status da requisição: ${res.status}. O servidor pode estar inicializando ou com instabilidade temporária no Supabase.`);
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Ocorreu um erro ao processar sua solicitação.');
       }

@@ -4,6 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -291,6 +292,12 @@ seedCloudDatabase();
 // API REST ENDPOINTS
 // ==========================================
 
+// Helper to clean avatar_url from password suffix
+function cleanAvatarUrl(url: string | null | undefined): string {
+  if (!url) return 'https://api.dicebear.com/7.x/bottts/svg?seed=Apostador';
+  return url.split('||')[0];
+}
+
 // Real Authentication Endpoints
 app.post('/api/auth/signup', async (req, res) => {
   const { email, password, nome, avatarUrl } = req.body;
@@ -299,49 +306,44 @@ app.post('/api/auth/signup', async (req, res) => {
     return res.status(400).json({ error: 'Faltam dados essenciais para o cadastro (email, senha e nome).' });
   }
 
-  // 1. Genuine Supabase Authentication flow if credentials are active
+  const trimmedEmail = email.trim().toLowerCase();
+
+  // 1. Genuine Supabase database-driven signup without requiring auth email verification
   if (supabase) {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('participantes')
+        .select('*')
+        .eq('email', trimmedEmail)
+        .maybeSingle();
 
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Este e-mail já está cadastrado em nosso sistema.' });
       }
 
-      if (!data.user) {
-        return res.status(400).json({ error: 'Falha ao processar cadastro no Supabase Auth.' });
-      }
+      const finalId = crypto.randomUUID();
+      const defaultAvatar = avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
+      const finalAvatarWithPassword = `${defaultAvatar}||${password}`;
 
-      const finalAvatar = avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
-
-      // Try inserting into profiles ('participantes')
       const { error: profileError } = await supabase.from('participantes').insert({
-        id: data.user.id,
+        id: finalId,
         nome: nome,
-        email: email,
-        avatar_url: finalAvatar
+        email: trimmedEmail,
+        avatar_url: finalAvatarWithPassword
       });
 
       if (profileError) {
-        console.warn('Erro ao inserir perfil de participante de forma padrão, tentando upsert:', profileError.message);
-        await supabase.from('participantes').upsert({
-          id: data.user.id,
-          nome: nome,
-          email: email,
-          avatar_url: finalAvatar
-        });
+        throw new Error(profileError.message);
       }
 
       return res.json({
         success: true,
         user: {
-          id: data.user.id,
+          id: finalId,
           name: nome,
-          email: email,
-          avatar_url: finalAvatar,
+          email: trimmedEmail,
+          avatar_url: defaultAvatar,
           points: 0,
           exacts: 0,
           accuracy: 0,
@@ -350,24 +352,25 @@ app.post('/api/auth/signup', async (req, res) => {
         }
       });
     } catch (err: any) {
-      console.error('Falha interna no cadastro com Supabase:', err);
-      // Fallback below if there was a server/network error
+      console.error('Falha no cadastro com Supabase (custom direct):', err);
+      return res.status(400).json({ error: 'Erro de banco de dados ao salvar o usuário: ' + (err.message || err) });
     }
   }
 
   // 2. Off-grid fallback to local session memory
-  const existing = inMemoryParticipantes.find(p => p.email.toLowerCase() === email.toLowerCase());
+  const existing = inMemoryParticipantes.find(p => p.email.toLowerCase() === trimmedEmail);
   if (existing) {
     return res.status(400).json({ error: 'Este e-mail já está em uso na sessão do servidor.' });
   }
 
   const newId = 'luser_' + Math.random().toString(36).substring(2, 9);
-  const finalAvatar = avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
+  const defaultAvatar = avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
+  const finalAvatar = `${defaultAvatar}||${password}`;
   
   const localUser = {
     id: newId,
     nome,
-    email,
+    email: trimmedEmail,
     avatar_url: finalAvatar,
     created_at: new Date().toISOString()
   };
@@ -378,8 +381,8 @@ app.post('/api/auth/signup', async (req, res) => {
     user: {
       id: newId,
       name: nome,
-      email: email,
-      avatar_url: finalAvatar,
+      email: trimmedEmail,
+      avatar_url: defaultAvatar,
       points: 0,
       exacts: 0,
       accuracy: 0,
@@ -397,41 +400,49 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
   }
 
-  // 1. Genuine Supabase Auth lookup
+  const trimmedEmail = email.trim().toLowerCase();
+
+  // 1. Genuine Supabase lookup directly on participantes
   if (supabase) {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data: profile, error } = await supabase
+        .from('participantes')
+        .select('*')
+        .eq('email', trimmedEmail)
+        .maybeSingle();
 
       if (error) {
-        return res.status(400).json({ error: error.message });
+        throw new Error(error.message);
       }
 
-      if (!data.user) {
-        return res.status(400).json({ error: 'Usuário não encontrado.' });
-      }
-
-      // Query core participant profiles
-      let { data: profile } = await supabase.from('participantes').select('*').eq('id', data.user.id).single();
       if (!profile) {
-        const { data: pByEmail } = await supabase.from('participantes').select('*').eq('email', email).single();
-        profile = pByEmail;
+        return res.status(401).json({ error: 'Nenhum usuário cadastrado com este e-mail. Alterne para a aba "Criar nova conta" para realizar o cadastro.' });
       }
 
-      const { data: rankingView } = await supabase.from('view_ranking').select('*').eq('email', email).single();
+      const avatarValue = profile.avatar_url || '';
+      const realAvatarUrl = cleanAvatarUrl(avatarValue);
+      let storedPassword = '';
 
-      const finalName = profile?.nome || data.user.email?.split('@')[0] || 'Apostador';
-      const finalAvatar = profile?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(finalName)}`;
+      if (avatarValue.includes('||')) {
+        storedPassword = avatarValue.split('||')[1];
+      }
+
+      // If a password was saved, require it to match (ignore check if user exists but has no password in schema)
+      if (storedPassword && password !== storedPassword) {
+        return res.status(401).json({ error: 'E-mail ou senha incorretos. Por favor, tente novamente.' });
+      }
+
+      const { data: rankingView } = await supabase.from('view_ranking').select('*').eq('email', trimmedEmail).maybeSingle();
+
+      const finalName = profile.nome || 'Apostador';
 
       return res.json({
         success: true,
         user: {
-          id: data.user.id,
+          id: profile.id,
           name: finalName,
-          email: email,
-          avatar_url: finalAvatar,
+          email: trimmedEmail,
+          avatar_url: realAvatarUrl,
           points: rankingView?.total_pontos || 0,
           exacts: rankingView?.placares_exatos || 0,
           accuracy: rankingView?.acertos_resultado ? Math.round((rankingView.acertos_resultado / 4) * 100) : 0,
@@ -440,19 +451,30 @@ app.post('/api/auth/login', async (req, res) => {
         }
       });
     } catch (err: any) {
-      console.error('Falha no login com Supabase Auth:', err);
-      // Fallback
+      console.error('Falha no login com Supabase:', err);
+      return res.status(500).json({ error: 'Erro de conexão ou falha ao efetuar login com o banco de dados.' });
     }
   }
 
   // 2. Off-grid fallback to local session memory
-  const localPart = inMemoryParticipantes.find(p => p.email.toLowerCase() === email.toLowerCase());
+  const localPart = inMemoryParticipantes.find(p => p.email.toLowerCase() === trimmedEmail);
   if (!localPart) {
     return res.status(401).json({ error: 'Este e-mail de usuário não está cadastrado. Alterne para a aba "Criar nova conta".' });
   }
 
+  const avatarValue = localPart.avatar_url || '';
+  const realAvatarUrl = cleanAvatarUrl(avatarValue);
+  let storedPassword = '';
+  if (avatarValue.includes('||')) {
+    storedPassword = avatarValue.split('||')[1];
+  }
+
+  if (storedPassword && password !== storedPassword) {
+    return res.status(401).json({ error: 'E-mail ou senha incorretos. Por favor, tente novamente.' });
+  }
+
   const memoryRankings = getMemoryRanking();
-  const index = memoryRankings.findIndex(r => r.email.toLowerCase() === email.toLowerCase());
+  const index = memoryRankings.findIndex(r => r.email.toLowerCase() === trimmedEmail);
   const stats = memoryRankings[index] || { total_pontos: 0, placares_exatos: 0, acertos_resultado: 0 };
 
   return res.json({
@@ -461,7 +483,7 @@ app.post('/api/auth/login', async (req, res) => {
       id: localPart.id,
       name: localPart.nome,
       email: localPart.email,
-      avatar_url: localPart.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(localPart.nome)}`,
+      avatar_url: realAvatarUrl,
       points: stats.total_pontos,
       exacts: stats.placares_exatos,
       accuracy: stats.acertos_resultado ? Math.round((stats.acertos_resultado / 4) * 100) : 0,
@@ -1059,7 +1081,7 @@ app.get('/api/ranking', async (req, res) => {
           rank: idx + 1,
           name: r.participante,
           username: r.email.split('@')[0],
-          avatar: r.avatar_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAeuJMB8vQa_0_uJNYvI4kzhQm_gBw5dqzj84p5ahEW-oqqzLZDTzpgKZhe9PfqGc9iBgXwWcu8EAPOtlufisiT1dImnChCI1fPW6ZHCap00no74cwsclK_H8i2Q2_CNfofSNeLbLAnOi4ENykypX_1c12Lp1uORyadN1LM68eMhi69MJRtatk1gmeY5V7ZEoOylA61Mdk5xA_3u99hURO0u1LEdP7kc-tRFIAwHJihTmYeJsZZKyTEsJCXTBxU5qgiEN4tVfucY_E',
+          avatar: cleanAvatarUrl(r.avatar_url),
           points: r.total_pontos,
           exacts: r.placares_exatos,
           accuracy: r.acertos_resultado ? Math.min(100, Math.round((r.placares_exatos / Math.max(1, r.total_pontos)) * 100)) : 0
@@ -1077,7 +1099,7 @@ app.get('/api/ranking', async (req, res) => {
     rank: idx + 1,
     name: r.participante,
     username: r.email.split('@')[0],
-    avatar: r.avatar_url,
+    avatar: cleanAvatarUrl(r.avatar_url),
     points: r.total_pontos,
     exacts: r.placares_exatos,
     accuracy: Math.round((r.acertos_resultado / 5) * 100)

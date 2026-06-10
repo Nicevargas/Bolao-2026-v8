@@ -1,13 +1,14 @@
 import React from 'react';
-import { Trophy, TrendingUp, Award, Target, Clock, Zap, Star, X } from 'lucide-react';
-import { UserProfile } from '../types';
+import { Trophy, TrendingUp, Award, Target, Clock, Zap, Star } from 'lucide-react';
+import { UserProfile, Match } from '../types';
 
 interface DashboardProps {
   user: UserProfile;
+  matches: Match[];
   onNavigate: (tab: string) => void;
 }
 
-export default function Dashboard({ user, onNavigate }: DashboardProps) {
+export default function Dashboard({ user, matches, onNavigate }: DashboardProps) {
   return (
     <div className="animate-in fade-in duration-300">
       {/* Welcome Message */}
@@ -129,37 +130,100 @@ export default function Dashboard({ user, onNavigate }: DashboardProps) {
             Ver tudo
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="glass-card rounded-2xl p-4 flex items-center justify-between group hover:border-primary/20 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="bg-surface-container-high/60 p-3 rounded-xl flex items-center justify-center text-tertiary">
-                <Star size={20} className="fill-tertiary" />
-              </div>
-              <div>
-                <p className="font-bold text-white text-sm md:text-base">Argentina 2 - 1 França</p>
-                <p className="text-xs text-on-surface-variant font-medium">Seu palpite: 2-1 • Acertou em cheio!</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-tertiary font-black text-sm md:text-base">+10 pts</span>
-            </div>
-          </div>
 
-          <div className="glass-card rounded-2xl p-4 flex items-center justify-between group hover:border-pink-500/20 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="bg-surface-container-high/60 p-3 rounded-xl flex items-center justify-center text-error">
-                <X size={20} />
+        {(() => {
+          const finishedMatches = matches ? matches.filter(
+            m => m.status === 'ENCERRADO' || m.status === 'PONTUADO' || (m.realHomeScore !== undefined && m.realHomeScore !== null)
+          ) : [];
+
+          if (finishedMatches.length === 0) {
+            return (
+              <div className="glass-card rounded-3xl p-8 text-center border border-white/5 bg-white/[0.01]">
+                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4 text-pink-400">
+                  <Trophy size={24} />
+                </div>
+                <h4 className="text-base font-bold text-white mb-1">Nenhum resultado disponível</h4>
+                <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed mb-4 font-medium">
+                  Ainda não temos jogos finalizados no banco de dados. Os resultados oficiais do torneio aparecerão aqui assim que as partidas forem concluídas!
+                </p>
+                <button
+                  onClick={() => onNavigate('Apostas')}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 text-pink-400 hover:text-pink-300 rounded-xl font-bold text-xs uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-98 cursor-pointer shadow-lg shadow-pink-500/5 hover:border-pink-500/30"
+                >
+                  <span>Ver Próximos Jogos</span>
+                </button>
               </div>
-              <div>
-                <p className="font-bold text-white text-sm md:text-base">Espanha 0 - 0 Japão</p>
-                <p className="text-xs text-on-surface-variant font-medium">Seu palpite: 2-0 • Errou o vencedor</p>
-              </div>
+            );
+          }
+
+          const calculateScore = (golsT1: number, golsT2: number, palpiteT1: number, palpiteT2: number): number => {
+            const resultado_correto = (golsT1 > golsT2 && palpiteT1 > palpiteT2) || 
+                                      (golsT1 < golsT2 && palpiteT1 < palpiteT2) || 
+                                      (golsT1 === golsT2 && palpiteT1 === palpiteT2);
+                                      
+            const gol_time1_correto = (golsT1 === palpiteT1);
+            const gol_time2_correto = (golsT2 === palpiteT2);
+            const placar_exato = (golsT1 === palpiteT1 && golsT2 === palpiteT2);
+            
+            let pontos = 0;
+            if (resultado_correto) pontos += 2;
+            if (gol_time1_correto) pontos += 1;
+            if (gol_time2_correto) pontos += 1;
+            if (placar_exato) pontos += 1;
+
+            return pontos;
+          };
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {finishedMatches.slice(0, 4).map(m => {
+                const hasGuess = m.userHomeScore !== undefined && m.userAwayScore !== undefined && m.userHomeScore !== "";
+                const valT1 = m.realHomeScore ?? 0;
+                const valT2 = m.realAwayScore ?? 0;
+                
+                let pts = 0;
+                let detailText = "Você não registrou palpite para este jogo.";
+                if (hasGuess) {
+                  const p1 = Number(m.userHomeScore);
+                  const p2 = Number(m.userAwayScore);
+                  pts = calculateScore(valT1, valT2, p1, p2);
+                  if (pts === 5) {
+                    detailText = `Seu palpite: ${p1}-${p2} • Acertou em cheio! 🎯`;
+                  } else if (pts > 0) {
+                    detailText = `Seu palpite: ${p1}-${p2} • Acertou o resultado.`;
+                  } else {
+                    detailText = `Seu palpite: ${p1}-${p2} • Errou o resultado.`;
+                  }
+                }
+
+                return (
+                  <div key={m.id} className="glass-card rounded-2xl p-4 flex items-center justify-between group hover:border-primary/20 transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-xl flex items-center justify-center ${pts === 5 ? 'bg-tertiary/10 text-tertiary shadow-[0_0_15px_rgba(244,63,94,0.15)]' : pts > 0 ? 'bg-primary/10 text-primary' : 'bg-white/5 text-gray-400'}`}>
+                        {pts === 5 ? <Star size={20} className="fill-tertiary animate-pulse" /> : <Trophy size={20} />}
+                      </div>
+                      <div>
+                        <p className="font-bold text-white text-sm md:text-base flex items-center gap-2">
+                          <span>{m.homeTeam} {m.realHomeScore}</span>
+                          <span className="text-gray-500 font-normal text-xs font-mono">x</span>
+                          <span>{m.realAwayScore} {m.awayTeam}</span>
+                        </p>
+                        <p className="text-xs text-on-surface-variant font-medium mt-0.5">
+                          {detailText}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right pl-2">
+                      <span className={`font-black text-sm md:text-base ${pts > 0 ? 'text-tertiary' : 'text-gray-500'}`}>
+                        +{pts} pts
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="text-right">
-              <span className="text-error font-black text-sm md:text-base">+0 pts</span>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
       </section>
     </div>
   );

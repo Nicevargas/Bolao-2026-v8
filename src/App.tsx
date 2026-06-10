@@ -597,7 +597,7 @@ export default function App() {
 
           {!isLoadingMatches && (
             <>
-              {activeTab === 'Dashboard' && <Dashboard user={user} onNavigate={setActiveTab} />}
+              {activeTab === 'Dashboard' && <Dashboard user={user} matches={matches} onNavigate={setActiveTab} />}
               {activeTab === 'Apostas' && <Apostas matches={matches} onSaveGuess={handleSaveGuess} />}
               {activeTab === 'Ranking' && (
                 <Ranking

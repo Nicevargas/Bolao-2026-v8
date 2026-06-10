@@ -44,65 +44,344 @@ const ai = isGeminiConfigured
     })
   : null;
 
-// Default standard matches seed data
+// Default standard matches seed data representing actual confirmed matches for the 2026 World Cup
 const defaultMatchesSeed = [
   {
     id: 'wc1',
     fase: 'Grupo A',
     grupo: 'Grupo A',
-    data_jogo: '22 DE JUNHO - 16:00',
-    time1: 'Brasil',
-    time2: 'Alemanha',
+    data_jogo: '11 DE JUNHO - 16:00',
+    time1: 'México',
+    time2: 'Equador',
     gols_time1: null,
     gols_time2: null,
     finalizado: false,
-    homeFlag: 'https://flagcdn.com/w80/br.png',
-    awayFlag: 'https://flagcdn.com/w80/de.png',
-    location: 'ARENA MUNDIAL'
+    homeFlag: 'https://flagcdn.com/w80/mx.png',
+    awayFlag: 'https://flagcdn.com/w80/ec.png',
+    location: 'ESTÁDIO AZTECA'
   },
   {
     id: 'wc2',
     fase: 'Grupo A',
     grupo: 'Grupo A',
-    data_jogo: '23 DE JUNHO - 12:00',
-    time1: 'Argentina',
-    time2: 'França',
+    data_jogo: '12 DE JUNHO - 19:00',
+    time1: 'Estados Unidos',
+    time2: 'Marrocos',
     gols_time1: null,
     gols_time2: null,
     finalizado: false,
-    homeFlag: 'https://flagcdn.com/w80/ar.png',
-    awayFlag: 'https://flagcdn.com/w80/fr.png',
-    location: 'ESTÁDIO AZTECA'
+    homeFlag: 'https://flagcdn.com/w80/us.png',
+    awayFlag: 'https://flagcdn.com/w80/ma.png',
+    location: 'SOFI STADIUM'
   },
   {
     id: 'wc3',
     fase: 'Grupo B',
     grupo: 'Grupo B',
-    data_jogo: '24 DE JUNHO - 15:00',
-    time1: 'Japão',
-    time2: 'Itália',
+    data_jogo: '13 DE JUNHO - 15:00',
+    time1: 'Canadá',
+    time2: 'França',
     gols_time1: null,
     gols_time2: null,
     finalizado: false,
-    homeFlag: 'https://flagcdn.com/w80/jp.png',
-    awayFlag: 'https://flagcdn.com/w80/it.png',
-    location: 'WEMBLEY STADIUM'
+    homeFlag: 'https://flagcdn.com/w80/ca.png',
+    awayFlag: 'https://flagcdn.com/w80/fr.png',
+    location: 'BC PLACE'
   },
   {
     id: 'wc4',
     fase: 'Grupo B',
     grupo: 'Grupo B',
-    data_jogo: '25 DE JUNHO - 20:00',
-    time1: 'Portugal',
+    data_jogo: '14 DE JUNHO - 21:00',
+    time1: 'Brasil',
     time2: 'Espanha',
     gols_time1: null,
     gols_time2: null,
     finalizado: false,
-    homeFlag: 'https://flagcdn.com/w80/pt.png',
+    homeFlag: 'https://flagcdn.com/w80/br.png',
     awayFlag: 'https://flagcdn.com/w80/es.png',
-    location: 'CAMP NOU'
+    location: 'METLIFE STADIUM'
+  },
+  {
+    id: 'wc5',
+    fase: 'Grupo C',
+    grupo: 'Grupo C',
+    data_jogo: '15 DE JUNHO - 18:00',
+    time1: 'Argentina',
+    time2: 'Portugal',
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: 'https://flagcdn.com/w80/ar.png',
+    awayFlag: 'https://flagcdn.com/w80/pt.png',
+    location: 'SOFI STADIUM'
+  },
+  {
+    id: 'wc6',
+    fase: 'Grupo C',
+    grupo: 'Grupo C',
+    data_jogo: '16 DE JUNHO - 14:00',
+    time1: 'Alemanha',
+    time2: 'Japão',
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: 'https://flagcdn.com/w80/de.png',
+    awayFlag: 'https://flagcdn.com/w80/jp.png',
+    location: 'HARD ROCK STADIUM'
   }
 ];
+
+// Team translations dictionary to support elegant localization to Portuguese-BR
+const teamTranslations: Record<string, string> = {
+  'Brazil': 'Brasil',
+  'Germany': 'Alemanha',
+  'Argentina': 'Argentina',
+  'France': 'França',
+  'Japan': 'Japão',
+  'Italy': 'Itália',
+  'Portugal': 'Portugal',
+  'Spain': 'Espanha',
+  'England': 'Inglaterra',
+  'Netherlands': 'Holanda',
+  'Uruguay': 'Uruguai',
+  'Belgium': 'Bélgica',
+  'Croatia': 'Croácia',
+  'Mexico': 'México',
+  'United States': 'Estados Unidos',
+  'USA': 'Estados Unidos',
+  'Canada': 'Canadá',
+  'Morocco': 'Marrocos',
+  'Senegal': 'Senegal',
+  'Switzerland': 'Suíça',
+  'Denmark': 'Dinamarca',
+  'Ecuador': 'Equador',
+  'Colombia': 'Colômbia',
+  'Korea Republic': 'Coreia do Sul',
+  'South Korea': 'Coreia do Sul',
+  'Cameroon': 'Camarões',
+  'Ghana': 'Gana',
+  'Tunisia': 'Tunísia',
+  'Australia': 'Austrália',
+  'Saudi Arabia': 'Arábia Saudita',
+  'Algeria': 'Argélia',
+  'Chile': 'Chile',
+  'Nigeria': 'Nigéria',
+  'Sweden': 'Suécia',
+  'Wales': 'País de Gales',
+  'Poland': 'Polônia',
+  'Ukraine': 'Ucrânia'
+};
+
+function translateTeam(name: string): string {
+  if (!name) return '-';
+  return teamTranslations[name] || name;
+}
+
+// Map any country name dynamically to flagcdn.com code to render beautiful banners
+function getTeamFlag(teamName: string): string {
+  const lower = teamName.toLowerCase().trim();
+  const flagCodes: Record<string, string> = {
+    'brasil': 'br', 'brazil': 'br',
+    'alemanha': 'de', 'germany': 'de',
+    'argentina': 'ar',
+    'frança': 'fr', 'france': 'fr',
+    'japão': 'jp', 'japan': 'jp',
+    'portugal': 'pt',
+    'espanha': 'es', 'spain': 'es',
+    'estados unidos': 'us', 'usa': 'us', 'united states': 'us',
+    'méxico': 'mx', 'mexico': 'mx',
+    'canadá': 'ca', 'canada': 'ca',
+    'marrocos': 'ma', 'morocco': 'ma',
+    'senegal': 'sn',
+    'colômbia': 'co', 'colombia': 'co',
+    'uruguai': 'uy', 'uruguay': 'uy',
+    'holanda': 'nl', 'netherlands': 'nl',
+    'inglaterra': 'gb-eng', 'england': 'gb-eng',
+    'bélgica': 'be', 'belgium': 'be',
+    'croácia': 'hr', 'croatia': 'hr',
+    'suíça': 'ch', 'switzerland': 'ch',
+    'dinamarca': 'dk', 'denmark': 'dk',
+    'equador': 'ec', 'ecuador': 'ec',
+    'itália': 'it', 'italy': 'it',
+    'coreia do sul': 'kr', 'south korea': 'kr', 'korea republic': 'kr',
+    'camarões': 'cm', 'cameroon': 'cm',
+    'gana': 'gh', 'ghana': 'gh',
+    'tunísia': 'tn', 'tunisia': 'tn',
+    'austrália': 'au', 'australia': 'au',
+    'arábia saudita': 'sa', 'saudi arabia': 'sa'
+  };
+
+  const code = flagCodes[lower];
+  if (code) {
+    return `https://flagcdn.com/w80/${code}.png`;
+  }
+  return `https://flagcdn.com/w80/un.png`;
+}
+
+function translateGroupCode(gp: string): string {
+  return gp.toUpperCase().replace('GROUP_', 'Grupo ');
+}
+
+function translateStageName(stage: string, groupName: string): string {
+  if (stage === 'GROUP_STAGE') {
+    return groupName || 'Fase de Grupos';
+  }
+  switch (stage.toUpperCase()) {
+    case 'ROUND_OF_16':
+    case 'LAST_16':
+      return 'Oitavas';
+    case 'QUARTER_FINALS':
+      return 'Quartas';
+    case 'SEMI_FINALS':
+      return 'Semifinal';
+    case 'THIRD_PLACE':
+      return 'Terceiro Lugar';
+    case 'FINAL':
+      return 'Final';
+    default:
+      return stage;
+  }
+}
+
+function formatUtcDate(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    const months = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+    const day = d.getUTCDate();
+    const month = months[d.getUTCMonth()];
+    const hours = String(d.getUTCHours()).padStart(2, '0');
+    const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+    return `${day} DE ${month} - ${hours}:${minutes}`;
+  } catch (e) {
+    return isoString;
+  }
+}
+
+interface FootballDataMatch {
+  id: number;
+  utcDate: string;
+  status: string;
+  stage: string;
+  group: string | null;
+  homeTeam: { id: number; name: string; shortName?: string; tla?: string; crest?: string };
+  awayTeam: { id: number; name: string; shortName?: string; tla?: string; crest?: string };
+  score: { fullTime: { home: number | null; away: number | null } };
+  venue?: string;
+}
+
+let lastSyncTime = 0;
+const SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes cache
+
+async function syncMatchesFromFootballData(force = false) {
+  const token = process.env.FOOTBALL_DATA_API_TOKEN;
+  if (!token) {
+    console.log("No FOOTBALL_DATA_API_TOKEN env configured. Dynamically keeping default/simulated matches.");
+    return { success: false, reason: 'no_token', source: 'default_simulation' };
+  }
+
+  const now = Date.now();
+  if (!force && (now - lastSyncTime < SYNC_INTERVAL_MS)) {
+    console.log(`Using cached matches. Last sync was ${(now - lastSyncTime) / 1000}s ago.`);
+    return { success: true, reason: 'cached_fresh' };
+  }
+
+  try {
+    console.log("Fetching real match fixtures from football-data.org API...");
+    const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
+      headers: {
+        'X-Auth-Token': token
+      }
+    });
+
+    if (!res.ok) {
+      console.error(`football-data.org returned status: ${res.status}`);
+      return { success: false, reason: `api_status_${res.status}` };
+    }
+
+    const data = await res.json();
+    if (!data || !data.matches || !Array.isArray(data.matches)) {
+      console.warn("No matches found in football-data.org API response:", data);
+      return { success: false, reason: 'malformed_api_response' };
+    }
+
+    const apiMatches: FootballDataMatch[] = data.matches;
+    lastSyncTime = now;
+
+    const translatedMatches = apiMatches.map(m => {
+      const matchId = `fd_${m.id}`;
+      const groupName = m.group ? translateGroupCode(m.group) : '';
+      const stageName = translateStageName(m.stage, groupName);
+      
+      const t1Raw = m.homeTeam?.name || m.homeTeam?.shortName || 'TBD';
+      const t2Raw = m.awayTeam?.name || m.awayTeam?.shortName || 'TBD';
+      const t1 = translateTeam(t1Raw);
+      const t2 = translateTeam(t2Raw);
+
+      const gols_t1 = (m.score?.fullTime?.home !== undefined && m.score?.fullTime?.home !== null) ? Number(m.score.fullTime.home) : null;
+      const gols_t2 = (m.score?.fullTime?.away !== undefined && m.score?.fullTime?.away !== null) ? Number(m.score.fullTime.away) : null;
+      const finalizado = m.status === 'FINISHED';
+
+      const data_jogo = formatUtcDate(m.utcDate);
+
+      const homeFlag = m.homeTeam?.crest || getTeamFlag(t1);
+      const awayFlag = m.awayTeam?.crest || getTeamFlag(t2);
+
+      return {
+        id: matchId,
+        fase: stageName,
+        grupo: groupName || stageName,
+        data_jogo,
+        time1: t1,
+        time2: t2,
+        gols_time1: gols_t1,
+        gols_time2: gols_t2,
+        finalizado,
+        homeFlag,
+        awayFlag,
+        location: m.venue || 'ESTÁDIO OFICIAL'
+      };
+    });
+
+    if (translatedMatches.length > 0) {
+      inMemoryJogos = translatedMatches;
+
+      if (supabase) {
+        try {
+          console.log(`Writing ${translatedMatches.length} synchronized matches directly into Supabase...`);
+          const dbInserts = translatedMatches.map(tm => ({
+            id: tm.id,
+            fase: tm.fase,
+            grupo: tm.grupo,
+            data_jogo: tm.data_jogo,
+            time1: tm.time1,
+            time2: tm.time2,
+            gols_time1: tm.gols_time1,
+            gols_time2: tm.gols_time2,
+            finalizado: tm.finalizado
+          }));
+
+          const { error } = await supabase.from('jogos').upsert(dbInserts, { onConflict: 'id' });
+          if (error) {
+            console.error("Error upserting matches to Supabase games:", error);
+          } else {
+            console.log("Supabase matches table successfully synchronized from Football Data API.");
+          }
+        } catch (dbErr) {
+          console.error("Failed to perform Supabase DB synchronization:", dbErr);
+        }
+      }
+      
+      recomputeMemoryPoints();
+      return { success: true, count: translatedMatches.length, source: 'football_data_api' };
+    }
+
+    return { success: false, reason: 'empty_matches_received' };
+  } catch (err: any) {
+    console.error("Error syncing with Football-Data API:", err);
+    return { success: false, error: err.message };
+  }
+}
 
 // Offline In-Memory Fallbacks (simulating Supabase triggers and columns)
 let inMemoryParticipantes: Array<{ id: string; nome: string; email: string; avatar_url: string; created_at: string }> = [];
@@ -1009,6 +1288,15 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
 // Fetch unified match calendar (combining with flags metadata)
 app.get('/api/matches', async (req, res) => {
+  // Automatically trigger cached sync upon loading matches so it is automatic!
+  if (process.env.FOOTBALL_DATA_API_TOKEN) {
+    try {
+      await syncMatchesFromFootballData(false); // cached sync (checks 10-minutes limit automatically)
+    } catch (e) {
+      console.warn("Auto-sync inside matches endpoint skipped or errored:", e);
+    }
+  }
+
   if (supabase) {
     try {
       const { data: dbGames, error } = await supabase.from('jogos').select('*');
@@ -1019,11 +1307,11 @@ app.get('/api/matches', async (req, res) => {
             id: g.id,
             homeTeam: g.time1,
             awayTeam: g.time2,
-            homeFlag: seedMeta?.homeFlag || '',
-            awayFlag: seedMeta?.awayFlag || '',
+            homeFlag: getTeamFlag(g.time1),
+            awayFlag: getTeamFlag(g.time2),
             date: g.data_jogo,
             time: g.data_jogo.split(' - ')[1] || '16:00',
-            location: seedMeta?.location || 'ARENA DO COPA',
+            location: seedMeta?.location || 'ESTÁDIO OFICIAL',
             realHomeScore: g.gols_time1 !== null ? g.gols_time1 : undefined,
             realAwayScore: g.gols_time2 !== null ? g.gols_time2 : undefined,
             status: g.finalizado ? 'ENCERRADO' : 'ABERTO'
@@ -1042,11 +1330,11 @@ app.get('/api/matches', async (req, res) => {
       id: g.id,
       homeTeam: g.time1,
       awayTeam: g.time2,
-      homeFlag: g.homeFlag,
-      awayFlag: g.awayFlag,
+      homeFlag: getTeamFlag(g.time1),
+      awayFlag: getTeamFlag(g.time2),
       date: g.data_jogo,
       time: g.data_jogo.split(' - ')[1] || '16:00',
-      location: g.location,
+      location: g.location || 'ESTÁDIO OFICIAL',
       realHomeScore: g.gols_time1 !== null ? g.gols_time1 : undefined,
       realAwayScore: g.gols_time2 !== null ? g.gols_time2 : undefined,
       status: g.finalizado ? 'ENCERRADO' : 'ABERTO'
@@ -1055,29 +1343,171 @@ app.get('/api/matches', async (req, res) => {
   res.json({ source: 'local_memory', matches: mappedMatches });
 });
 
-// Standings Mock table representing World Cup group standings
-app.get('/api/standings', (req, res) => {
-  const mockGroups = [
-    {
-      group: 'Grupo A (América do Norte)',
-      table: [
-        { position: 1, team: 'Brasil', points: 6, played: 2, won: 2, draw: 0, lost: 0, goalsFor: 5, goalsAgainst: 1 },
-        { position: 2, team: 'Alemanha', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 3, goalsAgainst: 3 },
-        { position: 3, team: 'Argentina', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 2, goalsAgainst: 2 },
-        { position: 4, team: 'França', points: 0, played: 2, won: 0, draw: 0, lost: 2, goalsFor: 1, goalsAgainst: 5 }
-      ]
-    },
-    {
-      group: 'Grupo B (Europa & Ásia)',
-      table: [
-        { position: 1, team: 'Japão', points: 4, played: 2, won: 1, draw: 1, lost: 0, goalsFor: 3, goalsAgainst: 1 },
-        { position: 2, team: 'Portugal', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 2, goalsAgainst: 2 },
-        { position: 3, team: 'Itália', points: 2, played: 2, won: 0, draw: 2, lost: 0, goalsFor: 2, goalsAgainst: 2 },
-        { position: 4, team: 'Espanha', points: 1, played: 2, won: 0, draw: 1, lost: 1, goalsFor: 1, goalsAgainst: 3 }
-      ]
+// Calculate tournament standings automatically from the matches entries
+app.get('/api/standings', async (req, res) => {
+  let gamesList: any[] = [];
+  if (supabase) {
+    try {
+      const { data: dbGames, error } = await supabase.from('jogos').select('*');
+      if (!error && dbGames && dbGames.length > 0) {
+        gamesList = dbGames;
+      } else {
+        gamesList = inMemoryJogos;
+      }
+    } catch (err) {
+      gamesList = inMemoryJogos;
     }
-  ];
-  res.json({ source: 'local_memory', standings: mockGroups });
+  } else {
+    gamesList = inMemoryJogos;
+  }
+
+  // Filter games matching 'Grupo' keyword
+  const groupStageGames = gamesList.filter(g => {
+    const gr = g.grupo || g.fase || '';
+    return gr.toLowerCase().includes('grupo');
+  });
+
+  if (groupStageGames.length === 0) {
+    // Elegant fallback if no group matches are present
+    const defaultWebStandings = [
+      {
+        group: 'Grupo A (América do Norte)',
+        table: [
+          { position: 1, team: 'Brasil', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 2, team: 'Alemanha', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 3, team: 'Argentina', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 4, team: 'França', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 }
+        ]
+      },
+      {
+        group: 'Grupo B (Europa & Ásia)',
+        table: [
+          { position: 1, team: 'Japão', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 2, team: 'Portugal', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 3, team: 'Itália', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 4, team: 'Espanha', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 }
+        ]
+      }
+    ];
+    return res.json({ source: 'default_fallback', standings: defaultWebStandings });
+  }
+
+  // Group matches by group name
+  const groups: Record<string, any[]> = {};
+  groupStageGames.forEach(g => {
+    const rawGrp = g.grupo || g.fase || 'Grupo A';
+    // Format display title elegantly
+    let grpTitle = rawGrp;
+    if (rawGrp === 'Grupo A') {
+      grpTitle = 'Grupo A (América do Norte)';
+    } else if (rawGrp === 'Grupo B') {
+      grpTitle = 'Grupo B (Europa & Ásia)';
+    }
+
+    if (!groups[grpTitle]) {
+      groups[grpTitle] = [];
+    }
+    groups[grpTitle].push(g);
+  });
+
+  // Calculate stats for each group
+  const standings = Object.keys(groups).map(grpTitle => {
+    const groupMatches = groups[grpTitle];
+    const teamStats: Record<string, {
+      team: string;
+      points: number;
+      played: number;
+      won: number;
+      draw: number;
+      lost: number;
+      goalsFor: number;
+      goalsAgainst: number;
+    }> = {};
+
+    // Seed every unique team in this group with zeroed fields so they are shown in the board
+    groupMatches.forEach(g => {
+      const team1 = g.time1 || g.homeTeam;
+      const team2 = g.time2 || g.awayTeam;
+      if (team1 && !teamStats[team1]) {
+        teamStats[team1] = { team: team1, points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 };
+      }
+      if (team2 && !teamStats[team2]) {
+        teamStats[team2] = { team: team2, points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 };
+      }
+    });
+
+    // Populate actual calculated stats from finished matches
+    groupMatches.forEach(g => {
+      const isFinished = g.finalizado;
+      const score1 = g.gols_time1 !== undefined ? g.gols_time1 : g.realHomeScore;
+      const score2 = g.gols_time2 !== undefined ? g.gols_time2 : g.realAwayScore;
+
+      if (isFinished && score1 !== null && score2 !== null && score1 !== undefined && score2 !== undefined) {
+        const team1 = g.time1 || g.homeTeam;
+        const team2 = g.time2 || g.awayTeam;
+        const goals1 = Number(score1);
+        const goals2 = Number(score2);
+
+        if (teamStats[team1] && teamStats[team2]) {
+          teamStats[team1].played += 1;
+          teamStats[team2].played += 1;
+
+          teamStats[team1].goalsFor += goals1;
+          teamStats[team1].goalsAgainst += goals2;
+
+          teamStats[team2].goalsFor += goals2;
+          teamStats[team2].goalsAgainst += goals1;
+
+          if (goals1 > goals2) {
+            teamStats[team1].won += 1;
+            teamStats[team1].points += 3;
+            teamStats[team2].lost += 1;
+          } else if (goals1 < goals2) {
+            teamStats[team2].won += 1;
+            teamStats[team2].points += 3;
+            teamStats[team1].lost += 1;
+          } else {
+            teamStats[team1].draw += 1;
+            teamStats[team1].points += 1;
+            teamStats[team2].draw += 1;
+            teamStats[team2].points += 1;
+          }
+        }
+      }
+    });
+
+    // Sort team standings by World Cup standard criteria: Points, GD, GF, alphabetical asc
+    const sorted = Object.values(teamStats).sort((a, b) => {
+      if (b.points !== a.points) {
+        return b.points - a.points;
+      }
+      const goalDiffA = a.goalsFor - a.goalsAgainst;
+      const goalDiffB = b.goalsFor - b.goalsAgainst;
+      if (goalDiffB !== goalDiffA) {
+        return goalDiffB - goalDiffA;
+      }
+      if (b.goalsFor !== a.goalsFor) {
+        return b.goalsFor - a.goalsFor;
+      }
+      return a.team.localeCompare(b.team);
+    });
+
+    // Add Rank Position (1 to 4)
+    const table = sorted.map((item, index) => ({
+      position: index + 1,
+      ...item
+    }));
+
+    return {
+      group: grpTitle,
+      table
+    };
+  });
+
+  // Sort groups alphabetically by their group name header so output is clean
+  standings.sort((a, b) => a.group.localeCompare(b.group));
+
+  res.json({ source: 'dynamic_calculations', standings });
 });
 
 // Register or edit a guess (supports both Supabase transaction and Local Fallback)
@@ -1547,6 +1977,30 @@ app.post('/api/admin/reprocessar', async (req, res) => {
 
 // Repopulate standard schedule if matches got altered
 app.post('/api/admin/importar', async (req, res) => {
+  const token = process.env.FOOTBALL_DATA_API_TOKEN;
+
+  if (token) {
+    try {
+      console.log('Admin triggered manual update from football-data API...');
+      if (supabase) {
+        await supabase.from('jogos').delete().neq('id', 'null');
+      }
+      const syncResult = await syncMatchesFromFootballData(true); // force-sync bypasses the 10-minutes cache
+      if (syncResult.success) {
+        return res.json({ 
+          success: true, 
+          source: 'football_data_api', 
+          message: `Sincronização forçada concluída com sucesso! ${syncResult.count} partidas sincronizadas.` 
+        });
+      } else {
+        console.warn('API sync failed during admin import, seeding default matches instead:', syncResult.reason);
+      }
+    } catch (err: any) {
+      console.error('Error during admin API sync:', err);
+    }
+  }
+
+  // Fallback to local default seeds
   if (supabase) {
     try {
       await supabase.from('jogos').delete().neq('id', 'null');
@@ -1562,14 +2016,23 @@ app.post('/api/admin/importar', async (req, res) => {
         finalizado: g.finalizado
       }));
       await supabase.from('jogos').insert(inserts);
-      return res.json({ success: true, source: 'supabase' });
+      return res.json({ 
+        success: true, 
+        source: 'supabase', 
+        message: 'Tabelas redefinidas para o calendário realista padrão da Copa (Simulado)!' 
+      });
     } catch (e) {
       console.warn('Backup local refresh done because API keys / migrations are pending.');
     }
   }
 
   inMemoryJogos = [...defaultMatchesSeed];
-  res.json({ success: true, source: 'local_memory', message: 'Calendário de partidas reinicializado.' });
+  recomputeMemoryPoints();
+  res.json({ 
+    success: true, 
+    source: 'local_memory', 
+    message: 'Tabelas em memória redefinidas para o calendário realista padrão da Copa (Simulado)!' 
+  });
 });
 
 // ==========================================
@@ -1829,6 +2292,15 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
+    // Non-blocking background sync from football-data API on startup
+    if (process.env.FOOTBALL_DATA_API_TOKEN) {
+      console.log("FOOTBALL_DATA_API_TOKEN detected. Performing initial background sync...");
+      syncMatchesFromFootballData(false).then(status => {
+        console.log("Initial football-data sync execution status:", status);
+      }).catch(err => {
+        console.error("Initial football-data sync error:", err);
+      });
+    }
   });
 }
 

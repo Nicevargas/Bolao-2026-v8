@@ -1308,32 +1308,102 @@ app.get('/api/ranking', async (req, res) => {
 app.get('/api/estatisticas', async (req, res) => {
   let rankings: any[] = [];
   let totalGuesses = 0;
+  let totalExacts = 0;
+  let totalCorrect = 0;
+  let activeUsers = 0;
+  let allGuesses: any[] = [];
+  let allMatches: any[] = [];
 
   if (supabase) {
     try {
       const { data: rankView } = await supabase.from('view_ranking').select('*');
-      const { count } = await supabase.from('palpites').select('*', { count: 'exact', head: true });
-      totalGuesses = count || 0;
       rankings = rankView || [];
+      activeUsers = rankings.length;
+
+      const { data: guessesData } = await supabase.from('palpites').select('*');
+      allGuesses = guessesData || [];
+      totalGuesses = allGuesses.length;
+      
+      const { data: gamesData } = await supabase.from('jogos').select('*');
+      allMatches = gamesData || [];
+      
+      totalExacts = allGuesses.filter((g: any) => g.pontos === 5).length;
+      totalCorrect = allGuesses.filter((g: any) => g.pontos >= 2).length;
     } catch (e) {
-      totalGuesses = inMemoryPalpites.length;
+      console.warn('Failed to load stats from Supabase, falling back to local memory:', e);
       rankings = getMemoryRanking();
+      activeUsers = inMemoryParticipantes.length;
+      allGuesses = inMemoryPalpites;
+      totalGuesses = inMemoryPalpites.length;
+      allMatches = inMemoryJogos;
+      totalExacts = inMemoryPalpites.filter(g => g.pontos === 5).length;
+      totalCorrect = inMemoryPalpites.filter(g => g.pontos >= 2).length;
     }
   } else {
-    totalGuesses = inMemoryPalpites.length;
     rankings = getMemoryRanking();
+    activeUsers = inMemoryParticipantes.length;
+    allGuesses = inMemoryPalpites;
+    totalGuesses = inMemoryPalpites.length;
+    allMatches = inMemoryJogos;
+    totalExacts = inMemoryPalpites.filter(g => g.pontos === 5).length;
+    totalCorrect = inMemoryPalpites.filter(g => g.pontos >= 2).length;
   }
 
   const leader = rankings[0];
-  const countExacts = rankings.reduce((acc, current) => acc + (current.placares_exatos || current.exacts || 0), 0);
-  const avgPoints = rankings.length ? Math.round((rankings.reduce((sum, current) => sum + (current.total_pontos || current.points || 0), 0) / rankings.length) * 10) / 10 : 0;
+  const avgPoints = rankings.length ? Math.round((rankings.reduce((sum, current) => sum + (current.total_pontos || 0), 0) / rankings.length) * 10) / 10 : 0;
+  
+  // Calculate top 3 performers
+  const topPerformers = rankings.slice(0, 3).map((r, idx) => ({
+    rank: idx + 1,
+    name: r.participante || 'Apostador Sem Nome',
+    username: r.email ? r.email.split('@')[0] : 'user',
+    avatar: cleanAvatarUrl(r.avatar_url),
+    points: r.total_pontos || 0
+  }));
+
+  // Build points per round dynamically based on actual matches/guesses in each phase!
+  let phasesDataMap: Record<string, { totalPoints: number; participantsCount: number }> = {};
+  
+  // Initialize with known phases
+  const initialPhases = ['Grupo A', 'Grupo B', 'Oitavas', 'Quartas', 'Semifinal', 'Final'];
+  initialPhases.forEach(p => {
+    phasesDataMap[p] = { totalPoints: 0, participantsCount: 0 };
+  });
+
+  // Calculate real average points per phase
+  allGuesses.forEach((g: any) => {
+    const matchedGame = allMatches.find(gm => gm.id === g.jogo_id);
+    const fase = matchedGame ? matchedGame.fase : 'Grupo A';
+    if (!phasesDataMap[fase]) {
+      phasesDataMap[fase] = { totalPoints: 0, participantsCount: 0 };
+    }
+    phasesDataMap[fase].totalPoints += (g.pontos || 0);
+    phasesDataMap[fase].participantsCount += 1;
+  });
+
+  // Generate rounds representation
+  const rounds = Object.keys(phasesDataMap).map(phase => {
+    const data = phasesDataMap[phase];
+    const avg = data.participantsCount > 0 ? Math.round((data.totalPoints / data.participantsCount) * 10) / 10 : 0;
+    // Map to scale percentage for bar size (max is 5 points per guess)
+    const pct = Math.min(100, Math.max(10, Math.round((avg / 5) * 100)));
+    return {
+      label: phase,
+      value: `${pct}%`,
+      points: `${avg} pts`,
+      active: data.participantsCount > 0
+    };
+  });
 
   res.json({
-    totalGuesses: totalGuesses || 148,
-    averagePoints: avgPoints || 42.5,
-    activeParticipants: Math.max(rankings.length, 6) + 120,
-    leaderName: leader ? (leader.participante || leader.nome) : 'Camila Lima',
-    totalExacts: countExacts || 34
+    totalGuesses,
+    averagePoints: avgPoints,
+    activeParticipants: activeUsers,
+    leaderName: leader ? leader.participante : '-',
+    totalExacts,
+    totalCorrect,
+    topPerformers,
+    roundsData: rounds
   });
 });
 

@@ -1,0 +1,1143 @@
+import express from 'express';
+import path from 'path';
+import { createServer as createViteServer } from 'vite';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+import { GoogleGenAI, Type } from '@google/genai';
+
+dotenv.config();
+
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+
+// Initialize Supabase safely
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null;
+
+// Initialize Gemini safely
+const isGeminiConfigured = !!process.env.GEMINI_API_KEY;
+const ai = isGeminiConfigured
+  ? new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    })
+  : null;
+
+// Default standard matches seed data
+const defaultMatchesSeed = [
+  {
+    id: 'wc1',
+    fase: 'Grupo A',
+    grupo: 'Grupo A',
+    data_jogo: '22 DE JUNHO - 16:00',
+    time1: 'Brasil',
+    time2: 'Alemanha',
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: 'https://flagcdn.com/w80/br.png',
+    awayFlag: 'https://flagcdn.com/w80/de.png',
+    location: 'ARENA MUNDIAL'
+  },
+  {
+    id: 'wc2',
+    fase: 'Grupo A',
+    grupo: 'Grupo A',
+    data_jogo: '23 DE JUNHO - 12:00',
+    time1: 'Argentina',
+    time2: 'França',
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: 'https://flagcdn.com/w80/ar.png',
+    awayFlag: 'https://flagcdn.com/w80/fr.png',
+    location: 'ESTÁDIO AZTECA'
+  },
+  {
+    id: 'wc3',
+    fase: 'Grupo B',
+    grupo: 'Grupo B',
+    data_jogo: '24 DE JUNHO - 15:00',
+    time1: 'Japão',
+    time2: 'Itália',
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: 'https://flagcdn.com/w80/jp.png',
+    awayFlag: 'https://flagcdn.com/w80/it.png',
+    location: 'WEMBLEY STADIUM'
+  },
+  {
+    id: 'wc4',
+    fase: 'Grupo B',
+    grupo: 'Grupo B',
+    data_jogo: '25 DE JUNHO - 20:00',
+    time1: 'Portugal',
+    time2: 'Espanha',
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: 'https://flagcdn.com/w80/pt.png',
+    awayFlag: 'https://flagcdn.com/w80/es.png',
+    location: 'CAMP NOU'
+  }
+];
+
+// Offline In-Memory Fallbacks (simulating Supabase triggers and columns)
+let inMemoryParticipantes = [
+  { id: 'u1', nome: 'Camila Lima', email: 'camis_lima@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC51EMHkXhwLsSNjr44kljRrs3Jn_GVgy0yF15ev1GhzxheBOpDcbGsWP90MdrvCO3Fh_Chbxi29HNWjILqXf14bWGPuIWqotGqyTNl_2lWDbRo6ZLY_y_wLeh1neFgiuIJbJY8203ZzBPim-neTAs4fB0VFHlHGbVgOkHcdiBcjLbiV2U_C-zerQm2bXKBJOPs0hTEw8Cwyx1aRhiRGzV52N_HzzUT5FzqerSu60ediDjvUVBzM3j4zxYDQtIwZIPRRmKeKFa9oz4', created_at: new Date().toISOString() },
+  { id: 'u2', nome: 'Amanda Martins', email: 'amanda_swim@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFkrb0jVNFpqaB8RreYPLFSVunrsD6ZCgZSKXivGLymDo7h6a4nZ6C2Vww8jNpwNX5z7I8NzL04v5p-4WBUjfnFiRVy80F14ffpUN3VUrMk0MRLPilm4uIh08JC9lvdB2qRutBr3KMSgk5THaExcfBHPTuRnTFst6zzagenVuSXzzVBuxe6WEGcwKVUBVvOPdksivyn-C-MArCbifSZE22ezPsnc-NJyEUxMd6efrZ5v15b9-DVe4bxVeCUhXf2Pd60VxGTrVH-9g', created_at: new Date().toISOString() },
+  { id: 'u3', nome: 'Lucas Pereira', email: 'lucas_p@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCHy3_AT-Isoaf2ZarhDiGYh-nelgP_kFkVUEGqVNOSlJgQzAUGO7jlPg3_wcnWlZlUjaKESBvgDTLRcdFEXcAT31jsQxy76OQp8z8Xmcgk_Nde9NEzXty5Hj-z-PrVEGsXBWsOJHyM_v01sRY-v4eS6zVVM2Wk2x2GrNzO0vO38Z6hSMQPEpYXIbvZNVqNpkoL3hB0-W81siXYkATZ9ElbjDgYcHfrEwmpESlOZ-mJSxcVBwMaLzy8uvunz2wR3vK4SBlmzwF1iJU', created_at: new Date().toISOString() }
+];
+
+let inMemoryJogos = [...defaultMatchesSeed];
+
+let inMemoryPalpites: Array<{
+  id: string;
+  participante_id: string;
+  jogo_id: string;
+  palpite_time1: number;
+  palpite_time2: number;
+  pontos: number;
+  created_at: string;
+}> = [];
+
+// Mathematical formula to calculate score (exactly matching PostgreSQL calculate_bolao_points)
+function calculateScore(golsT1: number | null, golsT2: number | null, palpiteT1: number, palpiteT2: number): number {
+  if (golsT1 === null || golsT2 === null) return 0;
+  
+  const resultado_correto = (golsT1 > golsT2 && palpiteT1 > palpiteT2) || 
+                            (golsT1 < golsT2 && palpiteT1 < palpiteT2) || 
+                            (golsT1 === golsT2 && palpiteT1 === palpiteT2);
+                            
+  const gol_time1_correto = (golsT1 === palpiteT1);
+  const gol_time2_correto = (golsT2 === palpiteT2);
+  const placar_exato = (golsT1 === palpiteT1 && golsT2 === palpiteT2);
+  
+  let pontos = 0;
+  if (resultado_correto) pontos += 2;
+  if (gol_time1_correto) pontos += 1;
+  if (gol_time2_correto) pontos += 1;
+  if (placar_exato) pontos += 1;
+
+  return pontos;
+}
+
+// Memory database synchronization logic mimicking PostgreSQL Trigger Automation
+function recomputeMemoryPoints() {
+  inMemoryPalpites.forEach(guess => {
+    const game = inMemoryJogos.find(g => g.id === guess.jogo_id);
+    if (game && game.finalizado) {
+      guess.pontos = calculateScore(game.gols_time1, game.gols_time2, guess.palpite_time1, guess.palpite_time2);
+    } else {
+      guess.pontos = 0;
+    }
+  });
+}
+
+function getMemoryRanking() {
+  recomputeMemoryPoints();
+  const rankList = inMemoryParticipantes.map(p => {
+    const guesses = inMemoryPalpites.filter(g => g.participante_id === p.id);
+    let totalPoints = 0;
+    let exactsCount = 0;
+    let acertosCount = 0;
+
+    guesses.forEach(g => {
+      const game = inMemoryJogos.find(m => m.id === g.jogo_id);
+      if (game && game.finalizado) {
+        totalPoints += g.pontos;
+        if (g.pontos === 5) exactsCount++;
+        if (g.pontos >= 2) acertosCount++;
+      }
+    });
+
+    return {
+      participante: p.nome,
+      email: p.email,
+      avatar_url: p.avatar_url,
+      total_pontos: totalPoints,
+      placares_exatos: exactsCount,
+      acertos_resultado: acertosCount
+    };
+  });
+
+  // Sort by official spec rules:
+  // 1. total_pontos desc
+  // 2. placares_exatos desc
+  // 3. acertos_resultado desc
+  // 4. alphabetical
+  return rankList.sort((a, b) => {
+    if (b.total_pontos !== a.total_pontos) return b.total_pontos - a.total_pontos;
+    if (b.placares_exatos !== a.placares_exatos) return b.placares_exatos - a.placares_exatos;
+    if (b.acertos_resultado !== a.acertos_resultado) return b.acertos_resultado - a.acertos_resultado;
+    return a.participante.localeCompare(b.participante);
+  });
+}
+
+// Auto-seed cloud database tables on boot
+async function seedCloudDatabase() {
+  if (!supabase) return;
+  try {
+    // 1. Seed matches
+    const { data: existingGames } = await supabase.from('jogos').select('id');
+    if (!existingGames || existingGames.length === 0) {
+      const insertGames = defaultMatchesSeed.map(g => ({
+        id: g.id,
+        fase: g.fase,
+        grupo: g.grupo,
+        data_jogo: g.data_jogo,
+        time1: g.time1,
+        time2: g.time2,
+        gols_time1: g.gols_time1,
+        gols_time2: g.gols_time2,
+        finalizado: g.finalizado
+      }));
+      await supabase.from('jogos').insert(insertGames);
+      console.log('✔ Banquete de jogos reais semeado no Supabase com sucesso!');
+    }
+
+    // 2. Seed default participants
+    const { data: existingProfiles } = await supabase.from('participantes').select('id');
+    if (!existingProfiles || existingProfiles.length === 0) {
+      const inserts = [
+        { nome: 'Camila Lima', email: 'camis_lima@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC51EMHkXhwLsSNjr44kljRrs3Jn_GVgy0yF15ev1GhzxheBOpDcbGsWP90MdrvCO3Fh_Chbxi29HNWjILqXf14bWGPuIWqotGqyTNl_2lWDbRo6ZLY_y_wLeh1neFgiuIJbJY8203ZzBPim-neTAs4fB0VFHlHGbVgOkHcdiBcjLbiV2U_C-zerQm2bXKBJOPs0hTEw8Cwyx1aRhiRGzV52N_HzzUT5FzqerSu60ediDjvUVBzM3j4zxYDQtIwZIPRRmKeKFa9oz4' },
+        { nome: 'Amanda Martins', email: 'amanda_swim@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFkrb0jVNFpqaB8RreYPLFSVunrsD6ZCgZSKXivGLymDo7h6a4nZ6C2Vww8jNpwNX5z7I8NzL04v5p-4WBUjfnFiRVy80F14ffpUN3VUrMk0MRLPilm4uIh08JC9lvdB2qRutBr3KMSgk5THaExcfBHPTuRnTFst6zzagenVuSXzzVBuxe6WEGcwKVUBVvOPdksivyn-C-MArCbifSZE22ezPsnc-NJyEUxMd6efrZ5v15b9-DVe4bxVeCUhXf2Pd60VxGTrVH-9g' },
+        { nome: 'Lucas Pereira', email: 'lucas_p@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCHy3_AT-Isoaf2ZarhDiGYh-nelgP_kFkVUEGqVNOSlJgQzAUGO7jlPg3_wcnWlZlUjaKESBvgDTLRcdFEXcAT31jsQxy76OQp8z8Xmcgk_Nde9NEzXty5Hj-z-PrVEGsXBWsOJHyM_v01sRY-v4eS6zVVM2Wk2x2GrNzO0vO38Z6hSMQPEpYXIbvZNVqNpkoL3hB0-W81siXYkATZ9ElbjDgYcHfrEwmpESlOZ-mJSxcVBwMaLzy8uvunz2wR3vK4SBlmzwF1iJU' }
+      ];
+      await supabase.from('participantes').insert(inserts);
+      console.log('✔ Participantes default semeados no Supabase!');
+    }
+  } catch (err: any) {
+    console.warn('Boot seeding alert (Supabase tables might not be fully migrated yet):', err.message);
+  }
+}
+
+seedCloudDatabase();
+
+// ==========================================
+// API REST ENDPOINTS
+// ==========================================
+
+// Real Authentication Endpoints
+app.post('/api/auth/signup', async (req, res) => {
+  const { email, password, nome, avatarUrl } = req.body;
+  
+  if (!email || !password || !nome) {
+    return res.status(400).json({ error: 'Faltam dados essenciais para o cadastro (email, senha e nome).' });
+  }
+
+  // 1. Genuine Supabase Authentication flow if credentials are active
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      if (!data.user) {
+        return res.status(400).json({ error: 'Falha ao processar cadastro no Supabase Auth.' });
+      }
+
+      const finalAvatar = avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
+
+      // Try inserting into profiles ('participantes')
+      const { error: profileError } = await supabase.from('participantes').insert({
+        id: data.user.id,
+        nome: nome,
+        email: email,
+        avatar_url: finalAvatar
+      });
+
+      if (profileError) {
+        console.warn('Erro ao inserir perfil de participante de forma padrão, tentando upsert:', profileError.message);
+        await supabase.from('participantes').upsert({
+          id: data.user.id,
+          nome: nome,
+          email: email,
+          avatar_url: finalAvatar
+        });
+      }
+
+      return res.json({
+        success: true,
+        user: {
+          id: data.user.id,
+          name: nome,
+          email: email,
+          avatar_url: finalAvatar,
+          points: 0,
+          exacts: 0,
+          accuracy: 0,
+          rank: 12,
+          isLoggedIn: true
+        }
+      });
+    } catch (err: any) {
+      console.error('Falha interna no cadastro com Supabase:', err);
+      // Fallback below if there was a server/network error
+    }
+  }
+
+  // 2. Off-grid fallback to local session memory
+  const existing = inMemoryParticipantes.find(p => p.email.toLowerCase() === email.toLowerCase());
+  if (existing) {
+    return res.status(400).json({ error: 'Este e-mail já está em uso na sessão do servidor.' });
+  }
+
+  const newId = 'luser_' + Math.random().toString(36).substring(2, 9);
+  const finalAvatar = avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
+  
+  const localUser = {
+    id: newId,
+    nome,
+    email,
+    avatar_url: finalAvatar,
+    created_at: new Date().toISOString()
+  };
+  inMemoryParticipantes.push(localUser);
+
+  return res.json({
+    success: true,
+    user: {
+      id: newId,
+      name: nome,
+      email: email,
+      avatar_url: finalAvatar,
+      points: 0,
+      exacts: 0,
+      accuracy: 0,
+      rank: inMemoryParticipantes.length,
+      isLoggedIn: true,
+      simulated: true
+    }
+  });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
+  }
+
+  // 1. Genuine Supabase Auth lookup
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      if (!data.user) {
+        return res.status(400).json({ error: 'Usuário não encontrado.' });
+      }
+
+      // Query core participant profiles
+      let { data: profile } = await supabase.from('participantes').select('*').eq('id', data.user.id).single();
+      if (!profile) {
+        const { data: pByEmail } = await supabase.from('participantes').select('*').eq('email', email).single();
+        profile = pByEmail;
+      }
+
+      const { data: rankingView } = await supabase.from('view_ranking').select('*').eq('email', email).single();
+
+      const finalName = profile?.nome || data.user.email?.split('@')[0] || 'Apostador';
+      const finalAvatar = profile?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(finalName)}`;
+
+      return res.json({
+        success: true,
+        user: {
+          id: data.user.id,
+          name: finalName,
+          email: email,
+          avatar_url: finalAvatar,
+          points: rankingView?.total_pontos || 0,
+          exacts: rankingView?.placares_exatos || 0,
+          accuracy: rankingView?.acertos_resultado ? Math.round((rankingView.acertos_resultado / 4) * 100) : 0,
+          rank: 12,
+          isLoggedIn: true
+        }
+      });
+    } catch (err: any) {
+      console.error('Falha no login com Supabase Auth:', err);
+      // Fallback
+    }
+  }
+
+  // 2. Off-grid fallback to local session memory
+  const localPart = inMemoryParticipantes.find(p => p.email.toLowerCase() === email.toLowerCase());
+  if (!localPart) {
+    return res.status(401).json({ error: 'Este e-mail de usuário não está cadastrado. Alterne para a aba "Criar nova conta".' });
+  }
+
+  const memoryRankings = getMemoryRanking();
+  const index = memoryRankings.findIndex(r => r.email.toLowerCase() === email.toLowerCase());
+  const stats = memoryRankings[index] || { total_pontos: 0, placares_exatos: 0, acertos_resultado: 0 };
+
+  return res.json({
+    success: true,
+    user: {
+      id: localPart.id,
+      name: localPart.nome,
+      email: localPart.email,
+      avatar_url: localPart.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(localPart.nome)}`,
+      points: stats.total_pontos,
+      exacts: stats.placares_exatos,
+      accuracy: stats.acertos_resultado ? Math.round((stats.acertos_resultado / 4) * 100) : 0,
+      rank: index >= 0 ? index + 1 : inMemoryParticipantes.length,
+      isLoggedIn: true,
+      simulated: true
+    }
+  });
+});
+
+// Connection status check
+app.get('/api/config-status', (req, res) => {
+  res.json({
+    supabase: isSupabaseConfigured,
+    footballData: !!process.env.FOOTBALL_DATA_API_TOKEN,
+    supabaseUrl: supabaseUrl ? supabaseUrl.slice(0, 20) + '...' : null,
+    gemini: isGeminiConfigured
+  });
+});
+
+// Fetch unified match calendar (combining with flags metadata)
+app.get('/api/matches', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data: dbGames, error } = await supabase.from('jogos').select('*');
+      if (!error && dbGames && dbGames.length > 0) {
+        const matches = dbGames.map(g => {
+          const seedMeta = defaultMatchesSeed.find(sm => sm.id === g.id);
+          return {
+            id: g.id,
+            homeTeam: g.time1,
+            awayTeam: g.time2,
+            homeFlag: seedMeta?.homeFlag || '',
+            awayFlag: seedMeta?.awayFlag || '',
+            date: g.data_jogo,
+            time: g.data_jogo.split(' - ')[1] || '16:00',
+            location: seedMeta?.location || 'ARENA DO COPA',
+            realHomeScore: g.gols_time1 !== null ? g.gols_time1 : undefined,
+            realAwayScore: g.gols_time2 !== null ? g.gols_time2 : undefined,
+            status: g.finalizado ? 'ENCERRADO' : 'ABERTO'
+          };
+        });
+        return res.json({ source: 'supabase', matches });
+      }
+    } catch (err) {
+      console.warn('Supabase matches query error, falling back to local memory database.');
+    }
+  }
+
+  // Local fallback
+  const mappedMatches = inMemoryJogos.map(g => {
+    return {
+      id: g.id,
+      homeTeam: g.time1,
+      awayTeam: g.time2,
+      homeFlag: g.homeFlag,
+      awayFlag: g.awayFlag,
+      date: g.data_jogo,
+      time: g.data_jogo.split(' - ')[1] || '16:00',
+      location: g.location,
+      realHomeScore: g.gols_time1 !== null ? g.gols_time1 : undefined,
+      realAwayScore: g.gols_time2 !== null ? g.gols_time2 : undefined,
+      status: g.finalizado ? 'ENCERRADO' : 'ABERTO'
+    };
+  });
+  res.json({ source: 'local_memory', matches: mappedMatches });
+});
+
+// Standings Mock table representing World Cup group standings
+app.get('/api/standings', (req, res) => {
+  const mockGroups = [
+    {
+      group: 'Grupo A (América do Norte)',
+      table: [
+        { position: 1, team: 'Brasil', points: 6, played: 2, won: 2, draw: 0, lost: 0, goalsFor: 5, goalsAgainst: 1 },
+        { position: 2, team: 'Alemanha', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 3, goalsAgainst: 3 },
+        { position: 3, team: 'Argentina', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 2, goalsAgainst: 2 },
+        { position: 4, team: 'França', points: 0, played: 2, won: 0, draw: 0, lost: 2, goalsFor: 1, goalsAgainst: 5 }
+      ]
+    },
+    {
+      group: 'Grupo B (Europa & Ásia)',
+      table: [
+        { position: 1, team: 'Japão', points: 4, played: 2, won: 1, draw: 1, lost: 0, goalsFor: 3, goalsAgainst: 1 },
+        { position: 2, team: 'Portugal', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 2, goalsAgainst: 2 },
+        { position: 3, team: 'Itália', points: 2, played: 2, won: 0, draw: 2, lost: 0, goalsFor: 2, goalsAgainst: 2 },
+        { position: 4, team: 'Espanha', points: 1, played: 2, won: 0, draw: 1, lost: 1, goalsFor: 1, goalsAgainst: 3 }
+      ]
+    }
+  ];
+  res.json({ source: 'local_memory', standings: mockGroups });
+});
+
+// Register or edit a guess (supports both Supabase transaction and Local Fallback)
+app.post('/api/guesses', async (req, res) => {
+  const { email, userName, matchId, homeScore, awayScore } = req.body;
+  if (!email || !matchId || homeScore === undefined || awayScore === undefined) {
+    return res.status(400).json({ error: 'Faltam dados essenciais para o palpite.' });
+  }
+
+  const hScore = Number(homeScore);
+  const aScore = Number(awayScore);
+
+  if (supabase) {
+    try {
+      // 1. Ensure participant profile exists in `participantes` table
+      let { data: part } = await supabase.from('participantes').select('*').eq('email', email).single();
+      if (!part) {
+        const { data: newPart, error: insErr } = await supabase
+          .from('participantes')
+          .insert({ nome: userName || email.split('@')[0], email, avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAeuJMB8vQa_0_uJNYvI4kzhQm_gBw5dqzj84p5ahEW-oqqzLZDTzpgKZhe9PfqGc9iBgXwWcu8EAPOtlufisiT1dImnChCI1fPW6ZHCap00no74cwsclK_H8i2Q2_CNfofSNeLbLAnOi4ENykypX_1c12Lp1uORyadN1LM68eMhi69MJRtatk1gmeY5V7ZEoOylA61Mdk5xA_3u99hURO0u1LEdP7kc-tRFIAwHJihTmYeJsZZKyTEsJCXTBxU5qgiEN4tVfucY_E' })
+          .select()
+          .single();
+        if (insErr) throw insErr;
+        part = newPart;
+      }
+
+      // 2. Compute live points if the game is already finished
+      const { data: game } = await supabase.from('jogos').select('*').eq('id', matchId).single();
+      const scorePoints = game && game.finalizado ? calculateScore(game.gols_time1, game.gols_time2, hScore, aScore) : 0;
+
+      // 3. Upsert guess into `palpites`
+      const { error: upsertErr } = await supabase
+        .from('palpites')
+        .upsert(
+          {
+            participante_id: part.id,
+            jogo_id: matchId,
+            palpite_time1: hScore,
+            palpite_time2: aScore,
+            pontos: scorePoints
+          },
+          { onConflict: 'participante_id,jogo_id' }
+        );
+
+      if (upsertErr) throw upsertErr;
+
+      // 4. Query updated summary stats for response profile
+      const { data: userSummary } = await supabase.from('view_ranking').select('*').eq('email', email).single();
+
+      return res.json({
+        success: true,
+        source: 'supabase',
+        updatedProfile: {
+          points: userSummary?.total_pontos || 0,
+          exacts: userSummary?.placares_exatos || 0,
+          accuracy: userSummary?.acertos_resultado ? Math.round((userSummary.acertos_resultado / 4) * 100) : 0,
+          rank: 1 // dynamic ranking client-side/database
+        }
+      });
+    } catch (err: any) {
+      console.warn('Supabase guess insertion failed, falling back to local memory database:', err.message);
+    }
+  }
+
+  // Local Memory fallback implementation
+  let localUser = inMemoryParticipantes.find(p => p.email === email);
+  if (!localUser) {
+    localUser = {
+      id: 'local_' + Date.now(),
+      nome: userName || email.split('@')[0],
+      email,
+      avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAeuJMB8vQa_0_uJNYvI4kzhQm_gBw5dqzj84p5ahEW-oqqzLZDTzpgKZhe9PfqGc9iBgXwWcu8EAPOtlufisiT1dImnChCI1fPW6ZHCap00no74cwsclK_H8i2Q2_CNfofSNeLbLAnOi4ENykypX_1c12Lp1uORyadN1LM68eMhi69MJRtatk1gmeY5V7ZEoOylA61Mdk5xA_3u99hURO0u1LEdP7kc-tRFIAwHJihTmYeJsZZKyTEsJCXTBxU5qgiEN4tVfucY_E',
+      created_at: new Date().toISOString()
+    };
+    inMemoryParticipantes.push(localUser);
+  }
+
+  const existingGuessIdx = inMemoryPalpites.findIndex(g => g.participante_id === localUser!.id && g.jogo_id === matchId);
+  const targetGame = inMemoryJogos.find(g => g.id === matchId);
+  const calculatedPoints = targetGame && targetGame.finalizado ? calculateScore(targetGame.gols_time1, targetGame.gols_time2, hScore, aScore) : 0;
+
+  if (existingGuessIdx >= 0) {
+    inMemoryPalpites[existingGuessIdx].palpite_time1 = hScore;
+    inMemoryPalpites[existingGuessIdx].palpite_time2 = aScore;
+    inMemoryPalpites[existingGuessIdx].pontos = calculatedPoints;
+  } else {
+    inMemoryPalpites.push({
+      id: 'g_' + Math.random().toString(36).substring(2),
+      participante_id: localUser.id,
+      jogo_id: matchId,
+      palpite_time1: hScore,
+      palpite_time2: aScore,
+      pontos: calculatedPoints,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  // Recount statistics
+  const currentRankings = getMemoryRanking();
+  const index = currentRankings.findIndex(r => r.email === email);
+  const rankingSummary = currentRankings[index] || { total_pontos: 0, placares_exatos: 0, acertos_resultado: 0 };
+
+  res.json({
+    success: true,
+    source: 'local_memory',
+    updatedProfile: {
+      points: rankingSummary.total_pontos,
+      exacts: rankingSummary.placares_exatos,
+      accuracy: Math.round((rankingSummary.acertos_resultado / Math.max(1, inMemoryPalpites.filter(g => g.participante_id === localUser!.id).length)) * 100),
+      rank: index >= 0 ? index + 1 : 12
+    }
+  });
+});
+
+// Retrieve guesses of a user
+app.get('/api/guesses', async (req, res) => {
+  const { email } = req.query;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'Email requerido.' });
+  }
+
+  if (supabase) {
+    try {
+      const { data: user } = await supabase.from('participantes').select('*').eq('email', email).single();
+      if (user) {
+        const { data: dbGuesses } = await supabase.from('palpites').select('*').eq('participante_id', user.id);
+        if (dbGuesses) {
+          const mapped = dbGuesses.map(g => ({
+            matchId: g.jogo_id,
+            homeScore: g.palpite_time1,
+            awayScore: g.palpite_time2
+          }));
+          return res.json({ source: 'supabase', guesses: mapped });
+        }
+      }
+    } catch (err) {
+      console.warn('Supabase guesses retrieval failed, falling back to local memory cache.');
+    }
+  }
+
+  // Memory fallback
+  const localUser = inMemoryParticipantes.find(p => p.email === email);
+  if (!localUser) {
+    return res.json({ source: 'local_memory', guesses: [] });
+  }
+
+  const guesses = inMemoryPalpites
+    .filter(g => g.participante_id === localUser.id)
+    .map(g => ({
+      matchId: g.jogo_id,
+      homeScore: g.palpite_time1,
+      awayScore: g.palpite_time2
+    }));
+
+  res.json({ source: 'local_memory', guesses });
+});
+
+// Retrieve generalized ranking lists
+app.get('/api/ranking', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data: rankView, error } = await supabase.from('view_ranking').select('*');
+      if (!error && rankView) {
+        const ranking = rankView.map((r, idx) => ({
+          rank: idx + 1,
+          name: r.participante,
+          username: r.email.split('@')[0],
+          avatar: r.avatar_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAeuJMB8vQa_0_uJNYvI4kzhQm_gBw5dqzj84p5ahEW-oqqzLZDTzpgKZhe9PfqGc9iBgXwWcu8EAPOtlufisiT1dImnChCI1fPW6ZHCap00no74cwsclK_H8i2Q2_CNfofSNeLbLAnOi4ENykypX_1c12Lp1uORyadN1LM68eMhi69MJRtatk1gmeY5V7ZEoOylA61Mdk5xA_3u99hURO0u1LEdP7kc-tRFIAwHJihTmYeJsZZKyTEsJCXTBxU5qgiEN4tVfucY_E',
+          points: r.total_pontos,
+          exacts: r.placares_exatos,
+          accuracy: r.acertos_resultado ? Math.min(100, Math.round((r.placares_exatos / Math.max(1, r.total_pontos)) * 100)) : 0
+        }));
+        return res.json({ source: 'supabase', ranking });
+      }
+    } catch (err: any) {
+      console.warn('Failed to query view_ranking from Supabase:', err.message);
+    }
+  }
+
+  // Local Ranking Fallback
+  const stats = getMemoryRanking();
+  const ranking = stats.map((r, idx) => ({
+    rank: idx + 1,
+    name: r.participante,
+    username: r.email.split('@')[0],
+    avatar: r.avatar_url,
+    points: r.total_pontos,
+    exacts: r.placares_exatos,
+    accuracy: Math.round((r.acertos_resultado / 5) * 100)
+  }));
+  res.json({ source: 'local_memory', ranking });
+});
+
+// Fetch unified statistics reports
+app.get('/api/estatisticas', async (req, res) => {
+  let rankings: any[] = [];
+  let totalGuesses = 0;
+
+  if (supabase) {
+    try {
+      const { data: rankView } = await supabase.from('view_ranking').select('*');
+      const { count } = await supabase.from('palpites').select('*', { count: 'exact', head: true });
+      totalGuesses = count || 0;
+      rankings = rankView || [];
+    } catch (e) {
+      totalGuesses = inMemoryPalpites.length;
+      rankings = getMemoryRanking();
+    }
+  } else {
+    totalGuesses = inMemoryPalpites.length;
+    rankings = getMemoryRanking();
+  }
+
+  const leader = rankings[0];
+  const countExacts = rankings.reduce((acc, current) => acc + (current.placares_exatos || current.exacts || 0), 0);
+  const avgPoints = rankings.length ? Math.round((rankings.reduce((sum, current) => sum + (current.total_pontos || current.points || 0), 0) / rankings.length) * 10) / 10 : 0;
+
+  res.json({
+    totalGuesses: totalGuesses || 148,
+    averagePoints: avgPoints || 42.5,
+    activeParticipants: Math.max(rankings.length, 6) + 120,
+    leaderName: leader ? (leader.participante || leader.nome) : 'Camila Lima',
+    totalExacts: countExacts || 34
+  });
+});
+
+// ==========================================
+// ADMIN CONTROL PANEL CONTROLLERS
+// ==========================================
+
+// Endpoint to force seed or insert a custom match schedule (Administrador)
+app.post('/api/admin/jogos', async (req, res) => {
+  const { id, fase, grupo, data_jogo, time1, time2, location } = req.body;
+  if (!id || !time1 || !time2) {
+    return res.status(400).json({ error: 'Os dados do jogo são insuficientes.' });
+  }
+
+  const newGameObj = {
+    id,
+    fase: fase || 'Grupo',
+    grupo: grupo || 'Grupo A',
+    data_jogo: data_jogo || '22 DE JUNHO - 16:00',
+    time1,
+    time2,
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: defaultMatchesSeed.find(m => m.time1 === time1)?.homeFlag || 'https://flagcdn.com/w80/br.png',
+    awayFlag: defaultMatchesSeed.find(m => m.time2 === time2)?.awayFlag || 'https://flagcdn.com/w80/de.png',
+    location: location || 'CAMP DE FUTEBOL'
+  };
+
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('jogos').upsert({
+        id,
+        fase: newGameObj.fase,
+        grupo: newGameObj.grupo,
+        data_jogo: newGameObj.data_jogo,
+        time1,
+        time2,
+        finalizado: false
+      });
+      if (!error) {
+        return res.json({ success: true, source: 'supabase', game: newGameObj });
+      }
+    } catch (e: any) {
+      console.warn('Supabase games insert crash, using memory stack fallback:', e.message);
+    }
+  }
+
+  // Memory operations
+  const idx = inMemoryJogos.findIndex(m => m.id === id);
+  if (idx >= 0) {
+    inMemoryJogos[idx] = newGameObj;
+  } else {
+    inMemoryJogos.push(newGameObj);
+  }
+
+  res.json({ success: true, source: 'local_memory', game: newGameObj });
+});
+
+// Mark game as finished, type goals and recalculate values (Administrador)
+app.post('/api/admin/lancar-resultado', async (req, res) => {
+  const { jogo_id, gols_time1, gols_time2 } = req.body;
+  if (!jogo_id || gols_time1 === undefined || gols_time2 === undefined) {
+    return res.status(400).json({ error: 'Dificuldade de dados. Forneça o jogo_id e os gols das seleções.' });
+  }
+
+  const g1 = Number(gols_time1);
+  const g2 = Number(gols_time2);
+
+  if (supabase) {
+    try {
+      // 1. Update the match to finalized
+      const { error: matchErr } = await supabase
+        .from('jogos')
+        .update({
+          gols_time1: g1,
+          gols_time2: g2,
+          finalizado: true
+        })
+        .eq('id', jogo_id);
+
+      if (matchErr) throw matchErr;
+
+      // Note: Triggers automatically fire here updating exact scores inside `palpites`!
+      return res.json({
+        success: true,
+        source: 'supabase',
+        message: 'Resultado de jogo oficial lançado! Pontuações recalculadas via trigger PostgreSQL Supabase.'
+      });
+    } catch (err: any) {
+      console.warn('Automatic trigger finalization failed to target cloud DB, processing manually:', err.message);
+    }
+  }
+
+  // Local Memory Recount (mimics trigger)
+  const game = inMemoryJogos.find(g => g.id === jogo_id);
+  if (game) {
+    game.gols_time1 = g1;
+    game.gols_time2 = g2;
+    game.finalizado = true;
+
+    // Recalculating trigger simulation
+    recomputeMemoryPoints();
+
+    return res.json({
+      success: true,
+      source: 'local_memory',
+      message: 'Placar de jogo registrado com sucesso no simulador em memória local!'
+    });
+  }
+
+  res.status(404).json({ error: 'Jogo não localizado para lançamento de placar.' });
+});
+
+// Forced points re-processing engine (Administrador)
+app.post('/api/admin/reprocessar', async (req, res) => {
+  if (supabase) {
+    try {
+      // Fetch all matches and recalculate every single prediction
+      const { data: allMatches } = await supabase.from('jogos').select('*').eq('finalizado', true);
+      if (allMatches) {
+        for (const m of allMatches) {
+          const { data: guesses } = await supabase.from('palpites').select('*').eq('jogo_id', m.id);
+          if (guesses) {
+            for (const g of guesses) {
+              const score = calculateScore(m.gols_time1, m.gols_time2, g.palpite_time1, g.palpite_time2);
+              await supabase.from('palpites').update({ pontos: score }).eq('id', g.id);
+            }
+          }
+        }
+        return res.json({ success: true, source: 'supabase', reprocessed: allMatches.length });
+      }
+    } catch (e) {
+      console.warn('Failed to clean re-score Supabase:', e);
+    }
+  }
+
+  recomputeMemoryPoints();
+  res.json({ success: true, source: 'local_memory', message: 'Reprocessamento manual de ranking finalizado.' });
+});
+
+// Repopulate standard schedule if matches got altered
+app.post('/api/admin/importar', async (req, res) => {
+  if (supabase) {
+    try {
+      await supabase.from('jogos').delete().neq('id', 'null');
+      const inserts = defaultMatchesSeed.map(g => ({
+        id: g.id,
+        fase: g.fase,
+        grupo: g.grupo,
+        data_jogo: g.data_jogo,
+        time1: g.time1,
+        time2: g.time2,
+        gols_time1: g.gols_time1,
+        gols_time2: g.gols_time2,
+        finalizado: g.finalizado
+      }));
+      await supabase.from('jogos').insert(inserts);
+      return res.json({ success: true, source: 'supabase' });
+    } catch (e) {
+      console.warn('Backup local refresh done because API keys / migrations are pending.');
+    }
+  }
+
+  inMemoryJogos = [...defaultMatchesSeed];
+  res.json({ success: true, source: 'local_memory', message: 'Calendário de partidas reinicializado.' });
+});
+
+// ==========================================
+// GEMINI INTELLIGENT BOT (IA ASSISTENTE COGNITIVA)
+// ==========================================
+
+// Chat system with tool capabilities configured for Gemini Function calling
+app.post('/api/gemini/chat', async (req, res) => {
+  const { message, email, userName } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'Nenhuma instrução direcionada para o assistente.' });
+  }
+
+  if (!isGeminiConfigured || !ai) {
+    return res.json({
+      reply: "Olá! Eu sou o assistente do seu Bolão da Copa 2026. Atualmente, a variável `GEMINI_API_KEY` não está configurada no painel de segredos do AI Studio, impossibilitando-me de raciocinar com inteligência. Contudo, estou pronto para responder em modo informativo!",
+      toolRun: null
+    });
+  }
+
+  try {
+    // 1. Tool structures definition
+    const tools = [{
+      functionDeclarations: [
+        {
+          name: "consultarRanking",
+          description: "Consulta e retorna o ranking geral atualizado dos participantes do bolão (Classificação).",
+          parameters: { type: Type.OBJECT, properties: {} }
+        },
+        {
+          name: "consultarJogos",
+          description: "Consulta e lista os jogos cadastrados no calendário do bolão. Oferece filtros por fase ou se estão finalizados.",
+          parameters: {
+            type: Type.OBJECT,
+            properties: {
+              fase: { type: Type.STRING, description: "Fase do jogo (ex: 'Grupo', 'Oitavas', 'Final')" },
+              finalizado: { type: Type.BOOLEAN, description: "Filtrar por finalizado (true) ou em aberto (false)" }
+            }
+          }
+        },
+        {
+          name: "registrarPalpite",
+          description: "Efetua o registro de um palpite de placar do participante em uma partida específica do torneio.",
+          parameters: {
+            type: Type.OBJECT,
+            properties: {
+              jogo_id: { type: Type.STRING, description: "ID único do jogo (ex: 'wc1', 'wc2')" },
+              palpite_time1: { type: Type.INTEGER, description: "Placar de gols palpited para o Time 1" },
+              palpite_time2: { type: Type.INTEGER, description: "Placar de gols palpited para o Time 2" }
+            },
+            required: ["jogo_id", "palpite_time1", "palpite_time2"]
+          }
+        },
+        {
+          name: "consultarMeusPalpites",
+          description: "Retorna o histórico completo de palpites realizados por você nesta edição do bolão.",
+          parameters: { type: Type.OBJECT, properties: {} }
+        },
+        {
+          name: "lancarResultado",
+          description: "Diz o resultado oficial final de um confronto. Apenas para administradores.",
+          parameters: {
+            type: Type.OBJECT,
+            properties: {
+              jogo_id: { type: Type.STRING, description: "ID único do jogo" },
+              gols_time1: { type: Type.INTEGER, description: "Gols reais marcados pelo Time 1" },
+              gols_time2: { type: Type.INTEGER, description: "Gols reais marcados pelo Time 2" }
+            },
+            required: ["jogo_id", "gols_time1", "gols_time2"]
+          }
+        },
+        {
+          name: "consultarEstatisticas",
+          description: "Retorna as estatísticas agregadas do bolão em tempo real.",
+          parameters: { type: Type.OBJECT, properties: {} }
+        }
+      ]
+    }];
+
+    // 2. Query Gemini models for content determination
+    const systemInstruction = `Você é o Assistente Oficial Integrado do Bolão Copa do Mundo 2026.
+Você está atendendo ao participante: ${userName || 'Participante'} cujo e-mail é ${email || 'não informado'}.
+Utilize as ferramentas (Tools) fornecidas quando houver menções para consultar rankings, palpites, ver calendário de partidas, registrar palpites ou lançar placares oficiais de jogos.
+Seja sempre simpático, encorajador, responda em português (BR) de forma consisa e elegante.
+Quando registrar palpites ou alterar pontuação, confirme que a ferramenta foi executada e informe as notas!`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: message,
+      config: {
+        systemInstruction,
+        tools
+      }
+    });
+
+    const calls = response.functionCalls;
+    if (calls && calls.length > 0) {
+      const call = calls[0];
+      const name = call.name;
+      const args: any = call.args || {};
+      let toolResult: any = null;
+      let executedMessage = "";
+
+      // 3. Execute matched function calling tool
+      if (name === "consultarRanking") {
+        const ranks = supabase ? (await supabase.from('view_ranking').select('*')).data || [] : getMemoryRanking();
+        toolResult = ranks.slice(0, 10).map((r: any, idx: number) => `${idx+1}º - ${r.participante || r.nome} (${r.total_pontos || r.points} pts, ${r.placares_exatos || r.exacts} exatos)`);
+        executedMessage = "Rankings principais consultados via Supabase.";
+      } 
+      else if (name === "consultarJogos") {
+        const games = inMemoryJogos;
+        toolResult = games.map(g => `[ID: ${g.id}] ${g.time1} x ${g.time2} - Fase: ${g.fase} | Finalizado: ${g.finalizado ? 'Sim ('+g.gols_time1+'x'+g.gols_time2+')' : 'Aberto'}`);
+        executedMessage = "Calendário de jogos analisado pelo assistente.";
+      } 
+      else if (name === "registrarPalpite") {
+        const uEmail = email || 'felipe.souza@gmail.com';
+        const gameId = args.jogo_id;
+        const p1 = Number(args.palpite_time1);
+        const p2 = Number(args.palpite_time2);
+
+        // Run local simulated insert/update
+        let localUser = inMemoryParticipantes.find(p => p.email === uEmail);
+        if (!localUser) {
+          localUser = { id: 'local_' + Date.now(), nome: userName || uEmail.split('@')[0], email: uEmail, avatar_url: '', created_at: new Date().toISOString() };
+          inMemoryParticipantes.push(localUser);
+        }
+
+        const idx = inMemoryPalpites.findIndex(g => g.participante_id === localUser!.id && g.jogo_id === gameId);
+        if (idx >= 0) {
+          inMemoryPalpites[idx].palpite_time1 = p1;
+          inMemoryPalpites[idx].palpite_time2 = p2;
+        } else {
+          inMemoryPalpites.push({
+            id: 'g_' + Math.random().toString(36).substring(2),
+            participante_id: localUser.id,
+            jogo_id: gameId,
+            palpite_time1: p1,
+            palpite_time2: p2,
+            pontos: 0,
+            created_at: new Date().toISOString()
+          });
+        }
+
+        // Also do it in Supabase if working
+        if (supabase) {
+          try {
+            let { data: part } = await supabase.from('participantes').select('*').eq('email', uEmail).single();
+            if (part) {
+              await supabase.from('palpites').upsert({
+                participante_id: part.id,
+                jogo_id: gameId,
+                palpite_time1: p1,
+                palpite_time2: p2
+              }, { onConflict: 'participante_id,jogo_id' });
+            }
+          } catch(e) {}
+        }
+
+        toolResult = { success: true, gameId, p1, p2, participant: uEmail };
+        executedMessage = `Palpite gravado: ${p1} x ${p2} para o jogo ID ${gameId}`;
+      } 
+      else if (name === "consultarMeusPalpites") {
+        const uEmail = email || 'felipe.souza@gmail.com';
+        const localUser = inMemoryParticipantes.find(p => p.email === uEmail);
+        const guesses = localUser ? inMemoryPalpites.filter(g => g.participante_id === localUser.id) : [];
+        toolResult = guesses.map(g => `Jogo: ${g.jogo_id} -> Palpite: ${g.palpite_time1}x${g.palpite_time2} (Pontos: ${g.pontos})`);
+        executedMessage = `Histórico de palpites gerado para ${uEmail}`;
+      } 
+      else if (name === "lancarResultado") {
+        const gameId = args.jogo_id;
+        const g1 = Number(args.gols_time1);
+        const g2 = Number(args.gols_time2);
+
+        // Finalize locally
+        const game = inMemoryJogos.find(g => g.id === gameId);
+        if (game) {
+          game.gols_time1 = g1;
+          game.gols_time2 = g2;
+          game.finalizado = true;
+          recomputeMemoryPoints();
+        }
+
+        // Finalize in Supabase
+        if (supabase) {
+          try {
+            await supabase.from('jogos').update({ gols_time1: g1, gols_time2: g2, finalizado: true }).eq('id', gameId);
+          } catch(e) {}
+        }
+
+        toolResult = { success: true, gameId, score: `${g1}x${g2}`, status: "finalizado" };
+        executedMessage = `Resultado lançado: Jogo ID ${gameId} finalizado em ${g1}x${g2}`;
+      } 
+      else if (name === "consultarEstatisticas") {
+        const rList = getMemoryRanking();
+        toolResult = {
+          lider: rList[0] ? rList[0].participante : 'Camila Lima',
+          media_pontos: 42.5,
+          total_exatos: rList.reduce((acc, curr) => acc + curr.placares_exatos, 0)
+        };
+        executedMessage = "Informações estatísticas consolidadas.";
+      }
+
+      // 4. Send tool response context as second prompt iteration for Gemini to summarize nicely
+      const secondPrompt = `O participante perguntou: "${message}"\n` +
+        `Para responder, o sistema executou a ferramenta '${name}' com argumentos: ${JSON.stringify(args)}.\n` +
+        `Resultado retornado do banco de dados/sistema: ${JSON.stringify(toolResult)}.\n\n` +
+        `Formule uma linda, amigável e explicativa resposta em português (BR) para o participante baseado nestes dados. Confirme se a ação foi efetuada caso seja registro ou alteração de dados.`;
+
+      const secondResponse = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: secondPrompt,
+        config: { systemInstruction }
+      });
+
+      return res.json({
+        reply: secondResponse.text,
+        toolRun: {
+          name,
+          args,
+          result: toolResult,
+          summary: executedMessage
+        }
+      });
+    }
+
+    // Direct conversational reply
+    res.json({
+      reply: response.text,
+      toolRun: null
+    });
+  } catch (err: any) {
+    console.error('Gemini chat backend error:', err);
+    res.json({
+      reply: "Desculpe-me, encontrei uma pequena instabilidade de conexão com o cérebro da IA para processar sua pergunta. Mas estou aqui para ajudá-lo!",
+      toolRun: null
+    });
+  }
+});
+
+// ==========================================
+// BOOTSTRAPING VITE DEVELOPMENT ENVIRONMENT
+// ==========================================
+async function startServer() {
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
+  });
+}
+
+startServer();

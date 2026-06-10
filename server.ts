@@ -482,6 +482,312 @@ app.get('/api/config-status', (req, res) => {
   });
 });
 
+// Google OAuth Endpoints
+app.get('/api/auth/google/url', (req, res) => {
+  const origin = (req.query.origin || '').toString();
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+
+  if (!clientId || !process.env.GOOGLE_CLIENT_SECRET) {
+    // If not configured, return the simulated/mock login URL endpoint
+    return res.json({ 
+      url: `/api/auth/google/simulated-popup?origin=${encodeURIComponent(origin)}`,
+      configured: false 
+    });
+  }
+
+  // Real Google Auth URL
+  const redirectUri = `${origin}/api/auth/google/callback`;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    state: origin
+  });
+
+  res.json({ 
+    url: `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
+    configured: true 
+  });
+});
+
+app.get('/api/auth/google/simulated-popup', (req, res) => {
+  const origin = (req.query.origin || '').toString();
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Fazer login com o Google</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-[#f0f4f9] font-sans min-h-screen flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-xl w-full max-w-[450px] p-10 relative overflow-hidden">
+        <div class="h-1 bg-blue-500 absolute top-0 left-0 right-0"></div>
+
+        <div class="flex justify-center mb-6">
+          <svg class="h-8" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        </div>
+
+        <h1 class="text-2xl font-semibold text-gray-900 text-center mb-2">Fazer login com o Google</h1>
+        <p class="text-sm text-gray-600 text-center mb-6 font-medium">Bolão Copa 2026</p>
+
+        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-800 space-y-2">
+          <p class="font-bold flex items-center gap-1">
+            <span>ℹ️</span> Ambiente de Homologação / Visualização
+          </p>
+          <p>Você pode testar o login simulado imediatamente selecionando ou digitando um usuário de teste abaixo.</p>
+          <p class="text-[10px] text-gray-500 italic">Dica: Adicione <strong>GOOGLE_CLIENT_ID</strong> e <strong>GOOGLE_CLIENT_SECRET</strong> para usar o login real.</p>
+        </div>
+
+        <form id="google-mock-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nome Completo</label>
+            <input id="mock-nome" type="text" value="Felipe Souza" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:border-blue-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">E-mail</label>
+            <input id="mock-email" type="email" value="felipe.souza@gmail.com" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:border-blue-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">URL do Avatar (Opcional)</label>
+            <input id="mock-avatar" type="text" value="https://lh3.googleusercontent.com/aida-public/AB6AXuAeuJMB8vQa_0_uJNYvI4kzhQm_gBw5dqzj84p5ahEW-oqqzLZDTzpgKZhe9PfqGc9iBgXwWcu8EAPOtlufisiT1dImnChCI1fPW6ZHCap00no74cwsclK_H8i2Q2_CNfofSNeLbLAnOi4ENykypX_1c12Lp1uORyadN1LM68eMhi69MJRtatk1gmeY5V7ZEoOylA61Mdk5xA_3u99hURO0u1LEdP7kc-tRFIAwHJihTmYeJsZZKyTEsJCXTBxU5qgiEN4tVfucY_E" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:border-blue-500 focus:outline-none text-xs" />
+          </div>
+
+          <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition-all shadow-md">
+            Prosseguir como Google User
+          </button>
+        </form>
+      </div>
+
+      <script>
+        document.getElementById('google-mock-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const nome = document.getElementById('mock-nome').value;
+          const email = document.getElementById('mock-email').value;
+          const avatar = document.getElementById('mock-avatar').value;
+
+          const res = await fetch('/api/auth/google/create-mock-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, email, avatar })
+          });
+          const data = await res.json();
+
+          if (window.opener) {
+            window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', user: data.user }, '*');
+            window.close();
+          } else {
+            alert('Erro: Janela pai não encontrada.');
+          }
+        });
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+app.post('/api/auth/google/create-mock-session', async (req, res) => {
+  const { nome, email, avatar } = req.body;
+  if (!email || !nome) {
+    return res.status(400).json({ error: 'Faltam dados essenciais para o cadastro de teste.' });
+  }
+
+  const finalAvatar = avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
+
+  if (supabase) {
+    try {
+      const googleId = 'google_mock_' + Math.random().toString(36).substring(2, 9);
+      let { data: part } = await supabase.from('participantes').select('*').eq('email', email).single();
+      let finalId = part?.id || googleId;
+      if (!part) {
+        const { error: insErr } = await supabase.from('participantes').insert({
+          id: googleId,
+          nome,
+          email,
+          avatar_url: finalAvatar
+        });
+        if (insErr) {
+          console.warn('Erro ao inserir perfil de teste com Supabase:', insErr.message);
+        }
+      }
+
+      const { data: rankingView } = await supabase.from('view_ranking').select('*').eq('email', email).single();
+
+      return res.json({
+        user: {
+          id: finalId,
+          name: part?.nome || nome,
+          email: email,
+          avatar_url: part?.avatar_url || finalAvatar,
+          points: rankingView?.total_pontos || 0,
+          exacts: rankingView?.placares_exatos || 0,
+          accuracy: rankingView?.acertos_resultado ? Math.round((rankingView.acertos_resultado / 4) * 100) : 0,
+          rank: 12,
+          isLoggedIn: true
+        }
+      });
+    } catch (err) {
+      console.error('Falha ao processar mock google user com Supabase:', err);
+    }
+  }
+
+  const existing = inMemoryParticipantes.find(p => p.email.toLowerCase() === email.toLowerCase());
+  let finalId = existing?.id || ('google_mock_' + Math.random().toString(36).substring(2, 9));
+  if (!existing) {
+    inMemoryParticipantes.push({
+      id: finalId,
+      nome,
+      email,
+      avatar_url: finalAvatar,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  const memoryRankings = getMemoryRanking();
+  const index = memoryRankings.findIndex(r => r.email.toLowerCase() === email.toLowerCase());
+  const stats = memoryRankings[index] || { total_pontos: 0, placares_exatos: 0, acertos_resultado: 0 };
+
+  return res.json({
+    user: {
+      id: finalId,
+      name: existing?.nome || nome,
+      email: email,
+      avatar_url: existing?.avatar_url || finalAvatar,
+      points: stats.total_pontos,
+      exacts: stats.placares_exatos,
+      accuracy: stats.acertos_resultado ? Math.round((stats.acertos_resultado / 4) * 100) : 0,
+      rank: index >= 0 ? index + 1 : inMemoryParticipantes.length,
+      isLoggedIn: true,
+      simulated: true
+    }
+  });
+});
+
+app.get('/api/auth/google/callback', async (req, res) => {
+  const code = (req.query.code || '').toString();
+  const state = (req.query.state || '').toString(); // holding client origin
+
+  if (!code) {
+    return res.status(400).send('Código de autorização inválido.');
+  }
+
+  try {
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        redirect_uri: `${state}/api/auth/google/callback`,
+        grant_type: 'authorization_code'
+      })
+    });
+
+    const tokens: any = await tokenResponse.json();
+
+    if (tokens.error) {
+      throw new Error(tokens.error_description || tokens.error);
+    }
+
+    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokens.access_token}` }
+    });
+
+    const profile: any = await userInfoResponse.json();
+    const email = profile.email;
+    const nome = profile.name || email.split('@')[0];
+    const finalAvatar = profile.picture || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
+
+    let responseUser: any = null;
+
+    if (supabase) {
+      const googleId = 'google_' + profile.sub;
+      let { data: part } = await supabase.from('participantes').select('*').eq('email', email).single();
+      let finalId = part?.id || googleId;
+      if (!part) {
+        await supabase.from('participantes').insert({
+          id: googleId,
+          nome,
+          email,
+          avatar_url: finalAvatar
+        });
+      }
+
+      const { data: rankingView } = await supabase.from('view_ranking').select('*').eq('email', email).single();
+
+      responseUser = {
+        id: finalId,
+        name: part?.nome || nome,
+        email: email,
+        avatar_url: part?.avatar_url || finalAvatar,
+        points: rankingView?.total_pontos || 0,
+        exacts: rankingView?.placares_exatos || 0,
+        accuracy: rankingView?.acertos_resultado ? Math.round((rankingView.acertos_resultado / 4) * 100) : 0,
+        rank: 12,
+        isLoggedIn: true
+      };
+    } else {
+      const existing = inMemoryParticipantes.find(p => p.email.toLowerCase() === email.toLowerCase());
+      let finalId = existing?.id || ('google_' + profile.sub);
+      if (!existing) {
+        inMemoryParticipantes.push({
+          id: finalId,
+          nome,
+          email,
+          avatar_url: finalAvatar,
+          created_at: new Date().toISOString()
+        });
+      }
+
+      const memoryRankings = getMemoryRanking();
+      const index = memoryRankings.findIndex(r => r.email.toLowerCase() === email.toLowerCase());
+      const stats = memoryRankings[index] || { total_pontos: 0, placares_exatos: 0, acertos_resultado: 0 };
+
+      responseUser = {
+        id: finalId,
+        name: existing?.nome || nome,
+        email: email,
+        avatar_url: existing?.avatar_url || finalAvatar,
+        points: stats.total_pontos,
+        exacts: stats.placares_exatos,
+        accuracy: stats.acertos_resultado ? Math.round((stats.acertos_resultado / 4) * 100) : 0,
+        rank: index >= 0 ? index + 1 : inMemoryParticipantes.length,
+        isLoggedIn: true,
+        simulated: true
+      };
+    }
+
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', user: ${JSON.stringify(responseUser)} }, '*');
+              window.close();
+            } else {
+              window.location.origin = '${state}';
+            }
+          </script>
+          <p>Autenticação efetuada com sucesso! Esta janela fechará automaticamente...</p>
+        </body>
+      </html>
+    `);
+  } catch (err: any) {
+    console.error('Falha no processo de Callback Google OAuth:', err);
+    res.status(500).send(`Erro ao fazer login com o Google: ${err.message || err}`);
+  }
+});
+
+
 // Fetch unified match calendar (combining with flags metadata)
 app.get('/api/matches', async (req, res) => {
   if (supabase) {

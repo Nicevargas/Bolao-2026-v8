@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { UserProfile } from '../types';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
@@ -16,6 +16,54 @@ export default function Login({ onLogin }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const origin = event.origin;
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('3000')) {
+        return;
+      }
+
+      if (event.data?.type === 'GOOGLE_AUTH_SUCCESS' && event.data?.user) {
+        onLogin(event.data.user);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onLogin]);
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const currentOrigin = window.location.origin;
+      const res = await fetch(`/api/auth/google/url?origin=${encodeURIComponent(currentOrigin)}`);
+      
+      if (!res.ok) {
+        throw new Error('Falha ao obter URL de autenticação com o Google.');
+      }
+
+      const data = await res.json();
+      if (!data.url) {
+        throw new Error('URL de autenticação inválida.');
+      }
+
+      const authWindow = window.open(
+        data.url,
+        'google_oauth_popup',
+        'width=500,height=600'
+      );
+
+      if (!authWindow) {
+        setError('O bloqueador de popups impediu a janela do Google. Por favor, libere popups e tente novamente.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erro ao inicializar fluxo com o Google.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,17 +95,13 @@ export default function Login({ onLogin }: LoginProps) {
         body: JSON.stringify(payload)
       });
 
-      if (res.status === 404) {
-        throw new Error('STATUS_404_ERROR');
-      }
-
       let data: any;
       const responseText = await res.text();
       try {
         data = JSON.parse(responseText);
       } catch (parseErr) {
         console.error('Resposta não-JSON do servidor:', responseText);
-        throw new Error(`STATUS_PARSE_ERROR_CODE_${res.status}`);
+        throw new Error(`Erro de servidor (não retornou JSON válido). Status da requisição: ${res.status}. O servidor pode estar inicializando ou com instabilidade temporária no Supabase.`);
       }
 
       if (!res.ok) {
@@ -74,13 +118,8 @@ export default function Login({ onLogin }: LoginProps) {
       let translated = msg;
       
       const lower = msg.toLowerCase();
-      if (msg === 'STATUS_404_ERROR') {
-        translated = 'O servidor retornou erro 404 (Não Encontrado). O servidor do bolão pode estar inicializando ou as rotas de API ainda não carregaram. Por favor, aguarde de 10 a 30 segundos para que a conexão com o Supabase e o servidor se estabilize e tente novamente.';
-      } else if (msg.startsWith('STATUS_PARSE_ERROR_CODE_')) {
-        const code = msg.replace('STATUS_PARSE_ERROR_CODE_', '');
-        translated = `Erro de inicialização do servidor (Status ${code}). O sistema retornou uma resposta inesperada. Isso costuma ocorrer enquanto o banco de dados Supabase e o servidor estão terminando de inicializar. Aguarde alguns instantes e tente novamente.`;
-      } else if (lower.includes('invalid login credentials') || lower.includes('invalid_grant')) {
-        translated = 'E-mail ou senha incorretos. Por favor, verifique seus dados e tente novamente.';
+      if (lower.includes('invalid login credentials') || lower.includes('invalid_grant')) {
+        translated = 'E-mail ou senha incorretos. Por favor, tente novamente.';
       } else if (lower.includes('user already registered') || lower.includes('already exists') || lower.includes('unique constraint')) {
         translated = 'Este e-mail já está cadastrado em nosso sistema.';
       } else if (lower.includes('password should be at least 6 characters')) {
@@ -240,6 +279,30 @@ export default function Login({ onLogin }: LoginProps) {
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative py-2 flex items-center justify-center">
+              <div className="absolute inset-x-0 h-px bg-white/10"></div>
+              <span className="relative bg-[#041235] px-3 text-[10px] uppercase font-extrabold text-on-surface-variant tracking-wider">
+                ou continue com
+              </span>
+            </div>
+
+            {/* Google Login Button */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full h-11 bg-white hover:bg-gray-100 text-gray-900 border border-gray-200 font-bold text-xs uppercase tracking-wider rounded-inner transition-all transform active:scale-95 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              <span>Entrar com Google</span>
             </button>
           </form>
 

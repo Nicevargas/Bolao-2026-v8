@@ -267,6 +267,56 @@ export default function App() {
     localStorage.removeItem('bolao_user');
   };
 
+  // Verify if user session saved in localStorage still exists in database
+  useEffect(() => {
+    if (!user.isLoggedIn || !user.email) return;
+
+    let isMounted = true;
+    async function verifyUserExists() {
+      try {
+        const res = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: user.email })
+        });
+        if (res.ok && isMounted) {
+          const data = await res.json();
+          if (!data.exists) {
+            console.warn('Sessão inválida: Usuário não foi encontrado na base de dados. Efetuando logout automático.');
+            handleLogout();
+          } else if (data.user) {
+            // Update local state with latest statistics from DB if they changed
+            const updatedUser = {
+              ...user,
+              name: data.user.name,
+              points: data.user.points,
+              exacts: data.user.exacts,
+              accuracy: data.user.accuracy,
+              rank: data.user.rank
+            };
+            if (
+              user.name !== updatedUser.name ||
+              user.points !== updatedUser.points ||
+              user.exacts !== updatedUser.exacts ||
+              user.accuracy !== updatedUser.accuracy ||
+              user.rank !== updatedUser.rank
+            ) {
+              setUser(updatedUser);
+              localStorage.setItem('bolao_user', JSON.stringify(updatedUser));
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao verificar sessão do usuário:', err);
+      }
+    }
+
+    verifyUserExists();
+    return () => {
+      isMounted = false;
+    };
+  }, [user.isLoggedIn, user.email]);
+
   const handleSaveProfile = async (name: string, email: string) => {
     try {
       const res = await fetch('/api/auth/update-profile', {
@@ -601,7 +651,7 @@ export default function App() {
               {activeTab === 'Apostas' && <Apostas matches={matches} onSaveGuess={handleSaveGuess} />}
               {activeTab === 'Ranking' && (
                 <Ranking
-                  participants={rankingList.length > 0 ? rankingList : defaultParticipants}
+                  participants={config?.supabase ? rankingList : (rankingList.length > 0 ? rankingList : defaultParticipants)}
                   standings={standings}
                   isLoadingStandings={isLoadingStandings}
                   configStatus={config}

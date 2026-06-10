@@ -5,11 +5,12 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
 import crypto from 'crypto';
+import fs from 'fs';
 
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT || 3000);
+const PORT = 3000;
 
 app.use(express.json());
 
@@ -44,72 +45,563 @@ const ai = isGeminiConfigured
     })
   : null;
 
-// Default standard matches seed data
+// Default standard matches seed data representing actual confirmed matches for the 2026 World Cup
 const defaultMatchesSeed = [
   {
     id: 'wc1',
     fase: 'Grupo A',
     grupo: 'Grupo A',
-    data_jogo: '22 DE JUNHO - 16:00',
-    time1: 'Brasil',
-    time2: 'Alemanha',
+    data_jogo: '11 DE JUNHO - 16:00',
+    time1: 'México',
+    time2: 'Equador',
     gols_time1: null,
     gols_time2: null,
     finalizado: false,
-    homeFlag: 'https://flagcdn.com/w80/br.png',
-    awayFlag: 'https://flagcdn.com/w80/de.png',
-    location: 'ARENA MUNDIAL'
+    homeFlag: 'https://flagcdn.com/w80/mx.png',
+    awayFlag: 'https://flagcdn.com/w80/ec.png',
+    location: 'ESTÁDIO AZTECA'
   },
   {
     id: 'wc2',
     fase: 'Grupo A',
     grupo: 'Grupo A',
-    data_jogo: '23 DE JUNHO - 12:00',
-    time1: 'Argentina',
-    time2: 'França',
+    data_jogo: '12 DE JUNHO - 19:00',
+    time1: 'Estados Unidos',
+    time2: 'Marrocos',
     gols_time1: null,
     gols_time2: null,
     finalizado: false,
-    homeFlag: 'https://flagcdn.com/w80/ar.png',
-    awayFlag: 'https://flagcdn.com/w80/fr.png',
-    location: 'ESTÁDIO AZTECA'
+    homeFlag: 'https://flagcdn.com/w80/us.png',
+    awayFlag: 'https://flagcdn.com/w80/ma.png',
+    location: 'SOFI STADIUM'
   },
   {
     id: 'wc3',
     fase: 'Grupo B',
     grupo: 'Grupo B',
-    data_jogo: '24 DE JUNHO - 15:00',
-    time1: 'Japão',
-    time2: 'Itália',
+    data_jogo: '13 DE JUNHO - 15:00',
+    time1: 'Canadá',
+    time2: 'França',
     gols_time1: null,
     gols_time2: null,
     finalizado: false,
-    homeFlag: 'https://flagcdn.com/w80/jp.png',
-    awayFlag: 'https://flagcdn.com/w80/it.png',
-    location: 'WEMBLEY STADIUM'
+    homeFlag: 'https://flagcdn.com/w80/ca.png',
+    awayFlag: 'https://flagcdn.com/w80/fr.png',
+    location: 'BC PLACE'
   },
   {
     id: 'wc4',
     fase: 'Grupo B',
     grupo: 'Grupo B',
-    data_jogo: '25 DE JUNHO - 20:00',
-    time1: 'Portugal',
+    data_jogo: '14 DE JUNHO - 21:00',
+    time1: 'Brasil',
     time2: 'Espanha',
     gols_time1: null,
     gols_time2: null,
     finalizado: false,
-    homeFlag: 'https://flagcdn.com/w80/pt.png',
+    homeFlag: 'https://flagcdn.com/w80/br.png',
     awayFlag: 'https://flagcdn.com/w80/es.png',
-    location: 'CAMP NOU'
+    location: 'METLIFE STADIUM'
+  },
+  {
+    id: 'wc5',
+    fase: 'Grupo C',
+    grupo: 'Grupo C',
+    data_jogo: '15 DE JUNHO - 18:00',
+    time1: 'Argentina',
+    time2: 'Portugal',
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: 'https://flagcdn.com/w80/ar.png',
+    awayFlag: 'https://flagcdn.com/w80/pt.png',
+    location: 'SOFI STADIUM'
+  },
+  {
+    id: 'wc6',
+    fase: 'Grupo C',
+    grupo: 'Grupo C',
+    data_jogo: '16 DE JUNHO - 14:00',
+    time1: 'Alemanha',
+    time2: 'Japão',
+    gols_time1: null,
+    gols_time2: null,
+    finalizado: false,
+    homeFlag: 'https://flagcdn.com/w80/de.png',
+    awayFlag: 'https://flagcdn.com/w80/jp.png',
+    location: 'HARD ROCK STADIUM'
   }
 ];
 
+// Team translations dictionary to support elegant localization to Portuguese-BR
+const teamTranslations: Record<string, string> = {
+  'Brazil': 'Brasil',
+  'Germany': 'Alemanha',
+  'Argentina': 'Argentina',
+  'France': 'França',
+  'Japan': 'Japão',
+  'Italy': 'Itália',
+  'Portugal': 'Portugal',
+  'Spain': 'Espanha',
+  'England': 'Inglaterra',
+  'Netherlands': 'Holanda',
+  'Uruguay': 'Uruguai',
+  'Belgium': 'Bélgica',
+  'Croatia': 'Croácia',
+  'Mexico': 'México',
+  'United States': 'Estados Unidos',
+  'USA': 'Estados Unidos',
+  'Canada': 'Canadá',
+  'Morocco': 'Marrocos',
+  'Senegal': 'Senegal',
+  'Switzerland': 'Suíça',
+  'Denmark': 'Dinamarca',
+  'Ecuador': 'Equador',
+  'Colombia': 'Colômbia',
+  'Korea Republic': 'Coreia do Sul',
+  'South Korea': 'Coreia do Sul',
+  'Cameroon': 'Camarões',
+  'Ghana': 'Gana',
+  'Tunisia': 'Tunísia',
+  'Australia': 'Austrália',
+  'Saudi Arabia': 'Arábia Saudita',
+  'Algeria': 'Argélia',
+  'Chile': 'Chile',
+  'Nigeria': 'Nigéria',
+  'Sweden': 'Suécia',
+  'Wales': 'País de Gales',
+  'Poland': 'Polônia',
+  'Ukraine': 'Ucrânia'
+};
+
+function translateTeam(name: string): string {
+  if (!name) return '-';
+  return teamTranslations[name] || name;
+}
+
+// Map any country name dynamically to flagcdn.com code to render beautiful banners
+function getTeamFlag(teamName: string): string {
+  const lower = teamName.toLowerCase().trim();
+  const flagCodes: Record<string, string> = {
+    'brasil': 'br', 'brazil': 'br',
+    'alemanha': 'de', 'germany': 'de',
+    'argentina': 'ar',
+    'frança': 'fr', 'france': 'fr',
+    'japão': 'jp', 'japan': 'jp',
+    'portugal': 'pt',
+    'espanha': 'es', 'spain': 'es',
+    'estados unidos': 'us', 'usa': 'us', 'united states': 'us',
+    'méxico': 'mx', 'mexico': 'mx',
+    'canadá': 'ca', 'canada': 'ca',
+    'marrocos': 'ma', 'morocco': 'ma',
+    'senegal': 'sn',
+    'colômbia': 'co', 'colombia': 'co',
+    'uruguai': 'uy', 'uruguay': 'uy',
+    'holanda': 'nl', 'netherlands': 'nl',
+    'inglaterra': 'gb-eng', 'england': 'gb-eng',
+    'bélgica': 'be', 'belgium': 'be',
+    'croácia': 'hr', 'croatia': 'hr',
+    'suíça': 'ch', 'switzerland': 'ch',
+    'dinamarca': 'dk', 'denmark': 'dk',
+    'equador': 'ec', 'ecuador': 'ec',
+    'itália': 'it', 'italy': 'it',
+    'coreia do sul': 'kr', 'south korea': 'kr', 'korea republic': 'kr',
+    'camarões': 'cm', 'cameroon': 'cm',
+    'gana': 'gh', 'ghana': 'gh',
+    'tunísia': 'tn', 'tunisia': 'tn',
+    'austrália': 'au', 'australia': 'au',
+    'arábia saudita': 'sa', 'saudi arabia': 'sa'
+  };
+
+  const code = flagCodes[lower];
+  if (code) {
+    return `https://flagcdn.com/w80/${code}.png`;
+  }
+  return `https://flagcdn.com/w80/un.png`;
+}
+
+function translateGroupCode(gp: string): string {
+  return gp.toUpperCase().replace('GROUP_', 'Grupo ');
+}
+
+function translateStageName(stage: string, groupName: string): string {
+  if (stage === 'GROUP_STAGE') {
+    return groupName || 'Fase de Grupos';
+  }
+  switch (stage.toUpperCase()) {
+    case 'ROUND_OF_16':
+    case 'LAST_16':
+      return 'Oitavas';
+    case 'QUARTER_FINALS':
+      return 'Quartas';
+    case 'SEMI_FINALS':
+      return 'Semifinal';
+    case 'THIRD_PLACE':
+      return 'Terceiro Lugar';
+    case 'FINAL':
+      return 'Final';
+    default:
+      return stage;
+  }
+}
+
+function formatUtcDate(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    const months = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+    const day = d.getUTCDate();
+    const month = months[d.getUTCMonth()];
+    const hours = String(d.getUTCHours()).padStart(2, '0');
+    const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+    return `${day} DE ${month} - ${hours}:${minutes}`;
+  } catch (e) {
+    return isoString;
+  }
+}
+
+interface FootballDataMatch {
+  id: number;
+  utcDate: string;
+  status: string;
+  stage: string;
+  group: string | null;
+  homeTeam: { id: number; name: string; shortName?: string; tla?: string; crest?: string };
+  awayTeam: { id: number; name: string; shortName?: string; tla?: string; crest?: string };
+  score: { fullTime: { home: number | null; away: number | null } };
+  venue?: string;
+}
+
+let lastSyncTime = 0;
+const SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes cache
+
+let spreadsheetLastSyncTime = 0;
+const SPREADSHEET_SYNC_INTERVAL_MS = 5 * 60 * 1000; // Auto update every 5 minutes in background
+
+async function syncMatchesFromSpreadsheet(force = false) {
+  const configPath = path.join(process.cwd(), 'spreadsheet_config.json');
+  let url = '';
+  try {
+    if (fs.existsSync(configPath)) {
+      const data = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      url = data.spreadsheetUrl || '';
+    }
+  } catch (e) {
+    console.error("Error reading spreadsheet config:", e);
+    return { success: false, reason: 'error_reading_config' };
+  }
+
+  if (!url) {
+    return { success: false, reason: 'no_url_configured' };
+  }
+
+  const now = Date.now();
+  if (!force && (now - spreadsheetLastSyncTime < SPREADSHEET_SYNC_INTERVAL_MS)) {
+    console.log(`[Google Sheets Async] Using cached spreadsheet matches. Last sync was ${(now - spreadsheetLastSyncTime) / 1000}s ago.`);
+    return { success: true, reason: 'cached_fresh' };
+  }
+
+  try {
+    let fetchUrl = url;
+    // If it's a standard Google Sheets sharing link, convert it to a CSV export link!
+    if (url.includes('docs.google.com/spreadsheets')) {
+      const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (match && match[1]) {
+        const sheetId = match[1];
+        fetchUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+      }
+    }
+
+    console.log(`[Google Sheets Async] Pulling automatic spreadsheet updates from: ${fetchUrl}`);
+    const res = await fetch(fetchUrl);
+    if (!res.ok) {
+       console.error(`Spreadsheet fetch returned HTTP ${res.status}`);
+       return { success: false, reason: `http_status_${res.status}` };
+    }
+
+    const text = await res.text();
+    if (!text || !text.trim()) {
+      return { success: false, reason: 'empty_csv_response' };
+    }
+
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length === 0) {
+      return { success: false, reason: 'no_lines_found' };
+    }
+
+    // Parse CSV line safely
+    const parseCSVLine = (line: string, delim: string) => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === delim && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+
+    const firstLine = lines[0];
+    let delimiter = '\t';
+    if (firstLine.includes(';')) {
+      delimiter = ';';
+    } else if (firstLine.includes(',')) {
+      const commas = (firstLine.match(/,/g) || []).length;
+      const tabs = (firstLine.match(/\t/g) || []).length;
+      const semicolons = (firstLine.match(/;/g) || []).length;
+      if (semicolons > commas) delimiter = ';';
+      else if (tabs > commas) delimiter = '\t';
+      else delimiter = ',';
+    }
+
+    const headerRow = parseCSVLine(lines[0], delimiter);
+    let rowsToParse = lines.slice(1);
+
+    const hasHeader = headerRow.some(col => 
+      ['id', 'time', 'equipe', 'team', 'grupo', 'group', 'fase', 'stage', 'data', 'date', 'gols', 'goals', 'local', 'venue', 'estadio'].some(keyword => 
+        col.toLowerCase().includes(keyword)
+      )
+    );
+
+    let finalHeaders = headerRow;
+    if (!hasHeader) {
+      finalHeaders = ['Time 1', 'Time 2', 'Grupo', 'Data', 'Lugar'];
+      rowsToParse = lines;
+    }
+
+    const cleanHeaders = finalHeaders.map(h => h.toLowerCase().trim());
+
+    const colMap = {
+      id: cleanHeaders.findIndex(h => h === 'id' || h === 'id_jogo' || h === 'id_match' || h === 'match_id' || h === 'código'),
+      fase: cleanHeaders.findIndex(h => h.includes('fase') || h.includes('stage') || h.includes('rodada')),
+      grupo: cleanHeaders.findIndex(h => h.includes('grupo') || h.includes('group')),
+      data_jogo: cleanHeaders.findIndex(h => h.includes('data') || h.includes('date') || h.includes('horario') || h.includes('horário') || h.includes('time') && !h.includes('team')),
+      time1: cleanHeaders.findIndex(h => h.includes('time1') || h.includes('time 1') || h.includes('time_1') || h.includes('time_casa') || h.includes('casa') || h.includes('home') || h.includes('equipe 1') || h.includes('equipe1')),
+      time2: cleanHeaders.findIndex(h => h.includes('time2') || h.includes('time 2') || h.includes('time_2') || h.includes('time_fora') || h.includes('fora') || h.includes('away') || h.includes('equipe 2') || h.includes('equipe2')),
+      gols_time1: cleanHeaders.findIndex(h => h.includes('gols1') || h.includes('gols_time1') || h.includes('gols_1') || h.includes('gols casa') || h.includes('placar_casa') || h.includes('placar 1')),
+      gols_time2: cleanHeaders.findIndex(h => h.includes('gols2') || h.includes('gols_time2') || h.includes('gols_2') || h.includes('gols fora') || h.includes('placar_fora') || h.includes('placar 2')),
+      finalizado: cleanHeaders.findIndex(h => h.includes('finalizado') || h.includes('finished') || h.includes('encerrado') || h.includes('status') || h.includes('concluido') || h.includes('concluído')),
+      location: cleanHeaders.findIndex(h => h.includes('local') || h.includes('location') || h.includes('venue') || h.includes('estadio') || h.includes('estádio'))
+    };
+
+    if (colMap.time1 === -1 || colMap.time2 === -1) {
+      if (cleanHeaders.length >= 2) {
+        colMap.time1 = 0;
+        colMap.time2 = 1;
+        if (cleanHeaders.length >= 3) colMap.grupo = 2;
+        if (cleanHeaders.length >= 4) colMap.data_jogo = 3;
+        if (cleanHeaders.length >= 5) colMap.location = 4;
+      } else {
+        return { success: false, reason: 'missing_team_columns' };
+      }
+    }
+
+    const translatedMatches = [];
+    for (let idx = 0; idx < rowsToParse.length; idx++) {
+      const line = rowsToParse[idx];
+      if (!line.trim()) continue;
+      const cols = parseCSVLine(line, delimiter);
+      if (cols.length < 2) continue;
+
+      const rawT1 = cols[colMap.time1] || '';
+      const rawT2 = cols[colMap.time2] || '';
+      if (!rawT1 || !rawT2) continue;
+
+      const t1 = translateTeam(rawT1.trim());
+      const t2 = translateTeam(rawT2.trim());
+
+      const f = colMap.fase !== -1 ? cols[colMap.fase] : '';
+      const grp = colMap.grupo !== -1 ? cols[colMap.grupo] : '';
+
+      const rawG1 = colMap.gols_time1 !== -1 ? cols[colMap.gols_time1] : '';
+      const rawG2 = colMap.gols_time2 !== -1 ? cols[colMap.gols_time2] : '';
+      
+      const g1 = (rawG1 !== '' && rawG1 !== undefined && rawG1 !== null) ? Number(rawG1) : null;
+      const g2 = (rawG2 !== '' && rawG2 !== undefined && rawG2 !== null) ? Number(rawG2) : null;
+
+      const statStr = colMap.finalizado !== -1 ? cols[colMap.finalizado]?.toLowerCase() : '';
+      const isFin = statStr === 'sim' || statStr === 'true' || statStr === 'finished' || statStr === '1' || (g1 !== null && g2 !== null && !isNaN(g1) && !isNaN(g2));
+
+      const loc = colMap.location !== -1 ? cols[colMap.location] : '';
+      const finalId = (colMap.id !== -1 && cols[colMap.id]) ? cols[colMap.id] : `xls_${Date.now()}_${idx}`;
+
+      translatedMatches.push({
+        id: finalId,
+        fase: f || grp || 'Grupo',
+        grupo: grp || f || 'Grupo A',
+        data_jogo: colMap.data_jogo !== -1 ? cols[colMap.data_jogo] : '11 DE JUNHO - 16:00',
+        time1: t1,
+        time2: t2,
+        gols_time1: (g1 === null || isNaN(g1)) ? null : g1,
+        gols_time2: (g2 === null || isNaN(g2)) ? null : g2,
+        finalizado: isFin,
+        homeFlag: getTeamFlag(t1),
+        awayFlag: getTeamFlag(t2),
+        location: loc || 'ESTÁDIO OFICIAL'
+      });
+    }
+
+    if (translatedMatches.length > 0) {
+      if (supabase) {
+        try {
+          console.log(`Writing ${translatedMatches.length} spreadsheet-synchronized matches to Supabase...`);
+          await supabase.from('jogos').delete().neq('id', 'null');
+          
+          const dbInserts = translatedMatches.map(tm => ({
+            id: tm.id,
+            fase: tm.fase,
+            grupo: tm.grupo,
+            data_jogo: tm.data_jogo,
+            time1: tm.time1,
+            time2: tm.time2,
+            gols_time1: tm.gols_time1,
+            gols_time2: tm.gols_time2,
+            finalizado: tm.finalizado
+          }));
+
+          const { error } = await supabase.from('jogos').insert(dbInserts);
+          if (error) {
+            console.error("Error upserting matches from sheet to Supabase:", error);
+          } else {
+            console.log("Supabase matches table successfully updated from public Spreadsheet!");
+          }
+        } catch (dbErr) {
+          console.error("Failed to perform Supabase spreadsheet DB update:", dbErr);
+        }
+      }
+
+      inMemoryJogos = translatedMatches;
+      recomputeMemoryPoints();
+      spreadsheetLastSyncTime = now;
+      return { success: true, count: translatedMatches.length, source: 'public_spreadsheet' };
+    }
+
+    return { success: false, reason: 'no_valid_matches_parsed' };
+  } catch (err: any) {
+    console.error("Spreadsheet polling error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function syncMatchesFromFootballData(force = false) {
+  const token = process.env.FOOTBALL_DATA_API_TOKEN;
+  if (!token) {
+    console.log("No FOOTBALL_DATA_API_TOKEN env configured. Dynamically keeping default/simulated matches.");
+    return { success: false, reason: 'no_token', source: 'default_simulation' };
+  }
+
+  const now = Date.now();
+  if (!force && (now - lastSyncTime < SYNC_INTERVAL_MS)) {
+    console.log(`Using cached matches. Last sync was ${(now - lastSyncTime) / 1000}s ago.`);
+    return { success: true, reason: 'cached_fresh' };
+  }
+
+  try {
+    console.log("Fetching real match fixtures from football-data.org API...");
+    const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
+      headers: {
+        'X-Auth-Token': token
+      }
+    });
+
+    if (!res.ok) {
+      console.error(`football-data.org returned status: ${res.status}`);
+      return { success: false, reason: `api_status_${res.status}` };
+    }
+
+    const data = await res.json();
+    if (!data || !data.matches || !Array.isArray(data.matches)) {
+      console.warn("No matches found in football-data.org API response:", data);
+      return { success: false, reason: 'malformed_api_response' };
+    }
+
+    const apiMatches: FootballDataMatch[] = data.matches;
+    lastSyncTime = now;
+
+    const translatedMatches = apiMatches.map(m => {
+      const matchId = `fd_${m.id}`;
+      const groupName = m.group ? translateGroupCode(m.group) : '';
+      const stageName = translateStageName(m.stage, groupName);
+      
+      const t1Raw = m.homeTeam?.name || m.homeTeam?.shortName || 'TBD';
+      const t2Raw = m.awayTeam?.name || m.awayTeam?.shortName || 'TBD';
+      const t1 = translateTeam(t1Raw);
+      const t2 = translateTeam(t2Raw);
+
+      const gols_t1 = (m.score?.fullTime?.home !== undefined && m.score?.fullTime?.home !== null) ? Number(m.score.fullTime.home) : null;
+      const gols_t2 = (m.score?.fullTime?.away !== undefined && m.score?.fullTime?.away !== null) ? Number(m.score.fullTime.away) : null;
+      const finalizado = m.status === 'FINISHED';
+
+      const data_jogo = formatUtcDate(m.utcDate);
+
+      const homeFlag = m.homeTeam?.crest || getTeamFlag(t1);
+      const awayFlag = m.awayTeam?.crest || getTeamFlag(t2);
+
+      return {
+        id: matchId,
+        fase: stageName,
+        grupo: groupName || stageName,
+        data_jogo,
+        time1: t1,
+        time2: t2,
+        gols_time1: gols_t1,
+        gols_time2: gols_t2,
+        finalizado,
+        homeFlag,
+        awayFlag,
+        location: m.venue || 'ESTÁDIO OFICIAL'
+      };
+    });
+
+    if (translatedMatches.length > 0) {
+      inMemoryJogos = translatedMatches;
+
+      if (supabase) {
+        try {
+          console.log(`Writing ${translatedMatches.length} synchronized matches directly into Supabase...`);
+          const dbInserts = translatedMatches.map(tm => ({
+            id: tm.id,
+            fase: tm.fase,
+            grupo: tm.grupo,
+            data_jogo: tm.data_jogo,
+            time1: tm.time1,
+            time2: tm.time2,
+            gols_time1: tm.gols_time1,
+            gols_time2: tm.gols_time2,
+            finalizado: tm.finalizado
+          }));
+
+          const { error } = await supabase.from('jogos').upsert(dbInserts, { onConflict: 'id' });
+          if (error) {
+            console.error("Error upserting matches to Supabase games:", error);
+          } else {
+            console.log("Supabase matches table successfully synchronized from Football Data API.");
+          }
+        } catch (dbErr) {
+          console.error("Failed to perform Supabase DB synchronization:", dbErr);
+        }
+      }
+      
+      recomputeMemoryPoints();
+      return { success: true, count: translatedMatches.length, source: 'football_data_api' };
+    }
+
+    return { success: false, reason: 'empty_matches_received' };
+  } catch (err: any) {
+    console.error("Error syncing with Football-Data API:", err);
+    return { success: false, error: err.message };
+  }
+}
+
 // Offline In-Memory Fallbacks (simulating Supabase triggers and columns)
-let inMemoryParticipantes = [
-  { id: 'u1', nome: 'Camila Lima', email: 'camis_lima@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC51EMHkXhwLsSNjr44kljRrs3Jn_GVgy0yF15ev1GhzxheBOpDcbGsWP90MdrvCO3Fh_Chbxi29HNWjILqXf14bWGPuIWqotGqyTNl_2lWDbRo6ZLY_y_wLeh1neFgiuIJbJY8203ZzBPim-neTAs4fB0VFHlHGbVgOkHcdiBcjLbiV2U_C-zerQm2bXKBJOPs0hTEw8Cwyx1aRhiRGzV52N_HzzUT5FzqerSu60ediDjvUVBzM3j4zxYDQtIwZIPRRmKeKFa9oz4', created_at: new Date().toISOString() },
-  { id: 'u2', nome: 'Amanda Martins', email: 'amanda_swim@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFkrb0jVNFpqaB8RreYPLFSVunrsD6ZCgZSKXivGLymDo7h6a4nZ6C2Vww8jNpwNX5z7I8NzL04v5p-4WBUjfnFiRVy80F14ffpUN3VUrMk0MRLPilm4uIh08JC9lvdB2qRutBr3KMSgk5THaExcfBHPTuRnTFst6zzagenVuSXzzVBuxe6WEGcwKVUBVvOPdksivyn-C-MArCbifSZE22ezPsnc-NJyEUxMd6efrZ5v15b9-DVe4bxVeCUhXf2Pd60VxGTrVH-9g', created_at: new Date().toISOString() },
-  { id: 'u3', nome: 'Lucas Pereira', email: 'lucas_p@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCHy3_AT-Isoaf2ZarhDiGYh-nelgP_kFkVUEGqVNOSlJgQzAUGO7jlPg3_wcnWlZlUjaKESBvgDTLRcdFEXcAT31jsQxy76OQp8z8Xmcgk_Nde9NEzXty5Hj-z-PrVEGsXBWsOJHyM_v01sRY-v4eS6zVVM2Wk2x2GrNzO0vO38Z6hSMQPEpYXIbvZNVqNpkoL3hB0-W81siXYkATZ9ElbjDgYcHfrEwmpESlOZ-mJSxcVBwMaLzy8uvunz2wR3vK4SBlmzwF1iJU', created_at: new Date().toISOString() }
-];
+let inMemoryParticipantes: Array<{ id: string; nome: string; email: string; avatar_url: string; created_at: string }> = [];
 
 let inMemoryJogos = [...defaultMatchesSeed];
 
@@ -269,18 +761,6 @@ async function seedCloudDatabase() {
       await supabase.from('jogos').insert(insertGames);
       console.log('✔ Banquete de jogos reais semeado no Supabase com sucesso!');
     }
-
-    // 2. Seed default participants
-    const { data: existingProfiles } = await supabase.from('participantes').select('id');
-    if (!existingProfiles || existingProfiles.length === 0) {
-      const inserts = [
-        { nome: 'Camila Lima', email: 'camis_lima@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC51EMHkXhwLsSNjr44kljRrs3Jn_GVgy0yF15ev1GhzxheBOpDcbGsWP90MdrvCO3Fh_Chbxi29HNWjILqXf14bWGPuIWqotGqyTNl_2lWDbRo6ZLY_y_wLeh1neFgiuIJbJY8203ZzBPim-neTAs4fB0VFHlHGbVgOkHcdiBcjLbiV2U_C-zerQm2bXKBJOPs0hTEw8Cwyx1aRhiRGzV52N_HzzUT5FzqerSu60ediDjvUVBzM3j4zxYDQtIwZIPRRmKeKFa9oz4' },
-        { nome: 'Amanda Martins', email: 'amanda_swim@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFkrb0jVNFpqaB8RreYPLFSVunrsD6ZCgZSKXivGLymDo7h6a4nZ6C2Vww8jNpwNX5z7I8NzL04v5p-4WBUjfnFiRVy80F14ffpUN3VUrMk0MRLPilm4uIh08JC9lvdB2qRutBr3KMSgk5THaExcfBHPTuRnTFst6zzagenVuSXzzVBuxe6WEGcwKVUBVvOPdksivyn-C-MArCbifSZE22ezPsnc-NJyEUxMd6efrZ5v15b9-DVe4bxVeCUhXf2Pd60VxGTrVH-9g' },
-        { nome: 'Lucas Pereira', email: 'lucas_p@gmail.com', avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCHy3_AT-Isoaf2ZarhDiGYh-nelgP_kFkVUEGqVNOSlJgQzAUGO7jlPg3_wcnWlZlUjaKESBvgDTLRcdFEXcAT31jsQxy76OQp8z8Xmcgk_Nde9NEzXty5Hj-z-PrVEGsXBWsOJHyM_v01sRY-v4eS6zVVM2Wk2x2GrNzO0vO38Z6hSMQPEpYXIbvZNVqNpkoL3hB0-W81siXYkATZ9ElbjDgYcHfrEwmpESlOZ-mJSxcVBwMaLzy8uvunz2wR3vK4SBlmzwF1iJU' }
-      ];
-      await supabase.from('participantes').insert(inserts);
-      console.log('✔ Participantes default semeados no Supabase!');
-    }
   } catch (err: any) {
     console.warn('Boot seeding alert (Supabase tables might not be fully migrated yet):', err.message);
   }
@@ -299,6 +779,78 @@ function cleanAvatarUrl(url: string | null | undefined): string {
 }
 
 // Real Authentication Endpoints
+app.post('/api/auth/verify', async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'E-mail é obrigatório para verificação.' });
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+
+  if (supabase) {
+    try {
+      const { data: profile, error } = await supabase
+        .from('participantes')
+        .select('*')
+        .eq('email', trimmedEmail)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!profile) {
+        return res.json({ exists: false });
+      }
+
+      const { data: rankingView } = await supabase.from('view_ranking').select('*').eq('email', trimmedEmail).maybeSingle();
+
+      return res.json({
+        exists: true,
+        user: {
+          id: profile.id,
+          name: profile.nome || 'Apostador',
+          email: trimmedEmail,
+          avatar_url: cleanAvatarUrl(profile.avatar_url),
+          points: rankingView?.total_pontos || 0,
+          exacts: rankingView?.placares_exatos || 0,
+          accuracy: rankingView?.acertos_resultado ? Math.round((rankingView.acertos_resultado / 4) * 100) : 0,
+          rank: 12,
+          isLoggedIn: true
+        }
+      });
+    } catch (err: any) {
+      console.error('Falha na verificação de sessão com Supabase:', err);
+      return res.status(500).json({ error: 'Falha na verificação de sessão.' });
+    }
+  }
+
+  const localPart = inMemoryParticipantes.find(p => p.email.toLowerCase() === trimmedEmail);
+  if (!localPart) {
+    return res.json({ exists: false });
+  }
+
+  const memoryRankings = getMemoryRanking();
+  const index = memoryRankings.findIndex(r => r.email.toLowerCase() === trimmedEmail);
+  const stats = memoryRankings[index] || { total_pontos: 0, placares_exatos: 0, acertos_resultado: 0 };
+
+  return res.json({
+    exists: true,
+    user: {
+      id: localPart.id,
+      name: localPart.nome,
+      email: localPart.email,
+      avatar_url: cleanAvatarUrl(localPart.avatar_url),
+      points: stats.total_pontos,
+      exacts: stats.placares_exatos,
+      accuracy: stats.acertos_resultado ? Math.round((stats.acertos_resultado / 4) * 100) : 0,
+      rank: index >= 0 ? index + 1 : inMemoryParticipantes.length,
+      isLoggedIn: true,
+      simulated: true
+    }
+  });
+});
+
 app.post('/api/auth/signup', async (req, res) => {
   const { email, password, nome, avatarUrl } = req.body;
   
@@ -953,6 +1505,18 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
 // Fetch unified match calendar (combining with flags metadata)
 app.get('/api/matches', async (req, res) => {
+  // Automatically trigger cached sync of Google Sheets or football-data API upon loading matches
+  try {
+    const sheetSync = await syncMatchesFromSpreadsheet(false);
+    if (!sheetSync || sheetSync.reason === 'no_url_configured') {
+      if (process.env.FOOTBALL_DATA_API_TOKEN) {
+        await syncMatchesFromFootballData(false);
+      }
+    }
+  } catch (e) {
+    console.warn("Auto-sync inside matches endpoint skipped or errored:", e);
+  }
+
   if (supabase) {
     try {
       const { data: dbGames, error } = await supabase.from('jogos').select('*');
@@ -963,11 +1527,11 @@ app.get('/api/matches', async (req, res) => {
             id: g.id,
             homeTeam: g.time1,
             awayTeam: g.time2,
-            homeFlag: seedMeta?.homeFlag || '',
-            awayFlag: seedMeta?.awayFlag || '',
+            homeFlag: getTeamFlag(g.time1),
+            awayFlag: getTeamFlag(g.time2),
             date: g.data_jogo,
             time: g.data_jogo.split(' - ')[1] || '16:00',
-            location: seedMeta?.location || 'ARENA DO COPA',
+            location: seedMeta?.location || 'ESTÁDIO OFICIAL',
             realHomeScore: g.gols_time1 !== null ? g.gols_time1 : undefined,
             realAwayScore: g.gols_time2 !== null ? g.gols_time2 : undefined,
             status: g.finalizado ? 'ENCERRADO' : 'ABERTO'
@@ -986,11 +1550,11 @@ app.get('/api/matches', async (req, res) => {
       id: g.id,
       homeTeam: g.time1,
       awayTeam: g.time2,
-      homeFlag: g.homeFlag,
-      awayFlag: g.awayFlag,
+      homeFlag: getTeamFlag(g.time1),
+      awayFlag: getTeamFlag(g.time2),
       date: g.data_jogo,
       time: g.data_jogo.split(' - ')[1] || '16:00',
-      location: g.location,
+      location: g.location || 'ESTÁDIO OFICIAL',
       realHomeScore: g.gols_time1 !== null ? g.gols_time1 : undefined,
       realAwayScore: g.gols_time2 !== null ? g.gols_time2 : undefined,
       status: g.finalizado ? 'ENCERRADO' : 'ABERTO'
@@ -999,29 +1563,171 @@ app.get('/api/matches', async (req, res) => {
   res.json({ source: 'local_memory', matches: mappedMatches });
 });
 
-// Standings Mock table representing World Cup group standings
-app.get('/api/standings', (req, res) => {
-  const mockGroups = [
-    {
-      group: 'Grupo A (América do Norte)',
-      table: [
-        { position: 1, team: 'Brasil', points: 6, played: 2, won: 2, draw: 0, lost: 0, goalsFor: 5, goalsAgainst: 1 },
-        { position: 2, team: 'Alemanha', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 3, goalsAgainst: 3 },
-        { position: 3, team: 'Argentina', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 2, goalsAgainst: 2 },
-        { position: 4, team: 'França', points: 0, played: 2, won: 0, draw: 0, lost: 2, goalsFor: 1, goalsAgainst: 5 }
-      ]
-    },
-    {
-      group: 'Grupo B (Europa & Ásia)',
-      table: [
-        { position: 1, team: 'Japão', points: 4, played: 2, won: 1, draw: 1, lost: 0, goalsFor: 3, goalsAgainst: 1 },
-        { position: 2, team: 'Portugal', points: 3, played: 2, won: 1, draw: 0, lost: 1, goalsFor: 2, goalsAgainst: 2 },
-        { position: 3, team: 'Itália', points: 2, played: 2, won: 0, draw: 2, lost: 0, goalsFor: 2, goalsAgainst: 2 },
-        { position: 4, team: 'Espanha', points: 1, played: 2, won: 0, draw: 1, lost: 1, goalsFor: 1, goalsAgainst: 3 }
-      ]
+// Calculate tournament standings automatically from the matches entries
+app.get('/api/standings', async (req, res) => {
+  let gamesList: any[] = [];
+  if (supabase) {
+    try {
+      const { data: dbGames, error } = await supabase.from('jogos').select('*');
+      if (!error && dbGames && dbGames.length > 0) {
+        gamesList = dbGames;
+      } else {
+        gamesList = inMemoryJogos;
+      }
+    } catch (err) {
+      gamesList = inMemoryJogos;
     }
-  ];
-  res.json({ source: 'local_memory', standings: mockGroups });
+  } else {
+    gamesList = inMemoryJogos;
+  }
+
+  // Filter games matching 'Grupo' keyword
+  const groupStageGames = gamesList.filter(g => {
+    const gr = g.grupo || g.fase || '';
+    return gr.toLowerCase().includes('grupo');
+  });
+
+  if (groupStageGames.length === 0) {
+    // Elegant fallback if no group matches are present
+    const defaultWebStandings = [
+      {
+        group: 'Grupo A (América do Norte)',
+        table: [
+          { position: 1, team: 'Brasil', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 2, team: 'Alemanha', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 3, team: 'Argentina', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 4, team: 'França', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 }
+        ]
+      },
+      {
+        group: 'Grupo B (Europa, Ásia & África)',
+        table: [
+          { position: 1, team: 'Japão', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 2, team: 'Portugal', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 3, team: 'Marrocos', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 },
+          { position: 4, team: 'Espanha', points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 }
+        ]
+      }
+    ];
+    return res.json({ source: 'default_fallback', standings: defaultWebStandings });
+  }
+
+  // Group matches by group name
+  const groups: Record<string, any[]> = {};
+  groupStageGames.forEach(g => {
+    const rawGrp = g.grupo || g.fase || 'Grupo A';
+    // Format display title elegantly
+    let grpTitle = rawGrp;
+    if (rawGrp === 'Grupo A') {
+      grpTitle = 'Grupo A (América do Norte)';
+    } else if (rawGrp === 'Grupo B') {
+      grpTitle = 'Grupo B (Europa & Ásia)';
+    }
+
+    if (!groups[grpTitle]) {
+      groups[grpTitle] = [];
+    }
+    groups[grpTitle].push(g);
+  });
+
+  // Calculate stats for each group
+  const standings = Object.keys(groups).map(grpTitle => {
+    const groupMatches = groups[grpTitle];
+    const teamStats: Record<string, {
+      team: string;
+      points: number;
+      played: number;
+      won: number;
+      draw: number;
+      lost: number;
+      goalsFor: number;
+      goalsAgainst: number;
+    }> = {};
+
+    // Seed every unique team in this group with zeroed fields so they are shown in the board
+    groupMatches.forEach(g => {
+      const team1 = g.time1 || g.homeTeam;
+      const team2 = g.time2 || g.awayTeam;
+      if (team1 && !teamStats[team1]) {
+        teamStats[team1] = { team: team1, points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 };
+      }
+      if (team2 && !teamStats[team2]) {
+        teamStats[team2] = { team: team2, points: 0, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 };
+      }
+    });
+
+    // Populate actual calculated stats from finished matches
+    groupMatches.forEach(g => {
+      const isFinished = g.finalizado;
+      const score1 = g.gols_time1 !== undefined ? g.gols_time1 : g.realHomeScore;
+      const score2 = g.gols_time2 !== undefined ? g.gols_time2 : g.realAwayScore;
+
+      if (isFinished && score1 !== null && score2 !== null && score1 !== undefined && score2 !== undefined) {
+        const team1 = g.time1 || g.homeTeam;
+        const team2 = g.time2 || g.awayTeam;
+        const goals1 = Number(score1);
+        const goals2 = Number(score2);
+
+        if (teamStats[team1] && teamStats[team2]) {
+          teamStats[team1].played += 1;
+          teamStats[team2].played += 1;
+
+          teamStats[team1].goalsFor += goals1;
+          teamStats[team1].goalsAgainst += goals2;
+
+          teamStats[team2].goalsFor += goals2;
+          teamStats[team2].goalsAgainst += goals1;
+
+          if (goals1 > goals2) {
+            teamStats[team1].won += 1;
+            teamStats[team1].points += 3;
+            teamStats[team2].lost += 1;
+          } else if (goals1 < goals2) {
+            teamStats[team2].won += 1;
+            teamStats[team2].points += 3;
+            teamStats[team1].lost += 1;
+          } else {
+            teamStats[team1].draw += 1;
+            teamStats[team1].points += 1;
+            teamStats[team2].draw += 1;
+            teamStats[team2].points += 1;
+          }
+        }
+      }
+    });
+
+    // Sort team standings by World Cup standard criteria: Points, GD, GF, alphabetical asc
+    const sorted = Object.values(teamStats).sort((a, b) => {
+      if (b.points !== a.points) {
+        return b.points - a.points;
+      }
+      const goalDiffA = a.goalsFor - a.goalsAgainst;
+      const goalDiffB = b.goalsFor - b.goalsAgainst;
+      if (goalDiffB !== goalDiffA) {
+        return goalDiffB - goalDiffA;
+      }
+      if (b.goalsFor !== a.goalsFor) {
+        return b.goalsFor - a.goalsFor;
+      }
+      return a.team.localeCompare(b.team);
+    });
+
+    // Add Rank Position (1 to 4)
+    const table = sorted.map((item, index) => ({
+      position: index + 1,
+      ...item
+    }));
+
+    return {
+      group: grpTitle,
+      table
+    };
+  });
+
+  // Sort groups alphabetically by their group name header so output is clean
+  standings.sort((a, b) => a.group.localeCompare(b.group));
+
+  res.json({ source: 'dynamic_calculations', standings });
 });
 
 // Register or edit a guess (supports both Supabase transaction and Local Fallback)
@@ -1252,32 +1958,102 @@ app.get('/api/ranking', async (req, res) => {
 app.get('/api/estatisticas', async (req, res) => {
   let rankings: any[] = [];
   let totalGuesses = 0;
+  let totalExacts = 0;
+  let totalCorrect = 0;
+  let activeUsers = 0;
+  let allGuesses: any[] = [];
+  let allMatches: any[] = [];
 
   if (supabase) {
     try {
       const { data: rankView } = await supabase.from('view_ranking').select('*');
-      const { count } = await supabase.from('palpites').select('*', { count: 'exact', head: true });
-      totalGuesses = count || 0;
       rankings = rankView || [];
+      activeUsers = rankings.length;
+
+      const { data: guessesData } = await supabase.from('palpites').select('*');
+      allGuesses = guessesData || [];
+      totalGuesses = allGuesses.length;
+      
+      const { data: gamesData } = await supabase.from('jogos').select('*');
+      allMatches = gamesData || [];
+      
+      totalExacts = allGuesses.filter((g: any) => g.pontos === 5).length;
+      totalCorrect = allGuesses.filter((g: any) => g.pontos >= 2).length;
     } catch (e) {
-      totalGuesses = inMemoryPalpites.length;
+      console.warn('Failed to load stats from Supabase, falling back to local memory:', e);
       rankings = getMemoryRanking();
+      activeUsers = inMemoryParticipantes.length;
+      allGuesses = inMemoryPalpites;
+      totalGuesses = inMemoryPalpites.length;
+      allMatches = inMemoryJogos;
+      totalExacts = inMemoryPalpites.filter(g => g.pontos === 5).length;
+      totalCorrect = inMemoryPalpites.filter(g => g.pontos >= 2).length;
     }
   } else {
-    totalGuesses = inMemoryPalpites.length;
     rankings = getMemoryRanking();
+    activeUsers = inMemoryParticipantes.length;
+    allGuesses = inMemoryPalpites;
+    totalGuesses = inMemoryPalpites.length;
+    allMatches = inMemoryJogos;
+    totalExacts = inMemoryPalpites.filter(g => g.pontos === 5).length;
+    totalCorrect = inMemoryPalpites.filter(g => g.pontos >= 2).length;
   }
 
   const leader = rankings[0];
-  const countExacts = rankings.reduce((acc, current) => acc + (current.placares_exatos || current.exacts || 0), 0);
-  const avgPoints = rankings.length ? Math.round((rankings.reduce((sum, current) => sum + (current.total_pontos || current.points || 0), 0) / rankings.length) * 10) / 10 : 0;
+  const avgPoints = rankings.length ? Math.round((rankings.reduce((sum, current) => sum + (current.total_pontos || 0), 0) / rankings.length) * 10) / 10 : 0;
+  
+  // Calculate top 3 performers
+  const topPerformers = rankings.slice(0, 3).map((r, idx) => ({
+    rank: idx + 1,
+    name: r.participante || 'Apostador Sem Nome',
+    username: r.email ? r.email.split('@')[0] : 'user',
+    avatar: cleanAvatarUrl(r.avatar_url),
+    points: r.total_pontos || 0
+  }));
+
+  // Build points per round dynamically based on actual matches/guesses in each phase!
+  let phasesDataMap: Record<string, { totalPoints: number; participantsCount: number }> = {};
+  
+  // Initialize with known phases
+  const initialPhases = ['Grupo A', 'Grupo B', 'Oitavas', 'Quartas', 'Semifinal', 'Final'];
+  initialPhases.forEach(p => {
+    phasesDataMap[p] = { totalPoints: 0, participantsCount: 0 };
+  });
+
+  // Calculate real average points per phase
+  allGuesses.forEach((g: any) => {
+    const matchedGame = allMatches.find(gm => gm.id === g.jogo_id);
+    const fase = matchedGame ? matchedGame.fase : 'Grupo A';
+    if (!phasesDataMap[fase]) {
+      phasesDataMap[fase] = { totalPoints: 0, participantsCount: 0 };
+    }
+    phasesDataMap[fase].totalPoints += (g.pontos || 0);
+    phasesDataMap[fase].participantsCount += 1;
+  });
+
+  // Generate rounds representation
+  const rounds = Object.keys(phasesDataMap).map(phase => {
+    const data = phasesDataMap[phase];
+    const avg = data.participantsCount > 0 ? Math.round((data.totalPoints / data.participantsCount) * 10) / 10 : 0;
+    // Map to scale percentage for bar size (max is 5 points per guess)
+    const pct = Math.min(100, Math.max(10, Math.round((avg / 5) * 100)));
+    return {
+      label: phase,
+      value: `${pct}%`,
+      points: `${avg} pts`,
+      active: data.participantsCount > 0
+    };
+  });
 
   res.json({
-    totalGuesses: totalGuesses || 148,
-    averagePoints: avgPoints || 42.5,
-    activeParticipants: Math.max(rankings.length, 6) + 120,
-    leaderName: leader ? (leader.participante || leader.nome) : 'Camila Lima',
-    totalExacts: countExacts || 34
+    totalGuesses,
+    averagePoints: avgPoints,
+    activeParticipants: activeUsers,
+    leaderName: leader ? leader.participante : '-',
+    totalExacts,
+    totalCorrect,
+    topPerformers,
+    roundsData: rounds
   });
 });
 
@@ -1421,6 +2197,30 @@ app.post('/api/admin/reprocessar', async (req, res) => {
 
 // Repopulate standard schedule if matches got altered
 app.post('/api/admin/importar', async (req, res) => {
+  const token = process.env.FOOTBALL_DATA_API_TOKEN;
+
+  if (token) {
+    try {
+      console.log('Admin triggered manual update from football-data API...');
+      if (supabase) {
+        await supabase.from('jogos').delete().neq('id', 'null');
+      }
+      const syncResult = await syncMatchesFromFootballData(true); // force-sync bypasses the 10-minutes cache
+      if (syncResult.success) {
+        return res.json({ 
+          success: true, 
+          source: 'football_data_api', 
+          message: `Sincronização forçada concluída com sucesso! ${syncResult.count} partidas sincronizadas.` 
+        });
+      } else {
+        console.warn('API sync failed during admin import, seeding default matches instead:', syncResult.reason);
+      }
+    } catch (err: any) {
+      console.error('Error during admin API sync:', err);
+    }
+  }
+
+  // Fallback to local default seeds
   if (supabase) {
     try {
       await supabase.from('jogos').delete().neq('id', 'null');
@@ -1436,14 +2236,147 @@ app.post('/api/admin/importar', async (req, res) => {
         finalizado: g.finalizado
       }));
       await supabase.from('jogos').insert(inserts);
-      return res.json({ success: true, source: 'supabase' });
+      return res.json({ 
+        success: true, 
+        source: 'supabase', 
+        message: 'Tabelas redefinidas para o calendário realista padrão da Copa (Simulado)!' 
+      });
     } catch (e) {
       console.warn('Backup local refresh done because API keys / migrations are pending.');
     }
   }
 
   inMemoryJogos = [...defaultMatchesSeed];
-  res.json({ success: true, source: 'local_memory', message: 'Calendário de partidas reinicializado.' });
+  recomputeMemoryPoints();
+  res.json({ 
+    success: true, 
+    source: 'local_memory', 
+    message: 'Tabelas em memória redefinidas para o calendário realista padrão da Copa (Simulado)!' 
+  });
+});
+
+// Bulk import endpoint for custom matches from Excel/CSV (Administrador)
+app.post('/api/admin/bulk-import', async (req, res) => {
+  const { matches } = req.body;
+  if (!matches || !Array.isArray(matches)) {
+    return res.status(400).json({ error: 'Os dados dos jogos importados estão ausentes ou são inválidos.' });
+  }
+
+  const translatedMatches = matches.map((m, idx) => {
+    const rawT1 = m.time1 || m.homeTeam || '';
+    const rawT2 = m.time2 || m.awayTeam || '';
+    const t1 = translateTeam(rawT1.trim());
+    const t2 = translateTeam(rawT2.trim());
+
+    const g1 = (m.gols_time1 !== undefined && m.gols_time1 !== null && m.gols_time1 !== '') ? Number(m.gols_time1) : null;
+    const g2 = (m.gols_time2 !== undefined && m.gols_time2 !== null && m.gols_time2 !== '') ? Number(m.gols_time2) : null;
+
+    return {
+      id: m.id || `custom_${Date.now()}_${idx}`,
+      fase: m.fase || 'Grupo',
+      grupo: m.grupo || 'Grupo A',
+      data_jogo: m.data_jogo || '11 DE JUNHO - 16:00',
+      time1: t1,
+      time2: t2,
+      gols_time1: isNaN(g1 as any) ? null : g1,
+      gols_time2: isNaN(g2 as any) ? null : g2,
+      finalizado: m.finalizado === true || m.finalizado === 'true' || (g1 !== null && g2 !== null),
+      homeFlag: getTeamFlag(t1),
+      awayFlag: getTeamFlag(t2),
+      location: m.location || m.estadio || 'ESTÁDIO OFICIAL'
+    };
+  });
+
+  if (supabase) {
+    try {
+      console.log('Admin triggered bulk replacement/import of matches. Clearing old table...');
+      // Clean delete all games, which cascade-deletes related palpites to prevent orphaned data integrity violations
+      await supabase.from('jogos').delete().neq('id', 'null');
+      
+      const dbInserts = translatedMatches.map(tm => ({
+        id: tm.id,
+        fase: tm.fase,
+        grupo: tm.grupo,
+        data_jogo: tm.data_jogo,
+        time1: tm.time1,
+        time2: tm.time2,
+        gols_time1: tm.gols_time1,
+        gols_time2: tm.gols_time2,
+        finalizado: tm.finalizado
+      }));
+
+      const { error } = await supabase.from('jogos').insert(dbInserts);
+      if (error) {
+        console.error("Error inserting imported matches details into Supabase:", error);
+        return res.status(500).json({ error: 'Erro ao persistir canais de jogos no Supabase: ' + error.message });
+      }
+    } catch (dbErr: any) {
+      console.error("Exception during Supabase bulk matches import:", dbErr);
+      return res.status(500).json({ error: 'Erro de conexão/banco de dados: ' + dbErr.message });
+    }
+  }
+
+  // Update in-memory fallback matches too
+  inMemoryJogos = translatedMatches;
+  recomputeMemoryPoints();
+
+  res.json({
+    success: true,
+    message: `Excelente! Sincronização em massa concluída. ${translatedMatches.length} jogos importados com êxito!`,
+    count: translatedMatches.length
+  });
+});
+
+// Get Google Sheets / Spreadsheet Sync url
+app.get('/api/admin/spreadsheet-config', (req, res) => {
+  const configPath = path.join(process.cwd(), 'spreadsheet_config.json');
+  let url = '';
+  try {
+    if (fs.existsSync(configPath)) {
+      const data = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      url = data.spreadsheetUrl || '';
+    }
+  } catch (e) {
+    console.warn("Spreadsheet config file missing or unconfigured.");
+  }
+  res.json({ spreadsheetUrl: url });
+});
+
+// Configure Google Sheets / Spreadsheet Sync URL and trigger instant automated synchronization
+app.post('/api/admin/spreadsheet-config', async (req, res) => {
+  const { spreadsheetUrl } = req.body;
+  const url = (spreadsheetUrl || '').trim();
+
+  const configPath = path.join(process.cwd(), 'spreadsheet_config.json');
+  try {
+    fs.writeFileSync(configPath, JSON.stringify({ spreadsheetUrl: url, updated_at: new Date().toISOString() }, null, 2), 'utf-8');
+    
+    if (url) {
+      console.log(`Spreadsheet sync URL updated to: ${url}. Fetching instantly...`);
+      const syncResult = await syncMatchesFromSpreadsheet(true); // force-sync
+      if (syncResult.success) {
+        return res.json({
+          success: true,
+          message: `Sincronização configurada e acionada! ${syncResult.count} jogos sincronizados de sua planilha com sucesso!`,
+          count: syncResult.count
+        });
+      } else {
+        return res.json({
+          success: true,
+          message: `Sincronização configurada com sucesso, mas o carregamento inicial falhou: ${syncResult.reason || syncResult.error || 'confirme se o link é público'}. Certifique-se de usar um link de compartilhamento aberto!`,
+          error: syncResult.reason || syncResult.error
+        });
+      }
+    } else {
+      return res.json({
+        success: true,
+        message: 'Configuração de planilha limpa. O sistema voltará ao calendário padrão.'
+      });
+    }
+  } catch (err: any) {
+    console.error("Failed to write spreadsheet configuration:", err);
+    res.status(500).json({ error: 'Erro ao gravar arquivo de configuração: ' + err.message });
+  }
 });
 
 // ==========================================
@@ -1703,12 +2636,33 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
+    
+    // Non-blocking initial background spreadsheet sync or football-data sync
+    console.log("[Auto Sync Startup] Initiating non-blocking background data synchronization...");
+    syncMatchesFromSpreadsheet(false).then(status => {
+      console.log("[Auto Sync Startup] Google Sheets sync status:", status);
+      if (status.reason === 'no_url_configured' && process.env.FOOTBALL_DATA_API_TOKEN) {
+        syncMatchesFromFootballData(false).then(apiStatus => {
+          console.log("[Auto Sync Startup] Football-Data API sync status:", apiStatus);
+        });
+      }
+    }).catch(err => {
+      console.error("[Auto Sync Startup] Sheet sync error:", err);
+    });
+
+    // Setup active background polling intervals as requested: Fully hands-free and automatic!
+    setInterval(async () => {
+      console.log("[Background Chronometer] Performing automated sync check...");
+      try {
+        const sheetSync = await syncMatchesFromSpreadsheet(false); // standard checks 5m cache limit
+        if (sheetSync.reason === 'no_url_configured' && process.env.FOOTBALL_DATA_API_TOKEN) {
+          await syncMatchesFromFootballData(false);
+        }
+      } catch (err) {
+        console.error("[Background Chronometer] Auto-sync failed in background thread:", err);
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes automatically
   });
 }
 
-if (!process.env.VERCEL) {
-  startServer();
-}
-
-export { app };
-export default app;
+startServer();

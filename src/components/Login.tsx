@@ -41,7 +41,14 @@ export default function Login({ onLogin }: LoginProps) {
       const res = await fetch(`/api/auth/google/url?origin=${encodeURIComponent(currentOrigin)}`);
       
       if (!res.ok) {
-        throw new Error('Falha ao obter URL de autenticação com o Google.');
+        let errMsg = `Falha ao obter URL de autenticação com o Google (Status: ${res.status})`;
+        try {
+          const detail = await res.text();
+          if (detail) {
+            errMsg += `: ${detail.slice(0, 150)}`;
+          }
+        } catch (_) {}
+        throw new Error(errMsg);
       }
 
       const data = await res.json();

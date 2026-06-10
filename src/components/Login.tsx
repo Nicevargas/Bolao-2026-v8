@@ -47,13 +47,17 @@ export default function Login({ onLogin }: LoginProps) {
         body: JSON.stringify(payload)
       });
 
+      if (res.status === 404) {
+        throw new Error('STATUS_404_ERROR');
+      }
+
       let data: any;
       const responseText = await res.text();
       try {
         data = JSON.parse(responseText);
       } catch (parseErr) {
         console.error('Resposta não-JSON do servidor:', responseText);
-        throw new Error(`Erro de servidor (não retornou JSON válido). Status da requisição: ${res.status}. O servidor pode estar inicializando ou com instabilidade temporária no Supabase.`);
+        throw new Error(`STATUS_PARSE_ERROR_CODE_${res.status}`);
       }
 
       if (!res.ok) {
@@ -70,8 +74,13 @@ export default function Login({ onLogin }: LoginProps) {
       let translated = msg;
       
       const lower = msg.toLowerCase();
-      if (lower.includes('invalid login credentials') || lower.includes('invalid_grant')) {
-        translated = 'E-mail ou senha incorretos. Por favor, tente novamente.';
+      if (msg === 'STATUS_404_ERROR') {
+        translated = 'O servidor retornou erro 404 (Não Encontrado). O servidor do bolão pode estar inicializando ou as rotas de API ainda não carregaram. Por favor, aguarde de 10 a 30 segundos para que a conexão com o Supabase e o servidor se estabilize e tente novamente.';
+      } else if (msg.startsWith('STATUS_PARSE_ERROR_CODE_')) {
+        const code = msg.replace('STATUS_PARSE_ERROR_CODE_', '');
+        translated = `Erro de inicialização do servidor (Status ${code}). O sistema retornou uma resposta inesperada. Isso costuma ocorrer enquanto o banco de dados Supabase e o servidor estão terminando de inicializar. Aguarde alguns instantes e tente novamente.`;
+      } else if (lower.includes('invalid login credentials') || lower.includes('invalid_grant')) {
+        translated = 'E-mail ou senha incorretos. Por favor, verifique seus dados e tente novamente.';
       } else if (lower.includes('user already registered') || lower.includes('already exists') || lower.includes('unique constraint')) {
         translated = 'Este e-mail já está cadastrado em nosso sistema.';
       } else if (lower.includes('password should be at least 6 characters')) {

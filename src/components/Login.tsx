@@ -86,7 +86,7 @@ export default function Login({ onLogin }: LoginProps) {
             alt="Logo Bolão da Copa"
             referrerPolicy="no-referrer"
             className="w-40 h-auto drop-shadow-[0_0_20px_rgba(173,199,255,0.25)] rounded-2xl border border-white/5 mb-4"
-            src="https://zybwsvkeftolvkcarnep.supabase.co/storage/v1/object/public/imagens/bolao2026.jpeg"
+            src="https://jgtjmuvadcbtmfjiiipv.supabase.co/storage/v1/object/public/imagens/1000529284.jpg"
           />
           <h2 className="text-sm font-extrabold tracking-widest text-pink-400 uppercase mt-1">
             Bolão Oficial Copa 2026

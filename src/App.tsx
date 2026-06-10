@@ -370,7 +370,7 @@ export default function App() {
               alt="Logo Bolão da Copa"
               referrerPolicy="no-referrer"
               className="w-48 h-auto drop-shadow-[0_0_15px_rgba(173,199,255,0.2)] rounded-xl"
-              src="https://zybwsvkeftolvkcarnep.supabase.co/storage/v1/object/public/imagens/bolao2026.jpeg"
+              src="https://jgtjmuvadcbtmfjiiipv.supabase.co/storage/v1/object/public/imagens/1000529284.jpg"
             />
           </div>
 
@@ -434,7 +434,7 @@ export default function App() {
               alt="Logo Bolão da Copa"
               referrerPolicy="no-referrer"
               className="h-10 w-auto rounded-lg mx-2"
-              src="https://zybwsvkeftolvkcarnep.supabase.co/storage/v1/object/public/imagens/bolao2026.jpeg"
+              src="https://jgtjmuvadcbtmfjiiipv.supabase.co/storage/v1/object/public/imagens/1000529284.jpg"
             />
           </div>
 
@@ -513,7 +513,7 @@ export default function App() {
                     alt="Logo"
                     referrerPolicy="no-referrer"
                     className="h-10 w-auto rounded-lg"
-                    src="https://zybwsvkeftolvkcarnep.supabase.co/storage/v1/object/public/imagens/bolao2026.jpeg"
+                    src="https://jgtjmuvadcbtmfjiiipv.supabase.co/storage/v1/object/public/imagens/1000529284.jpg"
                   />
                   <button
                     onClick={() => setMobileMenuOpen(false)}

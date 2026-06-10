@@ -494,6 +494,147 @@ app.post('/api/auth/login', async (req, res) => {
   });
 });
 
+app.post('/api/auth/update-profile', async (req, res) => {
+  const { email, nome } = req.body;
+  if (!email || !nome) {
+    return res.status(400).json({ error: 'E-mail e nome são obrigatórios.' });
+  }
+  const trimmedEmail = email.trim().toLowerCase();
+  if (supabase) {
+    try {
+      let { data: part } = await supabase.from('participantes').select('*').eq('email', trimmedEmail).maybeSingle();
+      if (part) {
+        const { error: updErr } = await supabase.from('participantes').update({ nome }).eq('email', trimmedEmail);
+        if (updErr) throw new Error(updErr.message);
+      } else {
+        const finalId = crypto.randomUUID();
+        const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`;
+        const { error: insErr } = await supabase.from('participantes').insert({
+          id: finalId,
+          nome,
+          email: trimmedEmail,
+          avatar_url: defaultAvatar
+        });
+        if (insErr) throw new Error(insErr.message);
+      }
+      return res.json({ success: true, message: 'Perfil atualizado com sucesso.' });
+    } catch (err: any) {
+      console.error('Falha ao atualizar perfil no Supabase:', err);
+      // Fallback
+    }
+  }
+
+  // Fallback memory database update
+  let localPart = inMemoryParticipantes.find(p => p.email.toLowerCase() === trimmedEmail);
+  if (localPart) {
+    localPart.nome = nome;
+  } else {
+    inMemoryParticipantes.push({
+      id: 'local_' + Date.now(),
+      nome,
+      email: trimmedEmail,
+      avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nome)}`,
+      created_at: new Date().toISOString()
+    });
+  }
+  return res.json({ success: true, message: 'Perfil em memória atualizado com sucesso.' });
+});
+
+app.post('/api/auth/delete-account', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'E-mail é obrigatório para excluir a conta.' });
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+
+  if (supabase) {
+    try {
+      // 1. Get the profile
+      const { data: profile, error } = await supabase
+        .from('participantes')
+        .select('*')
+        .eq('email', trimmedEmail)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!profile) {
+        return res.status(404).json({ error: 'Nenhum usuário cadastrado com este e-mail.' });
+      }
+
+      const avatarValue = profile.avatar_url || '';
+      let storedPassword = '';
+      if (avatarValue.includes('||')) {
+        storedPassword = avatarValue.split('||')[1];
+      }
+
+      // If user has a password in our custom login flow, validate it
+      if (storedPassword && password && password !== storedPassword) {
+        return res.status(401).json({ error: 'Senha incorreta para fins de deleção de conta.' });
+      }
+
+      // 2. Delete guesses from 'palpites'
+      const { error: gErr } = await supabase
+        .from('palpites')
+        .delete()
+        .eq('participante_id', profile.id);
+
+      if (gErr) {
+        console.warn('Erro ao deletar palpites ao excluir conta:', gErr.message);
+      }
+
+      // 3. Delete participant profile
+      const { error: pErr } = await supabase
+        .from('participantes')
+        .delete()
+        .eq('id', profile.id);
+
+      if (pErr) {
+        throw new Error(pErr.message);
+      }
+
+      // Also clear in-memory if present
+      const memoryIdx = inMemoryParticipantes.findIndex(p => p.email.toLowerCase() === trimmedEmail);
+      if (memoryIdx >= 0) {
+        const pId = inMemoryParticipantes[memoryIdx].id;
+        inMemoryParticipantes.splice(memoryIdx, 1);
+        inMemoryPalpites = inMemoryPalpites.filter(g => g.participante_id !== pId);
+      }
+
+      return res.json({ success: true, message: 'Conta excluída com sucesso do banco de dados. Você já pode se cadastrar novamente.' });
+    } catch (err: any) {
+      console.error('Erro ao excluir conta:', err);
+      return res.status(500).json({ error: 'Erro de banco de dados ao excluir a conta: ' + (err.message || err) });
+    }
+  }
+
+  // Fallback to in-memory deletion
+  const memoryIdx = inMemoryParticipantes.findIndex(p => p.email.toLowerCase() === trimmedEmail);
+  if (memoryIdx === -1) {
+    return res.status(404).json({ error: 'Nenhum usuário cadastrado localmente com este e-mail.' });
+  }
+
+  const localPart = inMemoryParticipantes[memoryIdx];
+  const avatarValue = localPart.avatar_url || '';
+  let storedPassword = '';
+  if (avatarValue.includes('||')) {
+    storedPassword = avatarValue.split('||')[1];
+  }
+
+  if (storedPassword && password && password !== storedPassword) {
+    return res.status(401).json({ error: 'Senha incorreta para fins de deleção de conta.' });
+  }
+
+  const pId = localPart.id;
+  inMemoryParticipantes.splice(memoryIdx, 1);
+  inMemoryPalpites = inMemoryPalpites.filter(g => g.participante_id !== pId);
+
+  return res.json({ success: true, message: 'Conta em memória excluída com sucesso. Você já pode se cadastrar novamente.' });
+});
+
 // Connection status check
 app.get('/api/config-status', (req, res) => {
   res.json({

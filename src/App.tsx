@@ -5,15 +5,16 @@ import {
   Trophy,
   BarChart3,
   History,
-  LogOut,
   ChevronDown,
   Menu,
   X,
   Globe,
-  User
+  User,
+  LogOut
 } from 'lucide-react';
 
 import Login from './components/Login';
+import EditProfileModal from './components/EditProfileModal';
 import Dashboard from './components/Dashboard';
 import Apostas from './components/Apostas';
 import Ranking from './components/Ranking';
@@ -61,7 +62,7 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed.email === 'string') {
-          return parsed;
+          return { ...parsed, isLoggedIn: true };
         }
       } catch (e) {
         console.warn('Falha ao restaurar sessão de usuário local:', e);
@@ -83,6 +84,7 @@ export default function App() {
   const [rankingList, setRankingList] = useState<Participant[]>([]);
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -265,6 +267,34 @@ export default function App() {
     localStorage.removeItem('bolao_user');
   };
 
+  const handleSaveProfile = async (name: string, email: string) => {
+    try {
+      const res = await fetch('/api/auth/update-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, nome: name })
+      });
+      if (!res.ok) {
+        throw new Error('Falha de comunicação com o servidor.');
+      }
+      
+      const nextUser = {
+        ...user,
+        name,
+        email,
+        isLoggedIn: true
+      };
+      setUser(nextUser);
+      localStorage.setItem('bolao_user', JSON.stringify(nextUser));
+
+      // Refresh data
+      handleStateMutated();
+    } catch (err: any) {
+      console.error('Falha de sincronização de perfil:', err);
+      throw err;
+    }
+  };
+
   const handleSaveGuess = async (matchId: string, homeScore: number, awayScore: number) => {
     // 1. Instantly write to client state to be snappy
     setMatches(prevMatches =>
@@ -314,6 +344,8 @@ export default function App() {
     setCopiedText(true);
     setTimeout(() => setCopiedText(false), 2500);
   };
+
+
 
   if (!user.isLoggedIn) {
     return <Login onLogin={handleLogin} />;
@@ -368,11 +400,18 @@ export default function App() {
           </nav>
         </div>
 
-        {/* Sign out button at the foot of aside */}
-        <div className="pt-4 border-t border-white/5">
+        {/* Profile editing button at the foot of aside */}
+        <div className="pt-4 border-t border-white/5 space-y-2">
+          <button
+            onClick={() => setShowEditProfileModal(true)}
+            className="w-full flex items-center gap-3 px-4 py-2.5 bg-pink-500/10 rounded-xl font-bold text-xs uppercase tracking-wider text-pink-400 hover:text-pink-300 hover:bg-pink-500/20 transition-all cursor-pointer border border-pink-500/20"
+          >
+            <User size={16} />
+            <span>Editar perfil</span>
+          </button>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs uppercase tracking-wider text-error hover:bg-error-container/10 transition-all cursor-pointer border border-transparent hover:border-error/20"
+            className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-500/10 rounded-xl font-bold text-xs uppercase tracking-wider text-red-500 hover:text-red-400 hover:bg-red-500/20 transition-all cursor-pointer border border-red-500/20"
           >
             <LogOut size={16} />
             <span>Sair da conta</span>
@@ -439,8 +478,20 @@ export default function App() {
                   Meus Palpites
                 </button>
                 <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-2 text-xs text-error hover:bg-error-container/10 transition-colors text-left font-semibold cursor-pointer"
+                  onClick={() => {
+                    setShowEditProfileModal(true);
+                    setDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-2 text-xs text-pink-400 hover:text-pink-300 hover:bg-white/5 transition-colors text-left font-bold cursor-pointer border-b border-white/5"
+                >
+                  Editar Perfil
+                </button>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-2 text-xs text-gray-400 hover:text-red-400 hover:bg-white/5 transition-colors text-left font-bold cursor-pointer"
                 >
                   Sair da Conta
                 </button>
@@ -510,11 +561,24 @@ export default function App() {
                 </button>
 
                 <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-error hover:bg-error-container/10 transition-all cursor-pointer text-left"
+                  onClick={() => {
+                    setShowEditProfileModal(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-pink-500/10 hover:bg-pink-500/20 rounded-xl text-xs font-bold text-pink-400 hover:text-white uppercase tracking-wider transition-all cursor-pointer border border-pink-500/20"
                 >
-                  <LogOut size={18} />
-                  <span>Sair</span>
+                  <User size={16} />
+                  <span>Editar Perfil</span>
+                </button>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-xs font-bold text-red-500 hover:text-white uppercase tracking-wider transition-all cursor-pointer border border-red-500/20"
+                >
+                  <LogOut size={16} />
+                  <span>Sair da conta</span>
                 </button>
               </div>
             </aside>
@@ -576,6 +640,14 @@ export default function App() {
 
       {/* Privacy Policy Modal */}
       <PrivacyPolicyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+
+      {/* Profile Modification Modal (Bypassing login/register blocks) */}
+      <EditProfileModal
+        isOpen={showEditProfileModal}
+        onClose={() => setShowEditProfileModal(false)}
+        user={user}
+        onSave={handleSaveProfile}
+      />
 
     </div>
   );

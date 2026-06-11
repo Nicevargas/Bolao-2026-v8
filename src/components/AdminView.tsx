@@ -16,9 +16,6 @@ import {
   Shield,
   Layers,
   Sparkle,
-  Download,
-  FileSpreadsheet,
-  Upload,
   RefreshCw,
   Globe,
   Database,
@@ -31,7 +28,6 @@ import {
   getStoredInvitations,
   getStoredCompanies 
 } from '../db';
-import { syncMatchesFromCSVText } from '../supabaseService';
 import { MatchSyncService, syncProviders } from '../matchSyncService';
 
 interface AdminViewProps {
@@ -66,13 +62,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
   // Broadcast message
   const [broadcastMsg, setBroadcastMsg] = useState('');
-
-  // Spreadsheet synchronizer states
-  const [sheetUrl, setSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1QH9aHSckBh8GpcePcejv6W-V2oatqeZTRTWXS7NA_iE/edit?usp=sharing');
-  const [csvTextInput, setCsvTextInput] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncStatusMsg, setSyncStatusMsg] = useState('');
-  const [syncStatusType, setSyncStatusType] = useState<'success' | 'error' | ''>('');
 
   // Automated MatchSyncService integration states
   const [activeProvider, setActiveProvider] = useState<string>(MatchSyncService.getActiveProviderName());
@@ -127,89 +116,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
     setActiveProvider(newProv);
     const stored = localStorage.getItem('match_sync_provider_key_' + newProv) || '';
     setProviderKey(stored);
-  };
-
-  const handleSpreadsheetSync = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsSyncing(true);
-    setSyncStatusMsg('Conectando à planilha e buscando conteúdo...');
-    setSyncStatusType('');
-
-    try {
-      let targetUrl = sheetUrl.trim();
-      if (!targetUrl) {
-        throw new Error('Insira o link da planilha Google Sheets.');
-      }
-
-      // Convert standard share view URL to direct export CSV payload link
-      if (targetUrl.includes('docs.google.com/spreadsheets')) {
-        if (targetUrl.includes('/edit')) {
-          targetUrl = targetUrl.split('/edit')[0] + '/export?format=csv';
-        } else if (!targetUrl.endsWith('/export?format=csv')) {
-          targetUrl = targetUrl.replace(/\/+$/, '') + '/export?format=csv';
-        }
-      }
-
-      const response = await fetch(targetUrl);
-      if (!response.ok) {
-        throw new Error(`Falha ao obter dados da planilha (Código ${response.status}). Verifique as permissões de compartilhamento.`);
-      }
-
-      const csvData = await response.text();
-      if (!csvData || !csvData.trim()) {
-        throw new Error('A planilha retornou vazia ou formato inválido.');
-      }
-
-      const result = await syncMatchesFromCSVText(csvData);
-      if (result.success) {
-        setSyncStatusType('success');
-        setSyncStatusMsg(result.message);
-        if (onSyncComplete) onSyncComplete();
-      } else {
-        setSyncStatusType('error');
-        setSyncStatusMsg(result.message);
-      }
-    } catch (err: any) {
-      console.error('Spreadsheet sync error:', err);
-      setSyncStatusType('error');
-      setSyncStatusMsg(
-        err.message || 
-        'Erro de CORS ou acesso. Caso a planilha seja restrita ou não carregue, salve-a como .csv no Excel/Google Planilhas, copie o conteúdo de texto e cole na aba abaixo!'
-      );
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleTextCSVSync = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!csvTextInput.trim()) {
-      alert('Por favor, cole o conteúdo de texto CSV primeiro!');
-      return;
-    }
-
-    setIsSyncing(true);
-    setSyncStatusMsg('Processando dados do texto colado...');
-    setSyncStatusType('');
-
-    try {
-      const result = await syncMatchesFromCSVText(csvTextInput);
-      if (result.success) {
-        setSyncStatusType('success');
-        setSyncStatusMsg(result.message);
-        setCsvTextInput('');
-        if (onSyncComplete) onSyncComplete();
-      } else {
-        setSyncStatusType('error');
-        setSyncStatusMsg(result.message);
-      }
-    } catch (err: any) {
-      console.error('Pasted CSV sync error:', err);
-      setSyncStatusType('error');
-      setSyncStatusMsg(err.message || 'Erro inesperado ao sincronizar jogos colados.');
-    } finally {
-      setIsSyncing(false);
-    }
   };
 
   // 1. DYNAMIC CALCULATIONS FOR SECURE AND AUDITED STATS
@@ -569,134 +475,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 </div>
               )}
             </div>
-          </div>
-        )}
-      </section>
-
-      {/* Sincronizador de Planilha de Jogos (Google Sheets / CSV) */}
-      <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl select-none text-left">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="font-headline text-sm font-black flex items-center gap-2 text-on-surface uppercase tracking-wide">
-              <span className="p-1.5 bg-[#66B82F]/10 text-[#66B82F] rounded-lg">
-                <FileSpreadsheet size={16} />
-              </span>
-              Sincronizador Oficial de Planilha de Jogos
-            </h3>
-            <p className="text-[10px] text-on-surface-variant mt-1.5 font-sans leading-relaxed">
-              Importe ou atualize todos os confrontos da Copa 2026 instantaneamente ligando sua planilha online ou colando os dados CSV.
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2 text-[10px] bg-black/30 py-1.5 px-3 rounded-full border border-white/5 font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#66B82F] animate-pulse"></span>
-            <span className="text-[#9cb1cc] font-bold">Auto-Mapeador Ativo</span>
-          </div>
-        </div>
-
-        {/* Step by step help instructions for the Coordinator */}
-        <div className="mb-6 p-4 bg-[#66B82F]/5 rounded-xl border border-[#66B82F]/15 space-y-2">
-          <h4 className="text-[10px] font-black text-[#66B82F] uppercase tracking-wider font-bold">
-            Como Atualizar a partir do Google Sheets:
-          </h4>
-          <ol className="list-decimal list-inside text-[10px] text-slate-300 font-sans space-y-1.5 leading-relaxed">
-            <li>No seu Google Planilhas, mude as permissões de compartilhamento para <strong>"Qualquer pessoa com o link pode ler"</strong>.</li>
-            <li>Copie o link que você usa no seu navegador (ex: finalizando em <code>/edit?usp=sharing</code>) ou use o de publicação.</li>
-            <li>Cole o link oficial no campo de busca abaixo e clique em <strong>Sincronizar Planilha online</strong>. Nosso sistema converte o formato e recarrega os dados em tempo real!</li>
-            <li><em>Caso o Google Sheets restrinja o acesso devido a regras externas de CORS, você também pode exportar como CSV e colar os dados na caixa de texto ao lado.</em></li>
-          </ol>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 leading-none">
-          {/* Opção A: Fetch do Link */}
-          <div className="space-y-4">
-            <h4 className="text-[11px] font-black text-primary uppercase tracking-wider font-bold flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-              Sincronia Direta via Link da Planilha
-            </h4>
-
-            <form onSubmit={handleSpreadsheetSync} className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[9px] text-[#9cb1cc] block uppercase tracking-widest font-bold">
-                  URL da Planilha do Google Planilhas (Sheets)
-                </label>
-                <input 
-                  type="url" 
-                  value={sheetUrl}
-                  onChange={(e) => setSheetUrl(e.target.value)}
-                  placeholder="https://docs.google.com/spreadsheets/d/..."
-                  className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-xs text-on-surface focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-white/20 font-sans"
-                />
-              </div>
-
-              <div className="flex gap-2 leading-none">
-                <button
-                  type="submit"
-                  disabled={isSyncing}
-                  className="w-full bg-gradient-to-r from-[#66B82F] to-[#4d8922] hover:brightness-110 active:scale-98 text-white rounded-xl py-3 px-4 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer font-bold"
-                >
-                  {isSyncing ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Sincronizando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download size={14} />
-                      <span>Sincronizar Planilha Online</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Opção B: Colar Texto CSV */}
-          <div className="space-y-4">
-            <h4 className="text-[11px] font-black text-secondary uppercase tracking-wider font-bold flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-              Failsafe: Importar Colando Conteúdo de Texto CSV
-            </h4>
-
-            <form onSubmit={handleTextCSVSync} className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[9px] text-[#9cb1cc] block uppercase tracking-widest font-bold">
-                  Cole as linhas do CSV (com cabeçalhos: ID, Time A, Time B, Gols A, Gols B, etc.)
-                </label>
-                <textarea
-                  value={csvTextInput}
-                  onChange={(e) => setCsvTextInput(e.target.value)}
-                  rows={2}
-                  placeholder="id;time_a;time_b;goals_a;goals_b;status;fase&#10;m1;Brasil;Argentina;2;1;encerrado;Fase de Grupos&#10;m2;Estados Unidos;México;;;aguardando;Fase de Grupos"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl py-2 px-3 text-[11px] text-on-surface focus:border-secondary focus:ring-0 outline-none transition-all placeholder:text-white/20 font-mono resize-none leading-normal h-[72px]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSyncing}
-                className="w-full bg-white/10 hover:bg-white/15 border border-white/5 active:scale-98 text-on-surface rounded-xl py-3 px-4 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer font-bold"
-              >
-                <Upload size={14} className="text-secondary" />
-                <span>Salvar CSV Digitado/Colado</span>
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Sync Status messages feed block */}
-        {syncStatusMsg && (
-          <div className={`mt-4 p-4 rounded-xl text-[11px] font-sans leading-relaxed border transition-all ${
-            syncStatusType === 'success' 
-              ? 'bg-[#66B82F]/15 text-[#aaff66] border-[#66B82F]/30' 
-              : syncStatusType === 'error'
-              ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
-              : 'bg-black/40 text-on-surface-variant border-white/5'
-          }`}>
-            <p className="font-semibold flex items-center gap-1.5">
-              <span>{syncStatusType === 'success' ? '✔' : syncStatusType === 'error' ? '✖' : 'ℹ'}</span>
-              {syncStatusMsg}
-            </p>
           </div>
         )}
       </section>

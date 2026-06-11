@@ -710,8 +710,7 @@ export class MatchSyncService {
         await createSupabaseAuditLog('system', 'match', `Sincronização automática de jogos realizada via API (${provider.displayName}).`);
 
       } else {
-        // Sandboxed LocalStorage Sync fallback
-        const stored = getStoredMatches();
+        // Sandboxed LocalStorage Sync
         let changed = false;
 
         const mappedLocal = cleanMatches.map(m => {
@@ -734,33 +733,13 @@ export class MatchSyncService {
           };
         });
 
-        // Merge on ID
-        const merged = [...stored];
-        for (const localM of mappedLocal) {
-          const idx = merged.findIndex(x => x.id === localM.id);
-          if (idx !== -1) {
-            // Verify if values changed to avoid redundant disk I/O
-            const current = merged[idx];
-            if (
-              current.status !== localM.status ||
-              current.gols_time_a !== localM.gols_time_a ||
-              current.gols_time_b !== localM.gols_time_b ||
-              current.time_a !== localM.time_a
-            ) {
-              merged[idx] = { ...merged[idx], ...localM };
-              changed = true;
-            }
-          } else {
-            merged.push(localM);
-            changed = true;
-          }
-        }
+        // Replace all matches with API data (the API has the real schedule)
+        saveStoredMatches(mappedLocal);
+        changed = true;
 
-        if (changed || stored.length === 0) {
-          saveStoredMatches(merged);
-
+        if (changed) {
           // Force point distribution in browser sandbox local states
-          recalculateEveryonePoints(merged);
+          recalculateEveryonePoints(mappedLocal);
 
           // Save local audit log entry
           const logs = JSON.parse(localStorage.getItem('bolao_audit_logs') || '[]');

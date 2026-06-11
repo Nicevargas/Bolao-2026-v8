@@ -239,6 +239,28 @@ export default function App() {
     setCurrentTheme(theme);
   };
 
+  const handleUpdateAvatar = async (avatarUrl: string) => {
+    if (!activeUser) return;
+
+    if (isDBConnected) {
+      await supabase!
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', activeUser.id);
+    } else {
+      const users = getStoredUsers();
+      const updated = users.map((u: any) => {
+        if (u.id === activeUser.id) {
+          return { ...u, avatar: avatarUrl };
+        }
+        return u;
+      });
+      localStorage.setItem('bolao_users', JSON.stringify(updated));
+    }
+
+    await syncDatabaseStates();
+  };
+
   // Authentication Callbacks
   const handleLoginSuccess = async (user: any) => {
     setActiveUser(user);
@@ -429,6 +451,7 @@ export default function App() {
               activeUser={activeUser}
               onLogout={handleLogout}
               onThemeToggle={handleThemeToggle}
+              onUpdateAvatar={handleUpdateAvatar}
               currentTheme={currentTheme}
             />
 

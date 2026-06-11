@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ActiveTab } from '../types';
-import { Bell, Moon, Sun, Search, Shield, User, LogOut, Settings } from 'lucide-react';
+import { Bell, Moon, Sun, Search, Shield, User, LogOut, Settings, Camera } from 'lucide-react';
+import { ProfileEditModal } from './ProfileEditModal';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -11,6 +12,7 @@ interface HeaderProps {
   activeUser: any;
   onLogout: () => void;
   onThemeToggle: (theme: 'light' | 'dark' | 'system') => void;
+  onUpdateAvatar: (avatarUrl: string) => Promise<void>;
   currentTheme: 'light' | 'dark' | 'system';
 }
 
@@ -23,9 +25,11 @@ export const Header: React.FC<HeaderProps> = ({
   activeUser,
   onLogout,
   onThemeToggle,
+  onUpdateAvatar,
   currentTheme,
 }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   // Dynamic avatars based on active role
   const getAvatar = () => {
@@ -192,6 +196,17 @@ export const Header: React.FC<HeaderProps> = ({
 
                   <button
                     onClick={() => {
+                      setProfileModalOpen(true);
+                      setProfileDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 p-2 rounded-lg text-xs hover:bg-white/5 transition-all uppercase font-bold text-on-surface"
+                  >
+                    <Camera size={14} />
+                    <span>Editar Perfil</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
                       onLogout();
                       setProfileDropdownOpen(false);
                     }}
@@ -201,6 +216,13 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>Sair da Conta</span>
                   </button>
                 </div>
+
+                <ProfileEditModal
+                  isOpen={profileModalOpen}
+                  onClose={() => setProfileModalOpen(false)}
+                  currentAvatar={getAvatar()}
+                  onSave={onUpdateAvatar}
+                />
               </>
             )}
           </div>

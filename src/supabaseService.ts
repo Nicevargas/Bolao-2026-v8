@@ -473,7 +473,7 @@ export async function loginOrCreateSupabaseUser(email: string, fullName: string,
       const rawUserId = authData?.user?.id || `prov-${Date.now()}`;
 
       // Admin role defined directly by model constraints for this email
-      const finalRole = email === '02nicevargas@gmail.com' || email === 'simon_cpor@yahoo.com.br' ? 'admin' : 'member';
+      const finalRole = email === '02nicevargas@gmail.com' ? 'admin' : 'member';
 
       // Note: We do NOT need to call .upsert() or .insert() into profiles or rankings 
       // here client-side because the database trigger (on_auth_user_created) automatically 
@@ -513,7 +513,7 @@ export async function loginOrCreateSupabaseUser(email: string, fullName: string,
 
         if (profile && !dbQueryErr) {
           // If profile exists but password fails, let's auto-generate/link them or fetch profile directly
-          const isUserAdmin = profile.role === 'admin' || email === '02nicevargas@gmail.com' || email === 'simon_cpor@yahoo.com.br';
+          const isUserAdmin = profile.role === 'admin' || email === '02nicevargas@gmail.com';
           const userObject = {
             id: profile.id,
             name: profile.full_name || 'Usuário',
@@ -551,7 +551,7 @@ export async function loginOrCreateSupabaseUser(email: string, fullName: string,
         .eq('user_id', rawUserId)
         .single();
 
-      const isUserAdmin = profile.role === 'admin' || email === '02nicevargas@gmail.com' || email === 'simon_cpor@yahoo.com.br';
+      const isUserAdmin = profile.role === 'admin' || email === '02nicevargas@gmail.com';
 
       const userObject = {
         id: profile.id,

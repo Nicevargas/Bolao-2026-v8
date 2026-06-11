@@ -94,7 +94,7 @@ export default function App() {
             exactCount: activeParticipantObj ? activeParticipantObj.exactCount : 0,
             winnerCount: activeParticipantObj ? activeParticipantObj.winnerCount : 0,
             themePreference: dbProfile?.theme_preference || 'dark',
-            isAdmin: dbProfile?.role === 'admin' || email === '02nicevargas@gmail.com' || email === 'simon_cpor@yahoo.com.br',
+            isAdmin: dbProfile?.role === 'admin' || email === '02nicevargas@gmail.com',
             role: dbProfile?.role || 'member'
           };
 

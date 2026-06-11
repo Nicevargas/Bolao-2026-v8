@@ -103,7 +103,7 @@ DECLARE
   v_name TEXT;
 BEGIN
   -- If user is the coordinator/official admin email, set they as administrative coordinator
-  IF NEW.email = '02nicevargas@gmail.com' OR NEW.email = 'simon_cpor@yahoo.com.br' THEN
+  IF NEW.email = '02nicevargas@gmail.com' THEN
     v_role := 'admin';
   END IF;
 

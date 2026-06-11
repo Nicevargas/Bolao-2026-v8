@@ -243,10 +243,23 @@ export default function App() {
     if (!activeUser) return;
 
     if (isDBConnected) {
-      await supabase!
+      const { error } = await supabase!
         .from('profiles')
         .update({ avatar_url: avatarUrl })
         .eq('id', activeUser.id);
+
+      if (error) {
+        console.warn('Direct profile update failed, trying RPC:', error.message);
+        const { error: rpcError } = await supabase!
+          .rpc('update_my_avatar', {
+            p_user_id: activeUser.id,
+            p_avatar_url: avatarUrl
+          });
+        if (rpcError) {
+          console.error('RPC avatar update also failed:', rpcError.message);
+          throw new Error(rpcError.message);
+        }
+      }
     } else {
       const users = getStoredUsers();
       const updated = users.map((u: any) => {

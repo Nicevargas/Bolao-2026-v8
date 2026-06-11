@@ -86,37 +86,6 @@ export function calculatePoints(realA: number, realB: number, predA: number, pre
 // Initialize / Sync default official matches to Supabase matches table
 export async function syncOfficialMatchesToSupabase() {
   if (!isSupabaseConfigured()) return;
-  const client = supabase;
-
-  try {
-    // Check if matches table already has items
-    const { data: existingMatches, error } = await client.from('matches').select('id');
-    if (error) {
-      console.error('Error querying matches:', error);
-      return;
-    }
-
-    if (!existingMatches || existingMatches.length === 0) {
-      // Seed default matches
-      const defaultMatches = [
-        { id: 'm1', phase: 'Fase de Grupos', group_name: 'Grupo A', round_number: 'Fase de Grupos - Rodada 1', team_a: 'Brasil', team_b: 'Argentina', flag_a: '🇧🇷', flag_b: '🇦🇷', match_date: '2026-06-11T16:00:00Z', stadium: 'Estádio MetLife', city: 'East Rutherford', status: 'encerrado', goals_a: 2, goals_b: 1, locked: true },
-        { id: 'm2', phase: 'Fase de Grupos', group_name: 'Grupo A', round_number: 'Fase de Grupos - Rodada 1', team_a: 'Estados Unidos', team_b: 'México', flag_a: '🇺🇸', flag_b: '🇲🇽', match_date: '2026-06-11T19:00:00Z', stadium: 'Estádio Azteca', city: 'Cidade do México', status: 'ao_vivo', goals_a: 2, goals_b: 2, locked: true },
-        { id: 'm3', phase: 'Fase de Grupos', group_name: 'Grupo B', round_number: 'Fase de Grupos - Rodada 1', team_a: 'França', team_b: 'Alemanha', flag_a: '🇫🇷', flag_b: '🇩🇪', match_date: '2026-06-12T13:00:00Z', stadium: 'Estádio SoFi', city: 'Los Angeles', status: 'aguardando', locked: false },
-        { id: 'm4', phase: 'Fase de Grupos', group_name: 'Grupo B', round_number: 'Fase de Grupos - Rodada 1', team_a: 'Espanha', team_b: 'Portugal', flag_a: '🇪🇸', flag_b: '🇵🇹', match_date: '2026-06-12T16:00:00Z', stadium: 'Hard Rock Stadium', city: 'Miami', status: 'aguardando', locked: false },
-        { id: 'm5', phase: 'Fase de Grupos', group_name: 'Grupo A', round_number: 'Fase de Grupos - Rodada 2', team_a: 'Brasil', team_b: 'Estados Unidos', flag_a: '🇧🇷', flag_b: '🇺🇸', match_date: '2026-06-15T18:00:00Z', stadium: 'Estádio MetLife', city: 'East Rutherford', status: 'aguardando', locked: false },
-        { id: 'm6', phase: 'Fase de Grupos', group_name: 'Grupo A', round_number: 'Fase de Grupos - Rodada 2', team_a: 'Argentina', team_b: 'México', flag_a: '🇦🇷', flag_b: '🇲🇽', match_date: '2026-06-16T21:00:00Z', stadium: 'BC Place', city: 'Vancouver', status: 'aguardando', locked: false },
-        { id: 'm7', phase: 'Oitavas de Final', group_name: 'Oitavas', round_number: 'Oitavas de Final', team_a: 'Japão', team_b: 'Itália', flag_a: '🇯🇵', flag_b: '🇮🇹', match_date: '2026-06-25T18:00:00Z', stadium: 'Mercedes-Benz Stadium', city: 'Atlanta', status: 'aguardando', locked: false },
-        { id: 'm8', phase: 'Quartas de Final', group_name: 'Quartas', round_number: 'Quartas de Final', team_a: 'Inglaterra', team_b: 'Uruguai', flag_a: '🏴', flag_b: '🇺🇾', match_date: '2026-06-30T20:00:00Z', stadium: 'Gillette Stadium', city: 'Boston', status: 'aguardando', locked: false },
-        { id: 'm9', phase: 'Semifinal', group_name: 'Semifinal', round_number: 'Semifinal', team_a: 'Holanda', team_b: 'Bélgica', flag_a: '🇳🇱', flag_b: '🇧🇪', match_date: '2026-07-05T19:00:00Z', stadium: 'AT&T Stadium', city: 'Dallas', status: 'aguardando', locked: false },
-        { id: 'm10', phase: 'Disputa de Terceiro Lugar', group_name: 'Fase Final', round_number: 'Disputa de Terceiro Lugar', team_a: 'Marrocos', team_b: 'Croácia', flag_a: '🇲🇦', flag_b: '🇭🇷', match_date: '2026-07-11T16:00:00Z', stadium: 'Hard Rock Stadium', city: 'Miami', status: 'aguardando', locked: false },
-        { id: 'm11', phase: 'Final', group_name: 'Fase Final', round_number: 'Final', team_a: 'Brasil', team_b: 'França', flag_a: '🇧🇷', flag_b: '🇫🇷', match_date: '2026-07-12T19:00:00Z', stadium: 'Estádio MetLife', city: 'East Rutherford', status: 'aguardando', locked: false }
-      ];
-
-      await client.from('matches').insert(defaultMatches);
-    }
-  } catch (err) {
-    console.error('Error synchronising default matches:', err);
-  }
 }
 
 // Fetch all matches from Supabase joined with user bets

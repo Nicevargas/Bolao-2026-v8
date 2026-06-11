@@ -382,7 +382,7 @@ class FootballDataOrgProvider implements MatchSyncProvider {
   displayName = 'Football-Data.org API';
 
   async fetchMatches(apiKey?: string): Promise<OfficialMatch[]> {
-    const token = apiKey || (import.meta as any).env.VITE_FOOTBALL_DATA_TOKEN || '';
+    const token = apiKey || (import.meta as any).env.VITE_FOOTBALL_DATA_API_KEY || '';
     if (!token) {
       throw new Error('Chave de API (X-Auth-Token) não configurada para Football-Data.org.');
     }
@@ -575,7 +575,7 @@ export class MatchSyncService {
   private static STORAGE_KEY_ACTIVE_PROVIDER = 'match_sync_service_provider';
 
   static getActiveProviderName(): string {
-    return localStorage.getItem(this.STORAGE_KEY_ACTIVE_PROVIDER) || 'fifa';
+    return localStorage.getItem(this.STORAGE_KEY_ACTIVE_PROVIDER) || 'football-data';
   }
 
   static setActiveProviderName(provider: string) {

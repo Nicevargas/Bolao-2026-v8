@@ -120,7 +120,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Large Brand Icon Frame */}
-          <div className="relative w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-[#1670D8] via-[#D91C7A] to-[#F28C28] shadow-[0_0_40px_rgba(22,112,216,0.25)] flex items-center justify-center">
+          <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full p-1 bg-gradient-to-tr from-[#1670D8] via-[#D91C7A] to-[#F28C28] shadow-[0_0_40px_rgba(22,112,216,0.25)] flex items-center justify-center">
             <img 
               src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
               alt="Crest" 

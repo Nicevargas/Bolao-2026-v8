@@ -209,15 +209,15 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ participants }
 
         {/* Real HTML table matches exact column values requested */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[700px]">
+          <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container border-b border-white/10 select-none">
-                <th className="px-6 py-4 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-center font-bold">POSIÇÃO</th>
-                <th className="px-6 py-4 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-center font-bold">FOTO</th>
-                <th className="px-6 py-4 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest font-bold">NOME</th>
-                <th className="px-6 py-3 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-center font-bold">ACERTOS EXATOS</th>
-                <th className="px-6 py-3 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-center font-bold">ACERTOS DE RESULTADO</th>
-                <th className="px-6 py-4 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-right font-bold font-black">PONTOS</th>
+                <th className="px-2 md:px-6 py-4 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-center font-bold">#</th>
+                <th className="px-2 md:px-6 py-4 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-center font-bold hidden sm:table-cell">FOTO</th>
+                <th className="px-2 md:px-6 py-4 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest font-bold">NOME</th>
+                <th className="px-2 md:px-6 py-3 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-center font-bold hidden md:table-cell">EXATOS</th>
+                <th className="px-2 md:px-6 py-3 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-center font-bold hidden md:table-cell">RESULTADOS</th>
+                <th className="px-2 md:px-6 py-4 font-headline text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-right font-bold">PTS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -232,16 +232,14 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ participants }
                         : 'border-l-4 border-l-transparent'
                     }`}
                   >
-                    {/* POSIÇÃO */}
-                    <td className="px-6 py-4 text-center select-none">
+                    <td className="px-2 md:px-6 py-4 text-center select-none">
                       <span className={`font-headline text-xs font-black ${isYou ? 'text-primary' : 'text-on-surface-variant'}`}>
                         #{row.rank}
                       </span>
                     </td>
 
-                    {/* FOTO */}
-                    <td className="px-6 py-4 text-center select-none">
-                      <div className={`w-9 h-9 rounded-full overflow-hidden mx-auto border ${isYou ? 'border-primary' : 'border-white/10'}`}>
+                    <td className="px-2 md:px-6 py-4 text-center select-none hidden sm:table-cell">
+                      <div className={`w-7 h-7 md:w-9 md:h-9 rounded-full overflow-hidden mx-auto border ${isYou ? 'border-primary' : 'border-white/10'}`}>
                         <img 
                           alt={`${row.name} avatar`} 
                           className="w-full h-full object-cover" 
@@ -251,35 +249,29 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ participants }
                       </div>
                     </td>
 
-                    {/* NOME */}
-                    <td className="px-6 py-4 select-all">
-                      <div>
-                        <p className={`text-xs font-bold font-sans ${isYou ? 'text-primary' : 'text-on-surface'}`}>
+                    <td className="px-2 md:px-6 py-4 select-all">
+                      <div className="min-w-0">
+                        <p className={`text-xs font-bold font-sans truncate ${isYou ? 'text-primary' : 'text-on-surface'}`}>
                           {row.name}
                         </p>
-                        <span className="text-[9px] text-[#9cb1cc] font-medium block">
+                        <span className="text-[9px] text-[#9cb1cc] font-medium block truncate">
                           {row.league || 'Participante'}
                         </span>
                       </div>
                     </td>
 
-                    {/* ACERTOS EXATOS */}
-                    <td className="px-6 py-4 text-center font-bold text-xs text-yellow select-none">
+                    <td className="px-2 md:px-6 py-4 text-center font-bold text-xs text-yellow select-none hidden md:table-cell">
                       {row.exactCount}
                     </td>
 
-                    {/* ACERTOS DE RESULTADO */}
-                    <td className="px-6 py-4 text-center font-bold text-xs text-[#66B82F] select-none">
+                    <td className="px-2 md:px-6 py-4 text-center font-bold text-xs text-[#66B82F] select-none hidden md:table-cell">
                       {row.winnerCount}
                     </td>
 
-                    {/* PONTOS */}
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex flex-col items-end">
-                        <span className={`font-headline text-xs font-black ${isYou ? 'text-primary' : 'text-on-surface'}`}>
-                          {row.points} <span className="text-[9px] font-normal text-on-surface-variant font-sans">pts</span>
-                        </span>
-                      </div>
+                    <td className="px-2 md:px-6 py-4 text-right">
+                      <span className={`font-headline text-xs font-black whitespace-nowrap ${isYou ? 'text-primary' : 'text-on-surface'}`}>
+                        {row.points}
+                      </span>
                     </td>
                   </tr>
                 );

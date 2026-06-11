@@ -36,7 +36,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onDismiss }) => {
         className="relative z-10 w-full max-w-md text-center space-y-8"
       >
         {/* Crest Wrapper with water wave ripple effect */}
-        <div className="relative mx-auto w-40 h-40 rounded-full bg-gradient-to-tr from-primary to-secondary p-1 shadow-[0_0_50px_rgba(22,112,216,0.3)] group">
+        <div className="relative mx-auto w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-tr from-primary to-secondary p-1 shadow-[0_0_50px_rgba(22,112,216,0.3)] group">
           <div className="absolute inset-0 rounded-full bg-primary/25 animate-ping opacity-75"></div>
           <div className="w-full h-full rounded-full overflow-hidden bg-[#0c0f14] p-1 flex items-center justify-center relative">
             <img 

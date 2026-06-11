@@ -163,7 +163,7 @@ export const InvitationView: React.FC = () => {
                   {/* Left branding */}
                   <div className="space-y-1.5 flex-1 select-none">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs bg-primary/20 text-primary border border-primary/25 font-headline font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      <span className="text-xs bg-primary/20 text-primary border border-primary/25 font-headline font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider truncate max-w-[160px] md:max-w-[200px]">
                         {invite.code}
                       </span>
                       <span className="text-[10px] text-on-surface-variant font-medium flex items-center gap-1">

@@ -743,7 +743,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </div>
 
         {/* Logs feed list */}
-        <div className="flex flex-col gap-4 max-h-[290px] overflow-y-auto pr-1">
+        <div className="flex flex-col gap-4 max-h-48 lg:max-h-[290px] overflow-y-auto pr-1">
           {auditLogs.slice(0, 10).map((log) => {
             return (
               <div key={log.id} className="flex gap-4 p-3 rounded-xl bg-black/20 hover:bg-black/40 transition-all">

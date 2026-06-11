@@ -2634,35 +2634,41 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
-    
-    // Non-blocking initial background spreadsheet sync or football-data sync
-    console.log("[Auto Sync Startup] Initiating non-blocking background data synchronization...");
-    syncMatchesFromSpreadsheet(false).then(status => {
-      console.log("[Auto Sync Startup] Google Sheets sync status:", status);
-      if (status.reason === 'no_url_configured' && process.env.FOOTBALL_DATA_API_TOKEN) {
-        syncMatchesFromFootballData(false).then(apiStatus => {
-          console.log("[Auto Sync Startup] Football-Data API sync status:", apiStatus);
-        });
-      }
-    }).catch(err => {
-      console.error("[Auto Sync Startup] Sheet sync error:", err);
-    });
-
-    // Setup active background polling intervals as requested: Fully hands-free and automatic!
-    setInterval(async () => {
-      console.log("[Background Chronometer] Performing automated sync check...");
-      try {
-        const sheetSync = await syncMatchesFromSpreadsheet(false); // standard checks 5m cache limit
-        if (sheetSync.reason === 'no_url_configured' && process.env.FOOTBALL_DATA_API_TOKEN) {
-          await syncMatchesFromFootballData(false);
+  if (process.env.VERCEL) {
+    console.log("[Vercel Mode] Serverless function triggered. Skipping persistent app.listen()");
+  } else {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://0.0.0.0:${PORT}`);
+      
+      // Non-blocking initial background spreadsheet sync or football-data sync
+      console.log("[Auto Sync Startup] Initiating non-blocking background data synchronization...");
+      syncMatchesFromSpreadsheet(false).then(status => {
+        console.log("[Auto Sync Startup] Google Sheets sync status:", status);
+        if (status.reason === 'no_url_configured' && process.env.FOOTBALL_DATA_API_TOKEN) {
+          syncMatchesFromFootballData(false).then(apiStatus => {
+            console.log("[Auto Sync Startup] Football-Data API sync status:", apiStatus);
+          });
         }
-      } catch (err) {
-        console.error("[Background Chronometer] Auto-sync failed in background thread:", err);
-      }
-    }, 5 * 60 * 1000); // Check every 5 minutes automatically
-  });
+      }).catch(err => {
+        console.error("[Auto Sync Startup] Sheet sync error:", err);
+      });
+
+      // Setup active background polling intervals as requested: Fully hands-free and automatic!
+      setInterval(async () => {
+        console.log("[Background Chronometer] Performing automated sync check...");
+        try {
+          const sheetSync = await syncMatchesFromSpreadsheet(false); // standard checks 5m cache limit
+          if (sheetSync.reason === 'no_url_configured' && process.env.FOOTBALL_DATA_API_TOKEN) {
+            await syncMatchesFromFootballData(false);
+          }
+        } catch (err) {
+          console.error("[Background Chronometer] Auto-sync failed in background thread:", err);
+        }
+      }, 5 * 60 * 1000); // Check every 5 minutes automatically
+    });
+  }
 }
 
 startServer();
+
+export default app;

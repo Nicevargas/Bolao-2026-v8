@@ -89,7 +89,7 @@ export default function App() {
             id: activeId,
             name: dbProfile?.full_name || fullName || 'Participante',
             email: email,
-            avatar: dbProfile?.avatar_url || 'https://api.dicebear.com/7.x/adventurer/svg?seed=avatar',
+            avatar: dbProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(dbProfile?.full_name || fullName || email)}`,
             points: activeParticipantObj ? activeParticipantObj.points : 0,
             exactCount: activeParticipantObj ? activeParticipantObj.exactCount : 0,
             winnerCount: activeParticipantObj ? activeParticipantObj.winnerCount : 0,

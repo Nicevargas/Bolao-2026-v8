@@ -38,7 +38,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         exactCount: participants.find(p => p.isUser)?.exactCount || 0,
         winnerCount: participants.find(p => p.isUser)?.winnerCount || 0,
         email: 'user@natacaocriativa.com',
-        avatar: 'https://api.dicebear.com/7.x/adventurer/svg?seed=avatar',
+        avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(participants.find(p => p.isUser)?.name || 'user')}`,
         role: 'member',
         themePreference: 'dark' as any,
         isAdmin: false

@@ -1,6 +1,4 @@
 import express from 'express';
-import path from 'path';
-import { createServer as createViteServer } from 'vite';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
@@ -10,7 +8,6 @@ import fs from 'fs';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
 
 app.use(express.json());
 
@@ -740,33 +737,7 @@ function getMemoryRanking() {
   });
 }
 
-// Auto-seed cloud database tables on boot
-async function seedCloudDatabase() {
-  if (!supabase) return;
-  try {
-    // 1. Seed matches
-    const { data: existingGames } = await supabase.from('jogos').select('id');
-    if (!existingGames || existingGames.length === 0) {
-      const insertGames = defaultMatchesSeed.map(g => ({
-        id: g.id,
-        fase: g.fase,
-        grupo: g.grupo,
-        data_jogo: g.data_jogo,
-        time1: g.time1,
-        time2: g.time2,
-        gols_time1: g.gols_time1,
-        gols_time2: g.gols_time2,
-        finalizado: g.finalizado
-      }));
-      await supabase.from('jogos').insert(insertGames);
-      console.log('✔ Banquete de jogos reais semeado no Supabase com sucesso!');
-    }
-  } catch (err: any) {
-    console.warn('Boot seeding alert (Supabase tables might not be fully migrated yet):', err.message);
-  }
-}
 
-seedCloudDatabase();
 
 // ==========================================
 // API REST ENDPOINTS

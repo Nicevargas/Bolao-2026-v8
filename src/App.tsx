@@ -242,6 +242,7 @@ export default function App() {
   // Authentication Callbacks
   const handleLoginSuccess = async (user: any) => {
     setActiveUser(user);
+    if (!user.isAdmin) setIsAdminMode(false);
     await syncDatabaseStates();
   };
 
@@ -415,17 +416,21 @@ export default function App() {
           </div>
 
           {/* Connected Brand Header */}
-          <Header 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-            xpPoints={xpPoints}
-            isAdminMode={isAdminMode}
-            setIsAdminMode={setIsAdminMode}
-            activeUser={activeUser}
-            onLogout={handleLogout}
-            onThemeToggle={handleThemeToggle}
-            currentTheme={currentTheme}
-          />
+            <Header 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+              xpPoints={xpPoints}
+              isAdminMode={isAdminMode}
+              setIsAdminMode={(v) => {
+                const newVal = typeof v === 'boolean' ? v : !isAdminMode;
+                if (newVal && !activeUser?.isAdmin) return;
+                setIsAdminMode(newVal);
+              }}
+              activeUser={activeUser}
+              onLogout={handleLogout}
+              onThemeToggle={handleThemeToggle}
+              currentTheme={currentTheme}
+            />
 
           {/* Dashboard Stage Workspace */}
           <div className="flex-1 w-full max-w-7xl mx-auto px-6 relative z-10 flex">
@@ -450,7 +455,7 @@ export default function App() {
 
             {/* Stage content frame */}
             <div className={`flex-grow py-6 transition-all ${isAdminMode ? 'lg:ml-64' : ''}`}>
-              {isAdminMode ? (
+              {isAdminMode && activeUser?.isAdmin ? (
                 <AdminView 
                   stats={adminStats}
                   companies={companies}
@@ -493,7 +498,11 @@ export default function App() {
             activeTab={activeTab} 
             setActiveTab={setActiveTab}
             isAdminMode={isAdminMode}
-            setIsAdminMode={setIsAdminMode}
+            setIsAdminMode={(v) => {
+              const newVal = typeof v === 'boolean' ? v : !isAdminMode;
+              if (newVal && !activeUser?.isAdmin) return;
+              setIsAdminMode(newVal);
+            }}
           />
         </div>
       )}

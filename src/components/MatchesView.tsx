@@ -233,100 +233,78 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
         <>
           {/* Render Table (Google Sheets Model Matches Exact Grid request) */}
           {viewMode === 'table' && (
-        <div className="overflow-x-auto rounded-2xl border border-white/10 shadow-xl bg-surface-container/40">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
+        <div className="overflow-x-auto overflow-y-hidden rounded-2xl border border-white/10 shadow-xl bg-surface-container/40">
+          <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-black/40 border-b border-white/10 font-headline text-[10px] font-black uppercase tracking-wider text-primary select-none">
-                <th className="py-3 px-4">RODADA</th>
-                <th className="py-3 px-4">DATA</th>
-                <th className="py-3 px-4">HORA</th>
-                <th className="py-3 px-4">TIME MANDANTE</th>
-                <th className="py-3 px-4 text-center">BANDEIRA</th>
-                <th className="py-3 px-4 text-center">PLACAR</th>
-                <th className="py-3 px-4 text-center">BANDEIRA</th>
-                <th className="py-3 px-4">TIME VISITANTE</th>
-                <th className="py-3 px-4">ESTÁDIO</th>
-                <th className="py-3 px-4">CIDADE / PAÍS</th>
-                <th className="py-3 px-4 text-center">STATUS</th>
+                <th className="py-3 px-2 md:px-4">DATA/HORA</th>
+                <th className="py-3 px-2 md:px-4">MANDANTE</th>
+                <th className="py-3 px-2 md:px-4 text-center">PLACAR</th>
+                <th className="py-3 px-2 md:px-4">VISITANTE</th>
+                <th className="py-3 px-2 md:px-4 hidden sm:table-cell">FASE</th>
+                <th className="py-3 px-2 md:px-4 hidden md:table-cell">ESTÁDIO</th>
+                <th className="py-3 px-2 md:px-4 text-center">STATUS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 font-sans text-xs">
               {filteredMatches.map((match) => {
-                // LOCKOUT COMPUTATION: automatically block if match date has reached
                 const isLocked = new Date(match.dateStr) <= new Date() || match.type === 'live' || match.type === 'completed';
                 const hasUserBet = match.userBet !== undefined;
 
-                // Format DateTime
                 const matchDate = new Date(match.dateStr);
                 const readableDate = matchDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
                 const readableTime = matchDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
                 return (
-                  <tr 
+                  <tr
                     key={match.id}
                     className="hover:bg-white/5 transition-all text-on-surface relative group"
                   >
-                    <td className="py-4 px-4 font-bold text-slate-300 font-headline uppercase select-none text-[10px]">
-                      {match.teamA.info || 'COPA 2026'}
+                    <td className="py-3 px-2 md:py-4 md:px-4 font-mono text-slate-300 select-none whitespace-nowrap">
+                      <span className="block text-[10px] md:text-xs">{readableDate}</span>
+                      <span className="block text-[9px] md:text-[10px] text-slate-500">{readableTime}</span>
                     </td>
-                    <td className="py-4 px-4 font-mono text-slate-300 select-none">
-                      {readableDate}
+                    <td className="py-3 px-2 md:py-4 md:px-4">
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        {match.teamA.logo && <span className="text-base md:text-2xl shrink-0">{match.teamA.logo}</span>}
+                        <span className="font-extrabold text-white text-[11px] md:text-xs leading-tight">{match.teamA.name}</span>
+                      </div>
                     </td>
-                    <td className="py-4 px-4 font-mono text-slate-300 select-none">
-                      {readableTime}
-                    </td>
-                    {/* Mandante */}
-                    <td className="py-4 px-4 font-extrabold text-white text-right select-all">
-                      {match.teamA.name}
-                    </td>
-                    <td className="py-4 px-4 text-center text-2xl select-none">
-                      {match.teamA.logo}
-                    </td>
-                    
-                    {/* CENTRAL INTERACTIVE SCORE OR LOCKOUT MESSAGE */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-center gap-1.5">
+
+                    <td className="py-2 px-1 md:py-4 md:px-4">
+                      <div className="flex items-center justify-center gap-1">
                         {isLocked ? (
-                          <div className="flex flex-col items-center">
-                            <div className="flex items-center gap-1 bg-black/40 px-2.5 py-1 rounded-md border border-white/5">
-                              <span className="font-headline font-black text-slate-200">
-                                {hasUserBet ? match.userBet?.scoreA : (match.scoreA !== undefined ? match.scoreA : '-')}
-                              </span>
-                              <span className="text-[10px] text-[#D91C7A] font-bold">:</span>
-                              <span className="font-headline font-black text-slate-200">
-                                {hasUserBet ? match.userBet?.scoreB : (match.scoreB !== undefined ? match.scoreB : '-')}
-                              </span>
-                            </div>
-                            {/* LOCKED WARNING TRIGGER MESSAGE */}
-                            <div 
-                              className="absolute hidden group-hover:block bottom-12 z-50 bg-red-600/90 text-white rounded p-2 text-[10px] shadow-lg max-w-[200px]"
-                              style={{ left: '50%', transform: 'translateX(-50%)' }}
-                            >
-                              Os palpites para esta partida foram encerrados.
-                            </div>
+                          <div className="flex items-center gap-0.5 bg-black/40 px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-md border border-white/5">
+                            <span className="font-headline font-black text-slate-200 text-[11px] md:text-xs">
+                              {hasUserBet ? match.userBet?.scoreA : (match.scoreA !== undefined ? match.scoreA : '-')}
+                            </span>
+                            <span className="text-[9px] md:text-[10px] text-[#D91C7A] font-bold">:</span>
+                            <span className="font-headline font-black text-slate-200 text-[11px] md:text-xs">
+                              {hasUserBet ? match.userBet?.scoreB : (match.scoreB !== undefined ? match.scoreB : '-')}
+                            </span>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5 select-none">
-                            <input 
-                              type="text" 
+                          <div className="flex items-center gap-0.5 md:gap-1 select-none">
+                            <input
+                              type="text"
                               maxLength={2}
                               value={predictions[match.id]?.scoreA ?? (match.userBet?.scoreA ?? '')}
                               placeholder="-"
                               onChange={(e) => handleScoreChange(match.id, 'A', e.target.value)}
-                              className="w-8 h-8 rounded bg-black/30 border border-white/10 text-center font-black outline-none focus:border-[#1670D8] text-xs"
+                              className="w-6 h-6 md:w-8 md:h-8 rounded bg-black/30 border border-white/10 text-center font-black outline-none focus:border-[#1670D8] text-[10px] md:text-xs"
                             />
-                            <span className="text-[#D91C7A] font-bold font-headline select-none">:</span>
-                            <input 
-                              type="text" 
+                            <span className="text-[#D91C7A] font-bold font-headline select-none text-[10px] md:text-xs">:</span>
+                            <input
+                              type="text"
                               maxLength={2}
                               value={predictions[match.id]?.scoreB ?? (match.userBet?.scoreB ?? '')}
                               placeholder="-"
                               onChange={(e) => handleScoreChange(match.id, 'B', e.target.value)}
-                              className="w-8 h-8 rounded bg-black/30 border border-white/10 text-center font-black outline-none focus:border-[#1670D8] text-xs"
+                              className="w-6 h-6 md:w-8 md:h-8 rounded bg-black/30 border border-white/10 text-center font-black outline-none focus:border-[#1670D8] text-[10px] md:text-xs"
                             />
                             <button
                               onClick={() => handleSave(match.id)}
-                              className="ml-1 p-1 bg-gradient-to-r from-primary to-secondary text-white rounded text-[9px] font-black uppercase tracking-widest cursor-pointer"
+                              className="ml-0.5 md:ml-1 px-1 md:px-1.5 py-0.5 bg-gradient-to-r from-primary to-secondary text-white rounded text-[8px] md:text-[9px] font-black uppercase tracking-widest cursor-pointer"
                               title="Salvar palpite"
                             >
                               OK
@@ -336,40 +314,41 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                       </div>
                     </td>
 
-                    {/* Visitante */}
-                    <td className="py-4 px-4 text-center text-2xl select-none">
-                      {match.teamB.logo}
+                    <td className="py-3 px-2 md:py-4 md:px-4">
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        {match.teamB.logo && <span className="text-base md:text-2xl shrink-0">{match.teamB.logo}</span>}
+                        <span className="font-extrabold text-white text-[11px] md:text-xs leading-tight">{match.teamB.name}</span>
+                      </div>
                     </td>
-                    <td className="py-4 px-4 font-extrabold text-white text-left select-all">
-                      {match.teamB.name}
+
+                    <td className="py-3 px-2 md:py-4 md:px-4 hidden sm:table-cell whitespace-nowrap">
+                      <span className="font-bold text-slate-300 font-headline uppercase text-[9px] md:text-[10px]">
+                        {match.teamA.info || 'COPA 2026'}
+                      </span>
                     </td>
-                    <td className="py-4 px-4 text-slate-300 truncate select-all" style={{ maxWidth: '140px' }}>
-                      {match.stadium.split(',')[0]}
+
+                    <td className="py-3 px-2 md:py-4 md:px-4 hidden md:table-cell">
+                      <span className="text-slate-400 text-[10px] md:text-xs whitespace-nowrap">{match.stadium.split(',')[0]}</span>
                     </td>
-                    <td className="py-4 px-4 text-slate-400 select-all">
-                      {match.stadium.split(',')[1] || 'EUA'}
-                    </td>
-                    
-                    {/* Match status */}
-                    <td className="py-4 px-4 text-center select-none">
+
+                    <td className="py-3 px-2 md:py-4 md:px-4 text-center">
                       {isLocked ? (
                         match.type === 'completed' ? (
-                          <span className="text-[10px] bg-[#66B82F]/20 text-[#66B82F] font-bold px-2 py-0.5 rounded leading-none">
+                          <span className="text-[9px] md:text-[10px] bg-[#66B82F]/20 text-[#66B82F] font-bold px-1.5 md:px-2 py-0.5 rounded leading-none whitespace-nowrap">
                             Encerrado
                           </span>
                         ) : match.type === 'live' ? (
-                          <span className="text-[10px] bg-red-600/20 text-red-400 font-bold px-2 py-0.5 rounded leading-none animate-pulse">
+                          <span className="text-[9px] md:text-[10px] bg-red-600/20 text-red-400 font-bold px-1.5 md:px-2 py-0.5 rounded leading-none animate-pulse whitespace-nowrap">
                             Ao Vivo
                           </span>
                         ) : (
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-[9px] bg-amber-500/10 text-amber-500 font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none">
-                              <Lock size={10} /> Fechado
-                            </span>
-                          </div>
+                          <span className="text-[8px] md:text-[9px] bg-amber-500/10 text-amber-500 font-bold px-1 md:px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none justify-center">
+                            <Lock size={8} className="md:hidden" /><Lock size={10} className="hidden md:block" />
+                            <span className="hidden md:inline">Fechado</span>
+                          </span>
                         )
                       ) : (
-                        <span className="text-[10px] bg-blue-500/15 text-blue-400 font-bold px-2 py-0.5 rounded leading-none">
+                        <span className="text-[9px] md:text-[10px] bg-blue-500/15 text-blue-400 font-bold px-1.5 md:px-2 py-0.5 rounded leading-none whitespace-nowrap">
                           Aberto
                         </span>
                       )}
@@ -400,12 +379,13 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                 className="glass-card rounded-2xl overflow-hidden border border-white/10 shadow-lg flex flex-col justify-between"
               >
                 {/* upper header */}
-                <div className="px-4 py-2.5 bg-black/30 border-b border-outline/30 flex justify-between items-center text-[10px] font-black uppercase text-primary select-none font-headline">
-                  <div className="flex items-center gap-1.5">
-                    <Clock size={11} />
-                    <span>{match.teamA.info || 'Fase de Grupos'}</span>
+                <div className="px-3 md:px-4 py-2 md:py-2.5 bg-black/30 border-b border-outline/30 flex justify-between items-center text-[9px] md:text-[10px] font-black uppercase text-primary select-none font-headline gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Clock size={10} className="shrink-0 hidden md:block" />
+                    <Clock size={9} className="shrink-0 md:hidden" />
+                    <span className="truncate">{match.teamA.info || 'Fase de Grupos'}</span>
                   </div>
-                  <span className="text-on-surface-variant">{match.stadium}</span>
+                  <span className="text-on-surface-variant truncate max-w-[40%] md:max-w-[50%] text-right">{match.stadium}</span>
                 </div>
 
                 <div className="p-5 space-y-4">

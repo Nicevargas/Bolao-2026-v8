@@ -612,7 +612,7 @@ export function getMatchesWithParsedBets(userId: string): Match[] {
       scoreA: m.gols_time_a,
       scoreB: m.gols_time_b,
       time: m.status === 'ao_vivo' ? "55'" : undefined,
-      stadium: `${m.estadio}, ${m.cidade}`,
+      stadium: [m.estadio, m.cidade].filter(Boolean).join(', ') || 'Estádio Oficial, TBD',
       dateStr: m.data_hora,
       userBet: hasBet ? {
         scoreA: userBet!.placar_time_a,

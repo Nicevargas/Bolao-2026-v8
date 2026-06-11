@@ -23,7 +23,7 @@ export function mapDbMatchToModel(dbMatch: any, userBet?: any): Match {
     scoreA: dbMatch.goals_a !== null ? dbMatch.goals_a : undefined,
     scoreB: dbMatch.goals_b !== null ? dbMatch.goals_b : undefined,
     time: dbMatch.status === 'ao_vivo' ? "75'" : undefined,
-    stadium: `${dbMatch.stadium}, ${dbMatch.city}`,
+    stadium: [dbMatch.stadium, dbMatch.city].filter(Boolean).join(', ') || 'Estádio Oficial, TBD',
     dateStr: dbMatch.match_date,
     userBet: userBet ? {
       scoreA: userBet.bet_goals_a,

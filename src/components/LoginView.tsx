@@ -175,34 +175,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
             )}
-
-            {/* Quick-select convenience for testing and metadata credentials */}
-            <div className="pt-2">
-              <span className="text-[9px] text-[#9cb1cc] block uppercase tracking-widest font-black mb-2">
-                E-mails de Acesso Rápido para Teste:
-              </span>
-              <div className="flex flex-col gap-1.5">
-                {usersList.map(u => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => {
-                      setEmail(u.email);
-                      if (isDBConnected) {
-                        setPassword('bolao2026password!');
-                      }
-                    }}
-                    className="w-full text-left bg-white/5 hover:bg-white/10 rounded-lg p-2 flex items-center justify-between text-[11px] font-medium text-slate-300 border border-white/5"
-                  >
-                    <span className="truncate">{u.email}</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold">
-                      {u.name.split(' ')[0]}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <button 
               type="submit"
               className="w-full py-3.5 bg-gradient-to-r from-primary to-secondary text-white font-headline text-xs font-black rounded-xl tracking-wider hover:brightness-110 active:scale-95 transition-all uppercase shadow-lg font-bold"

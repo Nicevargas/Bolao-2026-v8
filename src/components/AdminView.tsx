@@ -21,7 +21,7 @@ import {
   getStoredInvitations,
   getStoredCompanies 
 } from '../db';
-import { saveSupabaseOfficialMatchResult, isSupabaseConfigured } from '../supabaseService';
+import { saveSupabaseOfficialMatchResult } from '../supabaseService';
 import { saveStoredMatches, getStoredMatches, recalculateEveryonePoints } from '../db';
 
 interface AdminViewProps {
@@ -73,7 +73,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
     const status = form.status || 'encerrado';
 
     try {
-      if (isSupabaseConfigured()) {
+      if (isDBConnected) {
         const res = await saveSupabaseOfficialMatchResult(matchId, goalsA, goalsB, status as any);
         if (!res.success) throw new Error(res.message);
       } else {

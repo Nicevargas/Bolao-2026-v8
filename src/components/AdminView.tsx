@@ -27,6 +27,8 @@ import {
   getStoredCompanies 
 } from '../db';
 import { MatchSyncService, syncProviders } from '../matchSyncService';
+import { saveSupabaseOfficialMatchResult, isSupabaseConfigured } from '../supabaseService';
+import { saveStoredMatches, getStoredMatches, recalculateEveryonePoints } from '../db';
 
 interface AdminViewProps {
   stats: AdminStats;
@@ -68,6 +70,46 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [autoSyncMsg, setAutoSyncMsg] = useState<string>('');
   const [autoSyncStatus, setAutoSyncStatus] = useState<'success' | 'error' | ''>('');
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(MatchSyncService.getLastSyncTime());
+
+  // Manual match result form state
+  const [resultForm, setResultForm] = useState<Record<string, { goalsA: string; goalsB: string; status: string }>>({});
+  const [savingResult, setSavingResult] = useState<string | null>(null);
+  const [resultMsg, setResultMsg] = useState<{ id: string; text: string; ok: boolean } | null>(null);
+
+  const handleSaveResult = async (matchId: string) => {
+    const form = resultForm[matchId];
+    if (!form || form.goalsA === '' || form.goalsB === '') {
+      alert('Preencha o placar dos dois times');
+      return;
+    }
+    setSavingResult(matchId);
+    setResultMsg(null);
+    const goalsA = parseInt(form.goalsA, 10);
+    const goalsB = parseInt(form.goalsB, 10);
+    const status = form.status || 'encerrado';
+
+    try {
+      if (isSupabaseConfigured()) {
+        const res = await saveSupabaseOfficialMatchResult(matchId, goalsA, goalsB, status as any);
+        if (!res.success) throw new Error(res.message);
+      } else {
+        const stored = getStoredMatches();
+        const updated = stored.map((m: any) => {
+          if (m.id === matchId) {
+            return { ...m, gols_time_a: goalsA, gols_time_b: goalsB, status };
+          }
+          return m;
+        });
+        saveStoredMatches(updated);
+        recalculateEveryonePoints(updated);
+      }
+      setResultMsg({ id: matchId, text: `Resultado salvo: ${goalsA} x ${goalsB}`, ok: true });
+      if (onSyncComplete) onSyncComplete();
+    } catch (err: any) {
+      setResultMsg({ id: matchId, text: `Erro: ${err.message}`, ok: false });
+    }
+    setSavingResult(null);
+  };
 
   const handleAutomatedSync = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -353,6 +395,113 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
       </section>
 
+
+      {/* CONFIGURAÇÃO MANUAL DE RESULTADOS */}
+      <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl select-none text-left mb-6">
+        <div className="flex items-center gap-2 mb-6">
+          <span className="p-1.5 bg-amber-500/10 text-amber-500 rounded-lg">
+            <CheckCircle size={16} />
+          </span>
+          <h3 className="font-headline text-sm font-black text-on-surface uppercase tracking-wide">
+            Configuração Manual de Resultados
+          </h3>
+          <span className="text-[9px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-bold uppercase ml-auto">
+            Modo Administrador
+          </span>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-white/10">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-black/40 border-b border-white/10 text-[10px] font-black uppercase tracking-wider text-primary">
+                <th className="py-3 px-3">Partida</th>
+                <th className="py-3 px-3 text-center w-24">Placar</th>
+                <th className="py-3 px-3 w-28">Status</th>
+                <th className="py-3 px-3 w-24">Ação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-xs">
+              {matches.map((match) => {
+                const formKey = match.id;
+                const form = resultForm[formKey] || {};
+                return (
+                  <tr key={match.id} className="hover:bg-white/5 transition-all">
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-2">
+                        <span>{match.teamA.logo}</span>
+                        <span className="font-bold text-white text-[11px]">{match.teamA.name}</span>
+                        <span className="text-[#D91C7A] font-bold text-[10px]">VS</span>
+                        <span className="font-bold text-white text-[11px]">{match.teamB.name}</span>
+                        <span>{match.teamB.logo}</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center justify-center gap-1">
+                        <input
+                          type="text"
+                          maxLength={2}
+                          placeholder={match.scoreA !== undefined ? String(match.scoreA) : '-'}
+                          value={form.goalsA ?? ''}
+                          onChange={(e) => setResultForm(prev => ({
+                            ...prev,
+                            [formKey]: { ...prev[formKey], goalsA: e.target.value.replace(/[^0-9]/g, '') }
+                          }))}
+                          className="w-8 h-8 rounded bg-black/40 border border-white/10 text-center font-black outline-none focus:border-[#66B82F] text-xs"
+                        />
+                        <span className="text-[#D91C7A] font-bold">:</span>
+                        <input
+                          type="text"
+                          maxLength={2}
+                          placeholder={match.scoreB !== undefined ? String(match.scoreB) : '-'}
+                          value={form.goalsB ?? ''}
+                          onChange={(e) => setResultForm(prev => ({
+                            ...prev,
+                            [formKey]: { ...prev[formKey], goalsB: e.target.value.replace(/[^0-9]/g, '') }
+                          }))}
+                          className="w-8 h-8 rounded bg-black/40 border border-white/10 text-center font-black outline-none focus:border-[#66B82F] text-xs"
+                        />
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <select
+                        value={form.status || 'encerrado'}
+                        onChange={(e) => setResultForm(prev => ({
+                          ...prev,
+                          [formKey]: { ...prev[formKey], status: e.target.value }
+                        }))}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-[10px] outline-none focus:border-[#66B82F]"
+                      >
+                        <option value="aguardando">Aguardando</option>
+                        <option value="ao_vivo">Ao Vivo</option>
+                        <option value="encerrado">Encerrado</option>
+                      </select>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <button
+                        onClick={() => handleSaveResult(match.id)}
+                        disabled={savingResult === match.id}
+                        className="px-3 py-1.5 bg-[#66B82F] hover:bg-[#529424] text-black font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                      >
+                        {savingResult === match.id ? '...' : 'Salvar'}
+                      </button>
+                      {resultMsg?.id === match.id && (
+                        <span className={`block text-[9px] mt-1 ${resultMsg.ok ? 'text-green-400' : 'text-red-400'}`}>
+                          {resultMsg.text}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {matches.length === 0 && (
+            <div className="p-6 text-center text-[10px] text-[#9cb1cc]">
+              Nenhuma partida disponível para configurar.
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* CADASTRO & INTEGRADOR DE SINCRONIA AUTOMÁTICA OFICIAL (match_sync_service) */}
       <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl select-none text-left mb-6">

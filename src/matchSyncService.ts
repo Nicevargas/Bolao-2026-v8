@@ -102,250 +102,9 @@ class FIFAPublicCDNProvider implements MatchSyncProvider {
       }
     }
 
-    // Embed pristine, complete, dynamic model representation of the 12 official matches (+ slots for dynamic updates)
-    // This serves as the decoupled FIFA core catalog, preventing blank screens or errors
-    const officialFIFASchedule: OfficialMatch[] = [
-      {
-        id: 'm1',
-        external_id: 'fifa-2026-m1',
-        source: 'fifa',
-        phase: 'Fase de Grupos',
-        group_name: 'Grupo A',
-        round_number: 'Fase de Grupos - Rodada 1',
-        team_a: 'Brasil',
-        team_b: 'Argentina',
-        flag_a: '🇧🇷',
-        flag_b: '🇦🇷',
-        match_date: '2026-06-11T16:00:00Z',
-        stadium: 'Estádio MetLife',
-        city: 'East Rutherford',
-        country: 'EUA',
-        goals_a: 2,
-        goals_b: 1,
-        status: 'finished',
-        last_sync: nowISO
-      },
-      {
-        id: 'm2',
-        external_id: 'fifa-2026-m2',
-        source: 'fifa',
-        phase: 'Fase de Grupos',
-        group_name: 'Grupo A',
-        round_number: 'Fase de Grupos - Rodada 1',
-        team_a: 'Estados Unidos',
-        team_b: 'México',
-        flag_a: '🇺🇸',
-        flag_b: '🇲🇽',
-        match_date: '2026-06-11T19:00:00Z',
-        stadium: 'Estádio Azteca',
-        city: 'Cidade do México',
-        country: 'México',
-        goals_a: 2,
-        goals_b: 2,
-        status: 'live',
-        last_sync: nowISO
-      },
-      {
-        id: 'm3',
-        external_id: 'fifa-2026-m3',
-        source: 'fifa',
-        phase: 'Fase de Grupos',
-        group_name: 'Grupo B',
-        round_number: 'Fase de Grupos - Rodada 1',
-        team_a: 'França',
-        team_b: 'Alemanha',
-        flag_a: '🇫🇷',
-        flag_b: '🇩🇪',
-        match_date: '2026-06-12T13:00:00Z',
-        stadium: 'Estádio SoFi',
-        city: 'Los Angeles',
-        country: 'EUA',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm4',
-        external_id: 'fifa-2026-m4',
-        source: 'fifa',
-        phase: 'Fase de Grupos',
-        group_name: 'Grupo B',
-        round_number: 'Fase de Grupos - Rodada 1',
-        team_a: 'Espanha',
-        team_b: 'Portugal',
-        flag_a: '🇪🇸',
-        flag_b: '🇵🇹',
-        match_date: '2026-06-12T16:00:00Z',
-        stadium: 'Hard Rock Stadium',
-        city: 'Miami',
-        country: 'EUA',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm5',
-        external_id: 'fifa-2026-m5',
-        source: 'fifa',
-        phase: 'Fase de Grupos',
-        group_name: 'Grupo A',
-        round_number: 'Fase de Grupos - Rodada 2',
-        team_a: 'Brasil',
-        team_b: 'Estados Unidos',
-        flag_a: '🇧🇷',
-        flag_b: '🇺🇸',
-        match_date: '2026-06-15T18:00:00Z',
-        stadium: 'Estádio MetLife',
-        city: 'East Rutherford',
-        country: 'EUA',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm6',
-        external_id: 'fifa-2026-m6',
-        source: 'fifa',
-        phase: 'Fase de Grupos',
-        group_name: 'Grupo A',
-        round_number: 'Fase de Grupos - Rodada 2',
-        team_a: 'Argentina',
-        team_b: 'México',
-        flag_a: '🇦🇷',
-        flag_b: '🇲🇽',
-        match_date: '2026-06-16T21:00:00Z',
-        stadium: 'BC Place',
-        city: 'Vancouver',
-        country: 'Canadá',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm7',
-        external_id: 'fifa-2026-m7',
-        source: 'fifa',
-        phase: 'Oitavas de Final',
-        group_name: 'Oitavas',
-        round_number: 'Oitavas de Final',
-        team_a: 'Japão',
-        team_b: 'Canadá',
-        flag_a: '🇯🇵',
-        flag_b: '🇨🇦',
-        match_date: '2026-06-25T18:00:00Z',
-        stadium: 'Mercedes-Benz Stadium',
-        city: 'Atlanta',
-        country: 'EUA',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm8',
-        external_id: 'fifa-2026-m8',
-        source: 'fifa',
-        phase: 'Quartas de Final',
-        group_name: 'Quartas',
-        round_number: 'Quartas de Final',
-        team_a: 'Inglaterra',
-        team_b: 'Uruguai',
-        flag_a: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-        flag_b: '🇺🇾',
-        match_date: '2026-06-30T20:00:00Z',
-        stadium: 'Gillette Stadium',
-        city: 'Boston',
-        country: 'EUA',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm9',
-        external_id: 'fifa-2026-m9',
-        source: 'fifa',
-        phase: 'Semifinal',
-        group_name: 'Semifinal',
-        round_number: 'Semifinal',
-        team_a: 'Holanda',
-        team_b: 'Bélgica',
-        flag_a: '🇳🇱',
-        flag_b: '🇧🇪',
-        match_date: '2026-07-05T19:00:00Z',
-        stadium: 'AT&T Stadium',
-        city: 'Dallas',
-        country: 'EUA',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm10',
-        external_id: 'fifa-2026-m10',
-        source: 'fifa',
-        phase: 'Disputa de Terceiro Lugar',
-        group_name: 'Fase Final',
-        round_number: 'Disputa de Terceiro Lugar',
-        team_a: 'Marrocos',
-        team_b: 'Croácia',
-        flag_a: '🇲🇦',
-        flag_b: '🇭🇷',
-        match_date: '2026-07-11T16:00:00Z',
-        stadium: 'Hard Rock Stadium',
-        city: 'Miami',
-        country: 'EUA',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm11',
-        external_id: 'fifa-2026-m11',
-        source: 'fifa',
-        phase: 'Final',
-        group_name: 'Fase Final',
-        round_number: 'Final',
-        team_a: 'Brasil',
-        team_b: 'França',
-        flag_a: '🇧🇷',
-        flag_b: '🇫🇷',
-        match_date: '2026-07-12T19:00:00Z',
-        stadium: 'Estádio MetLife',
-        city: 'East Rutherford',
-        country: 'EUA',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      },
-      {
-        id: 'm12',
-        external_id: 'fifa-2026-m12',
-        source: 'fifa',
-        phase: 'Fase de Grupos',
-        group_name: 'Grupo C',
-        round_number: 'Fase de Grupos - Rodada 1',
-        team_a: 'Aguardando definição oficial da FIFA',
-        team_b: 'Aguardando definição oficial da FIFA',
-        flag_a: '🏳️',
-        flag_b: '🏳️',
-        match_date: '2026-06-13T15:00:00Z',
-        stadium: 'Estádio Oficial',
-        city: 'TBD',
-        country: 'TBD',
-        goals_a: null,
-        goals_b: null,
-        status: 'scheduled',
-        last_sync: nowISO
-      }
-    ];
+    // No hardcoded schedule — only real data from API is used.
+    // If the GitHub fetch fails, return empty array to prevent fake matches.
+    const officialFIFASchedule: OfficialMatch[] = [];
 
     if (data && data.matches && Array.isArray(data.matches)) {
       // Map github-hosted dynamic updates if successfully fetched
@@ -700,8 +459,21 @@ export class MatchSyncService {
               }
             }
           } else {
-            // Create new matches dynamically
-            await client.from('matches').insert(matchPayload);
+            // Dedup: check if same teams + date already exist under a different ID
+            const { data: existingDup } = await client
+              .from('matches')
+              .select('id')
+              .eq('team_a', officialMatch.team_a)
+              .eq('team_b', officialMatch.team_b)
+              .eq('match_date', officialMatch.match_date)
+              .maybeSingle();
+
+            if (existingDup) {
+              // Update the existing row with the new ID and data
+              await client.from('matches').update(matchPayload).eq('id', existingDup.id);
+            } else {
+              await client.from('matches').insert(matchPayload);
+            }
           }
         }
 

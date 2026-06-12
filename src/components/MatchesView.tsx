@@ -304,7 +304,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                             />
                             <button
                               onClick={() => handleSave(match.id)}
-                              className="ml-0.5 md:ml-1 px-1 md:px-1.5 py-0.5 bg-gradient-to-r from-primary to-secondary text-white rounded text-[8px] md:text-[9px] font-black uppercase tracking-widest cursor-pointer"
+                              className="ml-1 px-2 md:px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white rounded-md text-[9px] md:text-[10px] font-black uppercase tracking-wider cursor-pointer shadow-lg shadow-green-500/25 hover:shadow-green-400/40 transition-all active:scale-95"
                               title="Salvar palpite"
                             >
                               OK
@@ -448,7 +448,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                       </div>
                       <button
                         onClick={() => handleSave(match.id)}
-                        className="w-full py-2.5 bg-[#1670D8] hover:brightness-110 rounded-lg text-[10px] font-black uppercase tracking-wider font-headline font-bold text-white cursor-pointer"
+                        className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 rounded-xl text-[11px] font-black uppercase tracking-wider font-headline text-white cursor-pointer shadow-lg shadow-green-500/30 hover:shadow-green-400/50 transition-all active:scale-[0.98]"
                       >
                         SALVAR PALPITE
                       </button>

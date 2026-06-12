@@ -144,6 +144,14 @@ export default function App() {
     }
   };
 
+  // Check URL params for debug mode
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('debug') === 'true') {
+      setActiveTab('debug');
+    }
+  }, []);
+
   // Run initialization
   useEffect(() => {
     const bootstrap = async () => {

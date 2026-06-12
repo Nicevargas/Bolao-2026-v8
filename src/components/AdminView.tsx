@@ -192,6 +192,12 @@ export const AdminView: React.FC<AdminViewProps> = ({
             Adicionar Organização
           </button>
           
+          <a 
+            href="?debug=true"
+            className="px-4 py-2.5 rounded-lg bg-[#D91C7A]/20 border border-[#D91C7A]/40 text-[#D91C7A] hover:bg-[#D91C7A]/30 font-headline text-[10px] font-black tracking-wider uppercase cursor-pointer inline-flex items-center gap-1.5"
+          >
+            DEBUG BD
+          </a>
 
         </div>
       </div>

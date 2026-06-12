@@ -442,12 +442,7 @@ export default function App() {
               {isAdminMode && activeUser?.isAdmin ? (
                 <AdminView 
                   stats={adminStats}
-                  companies={companies}
-                  onAddCompany={handleAddCompany}
-                  auditLogs={auditLogs}
                   matches={matches}
-
-
                   onSyncComplete={syncDatabaseStates}
                 />
               ) : (

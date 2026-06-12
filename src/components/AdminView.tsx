@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
-import { Company, AuditLog, AdminStats, Match } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import { AdminStats, Match } from '../types';
+import { motion } from 'motion/react';
 import { 
-  Building2, 
   Users, 
   Dribbble, 
-  ShieldAlert, 
   TrendingUp, 
-  X, 
-  History,
   CheckCircle,
   Coins,
   Shield,
@@ -18,42 +14,22 @@ import {
   getStoredUsers, 
   getStoredPredictions, 
   getStoredMatches, 
-  getStoredInvitations,
-  getStoredCompanies 
+  getStoredInvitations 
 } from '../db';
 import { saveSupabaseOfficialMatchResult } from '../supabaseService';
 import { saveStoredMatches, getStoredMatches, recalculateEveryonePoints } from '../db';
 
 interface AdminViewProps {
   stats: AdminStats;
-  companies: Company[];
-  onAddCompany: (company: Omit<Company, 'id' | 'registeredDate'>) => void;
-  auditLogs: AuditLog[];
   matches: Match[];
   onSyncComplete?: () => void | Promise<void>;
 }
 
 export const AdminView: React.FC<AdminViewProps> = ({
   stats,
-  companies,
-  onAddCompany,
-  auditLogs,
   matches,
   onSyncComplete,
 }) => {
-  const [activeSubView, setActiveSubView] = useState<'overview' | 'companies'>('overview');
-  
-  // Modals status
-  const [companyModalOpen, setCompanyModalOpen] = useState(false);
-  const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
-  
-  // Registration form values
-  const [companyName, setCompanyName] = useState('');
-  const [companyDomain, setCompanyDomain] = useState('');
-  const [companyUsers, setCompanyUsers] = useState('150');
-
-  // Broadcast message
-  const [broadcastMsg, setBroadcastMsg] = useState('');
 
   // Manual match result form state
   const [resultForm, setResultForm] = useState<Record<string, { goalsA: string; goalsB: string; status: string }>>({});
@@ -101,43 +77,13 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const allUsers = isDBConnected ? [] : getStoredUsers();
   const allPredictions = isDBConnected ? [] : getStoredPredictions();
   const allMatches = isDBConnected ? [] : getStoredMatches();
-  const allInvitations = isDBConnected ? [] : getStoredInvitations();
-  const activeCompanies = isDBConnected ? [] : getStoredCompanies();
 
   const totalUsersCount = isDBConnected ? stats.totalUsers : allUsers.length;
   const totalAdminsCount = isDBConnected ? 1 : allUsers.filter(u => u.isAdmin).length;
   const totalPredictionsCount = isDBConnected ? stats.activeBets : allPredictions.length;
   const completedMatchesCount = isDBConnected ? matches.filter(m => m.scoreA !== undefined).length : allMatches.filter(m => m.status === 'encerrado').length;
   const pendingMatchesCount = isDBConnected ? matches.filter(m => m.scoreA === undefined).length : allMatches.filter(m => m.status === 'aguardando' || m.status === 'ao_vivo').length;
-  
-  // Used invites (sum of usedSlots in all invitations)
-  const usedInvitesCount = isDBConnected ? 2 : allInvitations.reduce((sum, inv) => sum + inv.usedSlots, 0);
-
-  // Submit new company domain
-  const submitCompany = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!companyName || !companyDomain) {
-      alert('Por favor, preencha todos os campos!');
-      return;
-    }
-    onAddCompany({
-      name: companyName,
-      domain: companyDomain,
-      usersCount: parseInt(companyUsers, 10) || 50,
-    });
-    setCompanyName('');
-    setCompanyDomain('');
-    setCompanyModalOpen(false);
-    alert(`Organização "${companyName}" integrada e autorizada com sucesso!`);
-  };
-
-  const sendBroadcast = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!broadcastMsg) return;
-    alert(`NOTIFICAÇÃO CENTRAL ENVIADA:\n"${broadcastMsg}"\n\nAvisos foram disparados para todos os colaboradores do servidor.`);
-    setBroadcastMsg('');
-    setBroadcastModalOpen(false);
-  };
+  const usedInvitesCount = isDBConnected ? 2 : 0;
 
   return (
     <motion.div 
@@ -165,15 +111,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 shrink-0">
-          <button 
-            onClick={() => setCompanyModalOpen(true)}
-            className="px-5 py-2.5 rounded-lg border border-outline hover:bg-white/5 text-on-surface font-headline text-[10px] font-black tracking-wider uppercase cursor-pointer"
-          >
-            Adicionar Organização
-          </button>
-          
-        </div>
+        <div className="flex flex-wrap gap-2 shrink-0"></div>
       </div>
 
       {/* Required Telemetry widgets grid following strict user requirements */}
@@ -441,147 +379,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
           )}
         </div>
       </section>
-
-      {/* Domain database tracking list container */}
-      <section className="glass-card rounded-2xl p-6 shadow-xl border border-white/5 select-none leading-none">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-headline text-sm font-black text-on-surface flex items-center gap-2 font-bold uppercase tracking-wider">
-            <Building2 size={16} className="text-primary" /> Empresas Corporativas & Domínios Integrados
-          </h3>
-          <span className="text-[10px] font-bold text-on-surface-variant bg-[#1670D8]/10 text-[#1670D8] border border-[#1670D8]/20 py-1.5 px-3 rounded-full font-bold">
-            {activeCompanies.length} Organizações Ativas
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {activeCompanies.map((comp) => (
-            <div 
-              key={comp.id} 
-              className="bg-black/30 p-4.5 rounded-xl border border-white/5 hover:border-white/10 transition-all flex flex-col justify-between h-28"
-            >
-              <div>
-                <p className="text-xs font-bold text-on-surface truncate">{comp.name}</p>
-                <p className="text-[10px] text-outline font-medium mt-1 truncate font-mono">{comp.domain}</p>
-              </div>
-              <div className="flex justify-between items-center text-[10px] pt-2 border-t border-white/5 text-on-surface-variant">
-                <span>{comp.usersCount.toLocaleString()} Usuários Max</span>
-                <span className="text-[#66B82F] font-extrabold flex items-center gap-0.5 font-bold uppercase text-[9px] tracking-wider">
-                  Ativo
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Audit log details feed */}
-      <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl leading-none">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-headline text-sm font-black flex items-center gap-2 text-on-surface font-bold uppercase tracking-wider">
-            <History size={16} className="text-secondary" /> Logs de Auditoria do Servidor
-          </h3>
-          <span className="text-[10px] font-black text-[#D91C7A] uppercase tracking-wider">Histórico de Segurança Ativo</span>
-        </div>
-
-        {/* Logs feed list */}
-        <div className="flex flex-col gap-4 max-h-48 lg:max-h-[290px] overflow-y-auto pr-1">
-          {auditLogs.slice(0, 10).map((log) => {
-            return (
-              <div key={log.id} className="flex gap-4 p-3 rounded-xl bg-black/20 hover:bg-black/40 transition-all">
-                <ShieldAlert size={14} className="text-[#D91C7A] shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="text-xs font-bold leading-normal truncate text-on-surface">{log.title}</p>
-                  <p className="text-[10px] text-on-surface-variant font-medium mt-1 leading-relaxed">{log.detail}</p>
-                  <span className="text-[9px] font-sans font-bold text-outline uppercase block mt-1 tracking-wider">{log.timeLabel}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Modals structure overlays */}
-      {/* 1. Register Company Modal overlay */}
-      <AnimatePresence>
-        {companyModalOpen && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-            <div className="relative w-full max-w-md glass-card rounded-2xl border border-white/25 overflow-hidden">
-              <div className="bg-surface-container-high px-6 py-4 flex justify-between items-center border-b border-white/10 select-none">
-                <span className="font-headline text-sm font-bold text-on-surface flex items-center gap-2 uppercase tracking-wide">
-                  <Building2 size={16} className="text-secondary" /> Cadastrar Novo Domínio Corporativo
-                </span>
-                <button 
-                  onClick={() => setCompanyModalOpen(false)}
-                  className="p-1 hover:bg-white/10 rounded-full transition-all text-on-surface-variant cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <form onSubmit={submitCompany} className="p-6 space-y-4">
-                <div>
-                  <label className="text-[10px] uppercase font-black text-primary block mb-2 tracking-wide font-bold">
-                    Nome da Empresa / Grupo
-                  </label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="Ex: Natação Criativa Filial SP"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full bg-black/40 border border-outline-variant rounded-lg p-3 text-xs text-on-surface outline-none focus:border-secondary"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] uppercase font-black text-primary block mb-2 tracking-wide font-bold">
-                    Domínio de E-mail Autorizado (Exemplo: @empresa.com)
-                  </label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="Ex: natacaocriativa.com.br"
-                    value={companyDomain}
-                    onChange={(e) => setCompanyDomain(e.target.value)}
-                    className="w-full bg-black/40 border border-outline-variant rounded-lg p-3 text-xs text-on-surface outline-none focus:border-secondary"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] uppercase font-black text-primary block mb-2 tracking-wide font-bold">
-                    Slots de Inscrição Permitidos
-                  </label>
-                  <select
-                    value={companyUsers}
-                    onChange={(e) => setCompanyUsers(e.target.value)}
-                    className="w-full bg-black/40 border border-outline-variant rounded-lg p-3 text-xs text-on-surface outline-none focus:border-secondary cursor-pointer font-bold"
-                  >
-                    <option value="150">Até 150 colaboradores</option>
-                    <option value="500">Até 500 colaboradores</option>
-                    <option value="1500">Até 1500 colaboradores</option>
-                  </select>
-                </div>
-
-                <div className="pt-4 flex gap-3 justify-end leading-none">
-                  <button 
-                    type="button"
-                    onClick={() => setCompanyModalOpen(false)}
-                    className="px-5 py-3 rounded-lg border border-white/10 text-on-surface-variant text-xs font-bold hover:bg-white/5 active:scale-95 transition-all uppercase cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    type="submit"
-                    className="px-5 py-3 rounded-lg bg-gradient-to-r from-primary to-secondary text-white text-xs font-black hover:brightness-110 active:scale-95 transition-all shadow-lg uppercase cursor-pointer font-bold"
-                  >
-                    Salvar Empresa
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };

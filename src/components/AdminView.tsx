@@ -18,6 +18,7 @@ import {
 } from '../db';
 import { saveSupabaseOfficialMatchResult } from '../supabaseService';
 import { saveStoredMatches, getStoredMatches, recalculateEveryonePoints } from '../db';
+import { MatchSyncService } from '../matchSyncService';
 
 interface AdminViewProps {
   stats: AdminStats;
@@ -35,6 +36,27 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [resultForm, setResultForm] = useState<Record<string, { goalsA: string; goalsB: string; status: string }>>({});
   const [savingResult, setSavingResult] = useState<string | null>(null);
   const [resultMsg, setResultMsg] = useState<{ id: string; text: string; ok: boolean } | null>(null);
+
+  // API sync state
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncMsg('Sincronizando...');
+    try {
+      const res = await MatchSyncService.syncNow('football-data');
+      if (res.success) {
+        setSyncMsg(`${res.count} jogos atualizados (estádios, datas, etc)`);
+        if (onSyncComplete) onSyncComplete();
+      } else {
+        setSyncMsg(`Falha: ${res.message}`);
+      }
+    } catch (err: any) {
+      setSyncMsg(`Erro: ${err.message}`);
+    }
+    setSyncing(false);
+  };
 
   const handleSaveResult = async (matchId: string) => {
     const form = resultForm[matchId];
@@ -378,6 +400,31 @@ export const AdminView: React.FC<AdminViewProps> = ({
             </div>
           )}
         </div>
+      </section>
+
+      {/* Sincronizar dados via API */}
+      <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl">
+        <div className="flex items-center gap-3 mb-4">
+          <h3 className="font-headline text-sm font-black text-on-surface uppercase tracking-wide flex-1">
+            Sincronizar Dados via API
+          </h3>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="px-5 py-2 bg-[#1670D8] hover:bg-[#1670D8]/80 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+          >
+            {syncing ? 'Sincronizando...' : 'Sincronizar'}
+          </button>
+        </div>
+        <p className="text-[10px] text-on-surface-variant leading-relaxed">
+          Atualiza estádios, datas e informações das partidas a partir da Football-Data.org.
+          Resultados dos jogos não são alterados — apenas dados cadastrais.
+        </p>
+        {syncMsg && (
+          <div className={`mt-3 p-3 rounded-lg text-[10px] ${syncMsg.includes('Erro') || syncMsg.includes('Falha') ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+            {syncMsg}
+          </div>
+        )}
       </section>
     </motion.div>
   );

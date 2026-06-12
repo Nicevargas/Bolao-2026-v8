@@ -32,15 +32,19 @@ export const TestApiView: React.FC = () => {
         const data = await res.json();
         setResult({ source: 'Football-Data.org', raw: data, matches: data.matches });
       } else if (prov === 'fifa') {
-        const url = 'https://raw.githubusercontent.com/openfootball/world-cup/master/2026/matches.json';
-        const res = await fetch(url);
-        if (!res.ok) {
-          setError(`HTTP ${res.status}: ${res.statusText}`);
+        const base = 'https://raw.githubusercontent.com/openfootball/worldcup/master/2026--usa';
+        const [txtRes, csvRes] = await Promise.all([
+          fetch(`${base}/cup.txt`),
+          fetch(`${base}/cup_stadiums.csv`)
+        ]);
+        if (!txtRes.ok) {
+          setError(`HTTP ${txtRes.status}: cup.txt not found`);
           setLoading(false);
           return;
         }
-        const data = await res.json();
-        setResult({ source: 'FIFA (openfootball)', raw: data, matches: data.matches });
+        const text = await txtRes.text();
+        const csv = csvRes.ok ? await csvRes.text() : '';
+        setResult({ source: 'FIFA (openfootball)', raw: { text: text.slice(0, 2000), csv: csv.slice(0, 500) }, matches: null, rawText: text });
       }
     } catch (e: any) {
       setError(`Erro: ${e.message}`);
@@ -95,22 +99,45 @@ export const TestApiView: React.FC = () => {
       {result && (
         <div>
           <div style={{ color: '#66B82F', marginBottom: 8 }}>
-            <strong>{result.source}</strong> — Total de partidas: {result.matches?.length || 0}
+            <strong>{result.source}</strong>
           </div>
+
+          {provider === 'fifa' && result.rawText && (
+            <details style={{ marginBottom: 16 }}>
+              <summary style={{ cursor: 'pointer', color: '#D91C7A', fontWeight: 'bold', marginBottom: 8 }}>
+                RAW — cup.txt (primeiros 2000 caracteres)
+              </summary>
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: 10, background: '#1a1a2e', padding: 12, borderRadius: 8, maxHeight: 400, overflow: 'auto' }}>
+                {result.rawText}
+              </pre>
+            </details>
+          )}
+
+          {provider === 'fifa' && result.raw?.csv && (
+            <details style={{ marginBottom: 16 }}>
+              <summary style={{ cursor: 'pointer', color: '#D91C7A', fontWeight: 'bold', marginBottom: 8 }}>
+                RAW — cup_stadiums.csv (primeiros 500 caracteres)
+              </summary>
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: 10, background: '#1a1a2e', padding: 12, borderRadius: 8, maxHeight: 400, overflow: 'auto' }}>
+                {result.raw.csv}
+              </pre>
+            </details>
+          )}
 
           {result.matches && result.matches.length > 0 && (
             <>
-              {/* RAW JSON do primeiro jogo */}
+              <div style={{ color: '#66B82F', marginBottom: 8 }}>
+                Total de partidas: {result.matches.length}
+              </div>
               <details style={{ marginBottom: 16 }}>
                 <summary style={{ cursor: 'pointer', color: '#D91C7A', fontWeight: 'bold', marginBottom: 8 }}>
-                  RAW JSON — Primeira partida (campos disponíveis)
+                  RAW JSON — Primeira partida
                 </summary>
                 <pre style={{ whiteSpace: 'pre-wrap', fontSize: 10, background: '#1a1a2e', padding: 12, borderRadius: 8, maxHeight: 400, overflow: 'auto' }}>
                   {JSON.stringify(result.matches[0], null, 2)}
                 </pre>
               </details>
 
-              {/* Tabela com todos os campos */}
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', background: '#111', fontSize: 11 }}>
                   <thead>
@@ -128,9 +155,8 @@ export const TestApiView: React.FC = () => {
                   </thead>
                   <tbody>
                     {result.matches.slice(0, 50).map((m: any, i: number) => {
-                      // Try different field paths for venue/stadium
                       const venue = m.venue || m.estadio || m.stadium || (m.venue?.name) || m.match_venue || m.location || '-';
-                      const city = m.city || m.cidade || (m.venue?.city) || (m.match_city) || (m.venue?.split(',').length > 1 ? m.venue?.split(',')[1]?.trim() : '-');
+                      const city = m.city || m.cidade || (m.venue?.city) || (m.match_city) || '-';
                       const dateStr = m.utcDate || m.date || m.match_date || m.matchDate || '';
                       const timeStr = dateStr ? new Date(dateStr).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-';
                       const matchDate = dateStr ? new Date(dateStr).toLocaleDateString('pt-BR') : '-';
@@ -155,6 +181,12 @@ export const TestApiView: React.FC = () => {
                 </table>
               </div>
             </>
+          )}
+
+          {!result.matches && (
+            <div style={{ marginTop: 10, padding: 12, background: '#222', borderRadius: 8, color: '#ff0' }}>
+              Nenhuma partida parseada. <strong>Clique no RAW acima</strong> para ver o conteúdo bruto do cup.txt
+            </div>
           )}
 
           {result.matches && result.matches.length === 0 && (

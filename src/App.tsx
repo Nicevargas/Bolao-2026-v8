@@ -8,7 +8,7 @@ import { DashboardView } from './components/DashboardView';
 import { MatchesView } from './components/MatchesView';
 import { LeaderboardView } from './components/LeaderboardView';
 import { AdminView } from './components/AdminView';
-import { DebugMatchesView } from './components/DebugMatchesView';
+
 import { SplashView } from './components/SplashView';
 import { LoginView } from './components/LoginView';
 import { InvitationView } from './components/InvitationView';
@@ -143,14 +143,6 @@ export default function App() {
       setIsSyncing(false);
     }
   };
-
-  // Check URL params for debug mode
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('debug') === 'true') {
-      setActiveTab('debug');
-    }
-  }, []);
 
   // Run initialization
   useEffect(() => {
@@ -481,38 +473,11 @@ export default function App() {
                   {activeTab === 'invitations' && (
                     <InvitationView />
                   )}
-                  {activeTab === 'debug' && (
-                    <DebugMatchesView />
-                  )}
+
                 </>
               )}
             </div>
           </div>
-
-          {/* Debug button */}
-          {activeUser?.isAdmin && (
-            <button
-              onClick={() => setActiveTab(activeTab === 'debug' ? 'dashboard' : 'debug')}
-              style={{
-                position: 'fixed',
-                bottom: 80,
-                right: 16,
-                zIndex: 9999,
-                background: '#D91C7A',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 8,
-                padding: '6px 10px',
-                fontSize: 10,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                opacity: 0.5
-              }}
-              title="Debug: Ver jogos do banco"
-            >
-              DEBUG
-            </button>
-          )}
 
           {/* Bottom quick navigation mobile tab bar */}
           <BottomNav 

@@ -1,4 +1,4 @@
-export type ActiveTab = 'dashboard' | 'matches' | 'leaderboard' | 'admin' | 'invitations' | 'debug';
+export type ActiveTab = 'dashboard' | 'matches' | 'leaderboard' | 'admin' | 'invitations';
 
 export interface Match {
   id: string;

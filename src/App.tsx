@@ -12,7 +12,6 @@ import { AdminView } from './components/AdminView';
 import { SplashView } from './components/SplashView';
 import { LoginView } from './components/LoginView';
 import { InvitationView } from './components/InvitationView';
-import { TestApiView } from './components/TestApiView';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { 
   getSupabaseMatchesWithBets,
@@ -22,7 +21,6 @@ import {
   createSupabaseAuditLog,
   syncOfficialMatchesToSupabase
 } from './supabaseService';
-import { MatchSyncService } from './matchSyncService';
 import { 
   getActiveUser, 
   getMatchesWithParsedBets, 
@@ -152,32 +150,9 @@ export default function App() {
         await syncOfficialMatchesToSupabase();
       }
       
-      // FIFA / official sports service automated background synchronization at system boot
-      try {
-        console.log('Booting system: verifying if matches synchronization is stale...');
-        await MatchSyncService.syncIfStale();
-      } catch (err) {
-        console.warn('Boot match synchronization check skipped or failed:', err);
-      }
-
       await syncDatabaseStates();
     };
     bootstrap();
-
-    // Check & synchronise match scheduling and results automatically in background every 1 hour
-    const hourlyTimer = setInterval(async () => {
-      try {
-        console.log('Automated background hourly interval check triggered. Synchronising matches...');
-        await MatchSyncService.syncNow();
-        await syncDatabaseStates();
-      } catch (err) {
-        console.error('Hourly automatic synchronization task failed:', err);
-      }
-    }, 60 * 60 * 1000);
-
-    return () => {
-      clearInterval(hourlyTimer);
-    };
   }, []);
 
   // Supabase Real-time postgres_changes listener setup
@@ -376,11 +351,6 @@ export default function App() {
     pendingResults: isDBConnected ? matches.filter(m => m.scoreA === undefined).length : getStoredMatches().filter((m: any) => m.status !== 'encerrado').length
   };
 
-
-  // Show test API page if ?api param is present
-  if (new URLSearchParams(window.location.search).has('api')) {
-    return <TestApiView />;
-  }
 
   // Main system renderer
   return (

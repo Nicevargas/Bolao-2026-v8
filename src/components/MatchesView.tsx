@@ -254,7 +254,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
             </thead>
             <tbody className="divide-y divide-white/5 font-sans text-xs">
               {filteredMatches.map((match) => {
-                const isLocked = new Date(match.dateStr) <= new Date() || match.type === 'live' || match.type === 'completed';
+                const isLocked = new Date(match.dateStr).getTime() - 300000 <= Date.now() || match.type === 'live' || match.type === 'completed';
                 const hasUserBet = match.userBet !== undefined;
 
                 const matchDate = new Date(match.dateStr);
@@ -376,7 +376,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
       {viewMode === 'cards' && (
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredMatches.map((match) => {
-            const isLocked = new Date(match.dateStr) <= new Date() || match.type === 'live' || match.type === 'completed';
+            const isLocked = new Date(match.dateStr).getTime() - 300000 <= Date.now() || match.type === 'live' || match.type === 'completed';
             const hasUserBet = match.userBet !== undefined;
 
             return (

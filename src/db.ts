@@ -330,10 +330,8 @@ export function savePrediction(userId: string, matchId: string, scoreA: number, 
     return { success: false, message: 'Partida não encontrada.' };
   }
 
-  // AUTOMATIC CLOSING VERIFICATION: Check match schedule trigger
-  const matchTime = new Date(match.data_hora);
-  const now = new Date();
-  if (matchTime <= now || match.status === 'encerrado' || match.status === 'ao_vivo') {
+  // Bloqueia palpite 5 minutos antes do jogo
+  if (new Date(match.data_hora).getTime() - 300000 <= Date.now() || match.status === 'encerrado' || match.status === 'ao_vivo') {
     return { success: false, message: 'Os palpites para esta partida foram encerrados.' };
   }
 
@@ -402,7 +400,7 @@ export function getMatchesWithParsedBets(userId: string): Match[] {
     const hasBet = userBet !== undefined;
 
     // Is closed verification
-    const isLocked = new Date(m.data_hora) <= new Date() || m.status === 'encerrado' || m.status === 'ao_vivo';
+    const isLocked = new Date(m.data_hora).getTime() - 300000 <= Date.now() || m.status === 'encerrado' || m.status === 'ao_vivo';
 
     return {
       id: m.id,

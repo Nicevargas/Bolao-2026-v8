@@ -3,7 +3,7 @@ import { Match, Participant, AuditLog } from './types';
 
 // Helper to translate database match row to frontend Match structure
 export function mapDbMatchToModel(dbMatch: any, userBet?: any): Match {
-  const isLocked = new Date(dbMatch.match_date) <= new Date() || dbMatch.status === 'encerrado' || dbMatch.status === 'ao_vivo' || dbMatch.locked;
+  const isLocked = new Date(dbMatch.match_date).getTime() - 300000 <= Date.now() || dbMatch.status === 'encerrado' || dbMatch.status === 'ao_vivo' || dbMatch.locked;
 
   return {
     id: dbMatch.id,
@@ -185,7 +185,7 @@ export async function saveSupabaseBet(userId: string, matchId: string, goalsA: n
       return { success: false, message: 'Partida não encontrada.' };
     }
 
-    const isLocked = new Date(match.match_date) <= new Date() || match.status === 'encerrado' || match.status === 'ao_vivo' || match.locked;
+    const isLocked = new Date(match.match_date).getTime() - 300000 <= Date.now() || match.status === 'encerrado' || match.status === 'ao_vivo' || match.locked;
     if (isLocked) {
       return { success: false, message: 'Os palpites para esta partida foram encerrados.' };
     }

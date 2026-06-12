@@ -445,7 +445,7 @@ export default function App() {
                   companies={companies}
                   onAddCompany={handleAddCompany}
                   auditLogs={auditLogs}
-                  matches={getMatchesWithParsedBets(activeUser.id)}
+                  matches={matches}
 
 
                   onSyncComplete={syncDatabaseStates}

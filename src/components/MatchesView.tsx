@@ -280,14 +280,29 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                     <td className="py-2 px-1 md:py-4 md:px-4">
                       <div className="flex items-center justify-center gap-1">
                         {isLocked ? (
-                          <div className="flex items-center gap-0.5 bg-black/40 px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-md border border-white/5">
-                            <span className="font-headline font-black text-slate-200 text-[11px] md:text-xs">
-                              {hasUserBet ? match.userBet?.scoreA : (match.scoreA !== undefined ? match.scoreA : '-')}
-                            </span>
-                            <span className="text-[9px] md:text-[10px] text-[#D91C7A] font-bold">:</span>
-                            <span className="font-headline font-black text-slate-200 text-[11px] md:text-xs">
-                              {hasUserBet ? match.userBet?.scoreB : (match.scoreB !== undefined ? match.scoreB : '-')}
-                            </span>
+                          <div className="flex flex-col items-center gap-0.5">
+                            <div className="flex items-center gap-0.5 bg-black/40 px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-md border border-white/5">
+                              <span className="font-headline font-black text-slate-200 text-[11px] md:text-xs">
+                                {match.scoreA !== undefined ? match.scoreA : '-'}
+                              </span>
+                              <span className="text-[9px] md:text-[10px] text-[#D91C7A] font-bold">:</span>
+                              <span className="font-headline font-black text-slate-200 text-[11px] md:text-xs">
+                                {match.scoreB !== undefined ? match.scoreB : '-'}
+                              </span>
+                            </div>
+                            {hasUserBet && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-[8px] md:text-[9px] text-slate-400">
+                                  Palpite: {match.userBet?.scoreA}:{match.userBet?.scoreB}
+                                </span>
+                                {match.type === 'completed' && match.pointsEarned !== undefined && (
+                                  <span className="text-[8px] text-green-400 font-bold">+{match.pointsEarned}pts</span>
+                                )}
+                                {match.isAccurate && (
+                                  <span className="text-[8px] text-[#66B82F]">✓</span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="flex items-center gap-0.5 md:gap-1 select-none">
@@ -422,9 +437,19 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                       <p className="text-[10px] text-red-400 font-extrabold uppercase tracking-wider flex items-center justify-center gap-1">
                         <Lock size={12} /> Os palpites para esta partida foram encerrados.
                       </p>
+                      {(match.scoreA !== undefined && match.scoreB !== undefined) && (
+                        <div className="text-xs text-green-400 font-bold">
+                          Resultado: {match.scoreA} - {match.scoreB}
+                        </div>
+                      )}
                       {hasUserBet && (
                         <div className="text-xs font-headline font-black text-on-surface leading-none">
-                          SEU PALPITE DISPARADO: {match.userBet?.scoreA} - {match.userBet?.scoreB}
+                          SEU PALPITE: {match.userBet?.scoreA} - {match.userBet?.scoreB}
+                        </div>
+                      )}
+                      {hasUserBet && match.type === 'completed' && match.pointsEarned !== undefined && (
+                        <div className="text-[10px] text-green-400 font-bold">
+                          {match.isAccurate ? '✅ Palpite Exato!' : `+${match.pointsEarned} pontos`}
                         </div>
                       )}
                     </div>

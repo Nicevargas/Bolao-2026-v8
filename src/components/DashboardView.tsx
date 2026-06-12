@@ -64,8 +64,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const userRankIndex = sortedParticipants.findIndex(p => p.isUser);
   const userRank = userRankIndex >= 0 ? userRankIndex + 1 : '1';
 
-  // Get live or prominent upcoming matches
-  const featuredMatches = matches.slice(0, 3);
+  // Get live or prominent upcoming matches (priority: live > today > upcoming > recent completed)
+  const featuredMatches = (() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 86400000);
+
+    const live = matches.filter(m => m.type === 'live');
+    if (live.length > 0) return live.slice(0, 3);
+
+    const today = matches.filter(m => {
+      if (!m.dateStr) return false;
+      const d = new Date(m.dateStr);
+      return d >= todayStart && d < todayEnd;
+    });
+    if (today.length > 0) return today.slice(0, 3);
+
+    const upcoming = matches
+      .filter(m => m.type === 'upcoming')
+      .sort((a, b) => new Date(a.dateStr).getTime() - new Date(b.dateStr).getTime());
+    if (upcoming.length > 0) return upcoming.slice(0, 3);
+
+    const completed = matches
+      .filter(m => m.type === 'completed')
+      .sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
+    if (completed.length > 0) return completed.slice(0, 3);
+
+    return matches.slice(0, 3);
+  })();
   
   // Get quick Top 5 rankings
   const rankingPreview = participants.slice(0, 5);
@@ -290,7 +316,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </div>
 
                     <div className="font-headline text-center px-4 py-1.5 bg-black/30 border border-white/5 rounded-2xl flex items-center gap-3.5 select-none font-extrabold text-lg brand-gradient-text">
-                      {match.type === 'completed' || match.type === 'live' ? (
+                      {match.scoreA !== undefined && match.scoreB !== undefined ? (
                         <>
                           <span>{match.scoreA}</span>
                           <span className="text-xs text-on-surface-variant font-sans font-medium">X</span>
@@ -311,7 +337,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 select-none">
+                  {match.userBet && (
+                    <div className="text-center text-[10px] text-slate-400 font-bold select-none">
+                      Seu palpite: {match.userBet.scoreA} - {match.userBet.scoreB}
+                      {match.type === 'completed' && match.pointsEarned !== undefined && (
+                        <span className="text-green-400 ml-2">+{match.pointsEarned}pts</span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-2 pt-3 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 select-none">
                     <div className="flex items-center text-[11px] text-on-surface-variant gap-1">
                       <MapPin size={12} className="text-primary" />
                       <span>{match.stadium}</span>

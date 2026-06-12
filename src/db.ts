@@ -33,178 +33,7 @@ export interface Invitation {
   createdBy: string;
 }
 
-// Initial Copa 2026 official matches
-export const INITIAL_COPA_MATCHES = [
-  {
-    id: 'm1',
-    fase: 'Fase de Grupos',
-    rodada: 'Fase de Grupos - Rodada 1',
-    grupo: 'Grupo A',
-    time_a: 'Brasil',
-    time_b: 'Argentina',
-    bandeira_time_a: '🇧🇷',
-    bandeira_time_b: '🇦🇷',
-    data_hora: '2026-06-11T16:00:00Z',
-    estadio: 'Estádio MetLife',
-    cidade: 'East Rutherford',
-    pais: 'EUA',
-    status: 'encerrado',
-    gols_time_a: 2,
-    gols_time_b: 1
-  },
-  {
-    id: 'm2',
-    fase: 'Fase de Grupos',
-    rodada: 'Fase de Grupos - Rodada 1',
-    grupo: 'Grupo A',
-    time_a: 'Estados Unidos',
-    time_b: 'México',
-    bandeira_time_a: '🇺🇸',
-    bandeira_time_b: '🇲🇽',
-    data_hora: '2026-06-11T19:00:00Z',
-    estadio: 'Estádio Azteca',
-    cidade: 'Cidade do México',
-    pais: 'México',
-    status: 'ao_vivo',
-    gols_time_a: 2,
-    gols_time_b: 2
-  },
-  {
-    id: 'm3',
-    fase: 'Fase de Grupos',
-    rodada: 'Fase de Grupos - Rodada 1',
-    grupo: 'Grupo B',
-    time_a: 'França',
-    time_b: 'Alemanha',
-    bandeira_time_a: '🇫🇷',
-    bandeira_time_b: '🇩🇪',
-    data_hora: '2026-06-12T13:00:00Z',
-    estadio: 'Estádio SoFi',
-    cidade: 'Los Angeles',
-    pais: 'EUA',
-    status: 'aguardando'
-  },
-  {
-    id: 'm4',
-    fase: 'Fase de Grupos',
-    rodada: 'Fase de Grupos - Rodada 1',
-    grupo: 'Grupo B',
-    time_a: 'Espanha',
-    time_b: 'Portugal',
-    bandeira_time_a: '🇪🇸',
-    bandeira_time_b: '🇵🇹',
-    data_hora: '2026-06-12T16:00:00Z',
-    estadio: 'Hard Rock Stadium',
-    cidade: 'Miami',
-    pais: 'EUA',
-    status: 'aguardando'
-  },
-  {
-    id: 'm5',
-    fase: 'Fase de Grupos',
-    rodada: 'Fase de Grupos - Rodada 2',
-    grupo: 'Grupo A',
-    time_a: 'Brasil',
-    time_b: 'Estados Unidos',
-    bandeira_time_a: '🇧🇷',
-    bandeira_time_b: '🇺🇸',
-    data_hora: '2026-06-15T18:00:00Z',
-    estadio: 'Estádio MetLife',
-    cidade: 'East Rutherford',
-    pais: 'EUA',
-    status: 'aguardando'
-  },
-  {
-    id: 'm6',
-    fase: 'Fase de Grupos',
-    rodada: 'Fase de Grupos - Rodada 2',
-    grupo: 'Grupo A',
-    time_a: 'Argentina',
-    time_b: 'México',
-    bandeira_time_a: '🇦🇷',
-    bandeira_time_b: '🇲🇽',
-    data_hora: '2026-06-16T21:00:00Z',
-    estadio: 'BC Place',
-    cidade: 'Vancouver',
-    pais: 'Canadá',
-    status: 'aguardando'
-  },
-  {
-    id: 'm7',
-    fase: 'Oitavas de Final',
-    rodada: 'Oitavas de Final',
-    grupo: 'Oitavas',
-    time_a: 'Japão',
-    time_b: 'Canadá',
-    bandeira_time_a: '🇯🇵',
-    bandeira_time_b: '🇨🇦',
-    data_hora: '2026-06-25T18:00:00Z',
-    estadio: 'Mercedes-Benz Stadium',
-    cidade: 'Atlanta',
-    pais: 'EUA',
-    status: 'aguardando'
-  },
-  {
-    id: 'm8',
-    fase: 'Quartas de Final',
-    rodada: 'Quartas de Final',
-    grupo: 'Quartas',
-    time_a: 'Inglaterra',
-    time_b: 'Uruguai',
-    bandeira_time_a: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    bandeira_time_b: '🇺🇾',
-    data_hora: '2026-06-30T20:00:00Z',
-    estadio: 'Gillette Stadium',
-    cidade: 'Boston',
-    pais: 'EUA',
-    status: 'aguardando'
-  },
-  {
-    id: 'm9',
-    fase: 'Semifinal',
-    rodada: 'Semifinal',
-    grupo: 'Semifinal',
-    time_a: 'Holanda',
-    time_b: 'Bélgica',
-    bandeira_time_a: '🇳🇱',
-    bandeira_time_b: '🇧🇪',
-    data_hora: '2026-07-05T19:00:00Z',
-    estadio: 'AT&T Stadium',
-    cidade: 'Dallas',
-    pais: 'EUA',
-    status: 'aguardando'
-  },
-  {
-    id: 'm10',
-    fase: 'Disputa de Terceiro Lugar',
-    rodada: 'Disputa de Terceiro Lugar',
-    grupo: 'Fase Final',
-    time_a: 'Marrocos',
-    time_b: 'Croácia',
-    bandeira_time_a: '🇲🇦',
-    bandeira_time_b: '🇭🇷',
-    data_hora: '2026-07-11T16:00:00Z',
-    estadio: 'Hard Rock Stadium',
-    cidade: 'Miami',
-    pais: 'EUA',
-    status: 'aguardando'
-  },
-  {
-    id: 'm11',
-    fase: 'Final',
-    rodada: 'Final',
-    grupo: 'Fase Final',
-    time_a: 'Brasil',
-    time_b: 'França',
-    bandeira_time_a: '🇧🇷',
-    bandeira_time_b: '🇫🇷',
-    data_hora: '2026-07-12T19:00:00Z',
-    estadio: 'Estádio MetLife',
-    cidade: 'East Rutherford',
-    pais: 'EUA',
-    status: 'aguardando'
-  }
-];
+// Fake matches removed — only real API data is used
 
 // Seed standard initial participants list
 export const INITIAL_USERS: User[] = [
@@ -248,23 +77,7 @@ export const INITIAL_INVITATIONS: Invitation[] = [
   }
 ];
 
-export const INITIAL_PREDICTIONS: Prediction[] = [
-  // Seed initial values for user u3
-  {
-    user_id: 'u3',
-    match_id: 'm1',
-    placar_time_a: 2,
-    placar_time_b: 1,
-    data_palpite: '2026-06-11T03:00:00Z'
-  },
-  {
-    user_id: 'u3',
-    match_id: 'm2',
-    placar_time_a: 2,
-    placar_time_b: 2,
-    data_palpite: '2026-06-11T03:30:00Z'
-  }
-];
+export const INITIAL_PREDICTIONS: Prediction[] = [];
 
 // New dynamic point scoring calculation algorithm as per Copa 2026 guidelines
 export function calculatePredictionPoints(
@@ -369,9 +182,6 @@ export function initDB() {
   }
   if (!localStorage.getItem('bolao_predictions')) {
     localStorage.setItem('bolao_predictions', JSON.stringify(INITIAL_PREDICTIONS));
-  }
-  if (!localStorage.getItem('bolao_matches_v2')) {
-    localStorage.setItem('bolao_matches_v2', JSON.stringify(INITIAL_COPA_MATCHES));
   }
   if (!localStorage.getItem('bolao_active_user_id')) {
     // Default logged in user is u3 (the developer/tester)

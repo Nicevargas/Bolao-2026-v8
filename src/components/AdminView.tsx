@@ -7,7 +7,6 @@ import {
   Dribbble, 
   ShieldAlert, 
   TrendingUp, 
-  Cpu, 
   Radio, 
   X, 
   History,
@@ -15,7 +14,6 @@ import {
   Coins,
   Shield,
   Layers,
-  Sparkle,
   RefreshCw,
   Globe,
   Database,
@@ -36,7 +34,6 @@ interface AdminViewProps {
   onAddCompany: (company: Omit<Company, 'id' | 'registeredDate'>) => void;
   auditLogs: AuditLog[];
   matches: Match[];
-  onTriggerMatchSimulation: () => void;
   onSyncComplete?: () => void | Promise<void>;
 }
 
@@ -46,7 +43,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
   onAddCompany,
   auditLogs,
   matches,
-  onTriggerMatchSimulation,
   onSyncComplete,
 }) => {
   const [activeSubView, setActiveSubView] = useState<'overview' | 'companies'>('overview');
@@ -183,7 +179,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               Painel Administrativo Geral
             </h1>
             <p className="text-on-surface-variant text-xs font-sans">
-              Visão geral de auditoria de apostas, monitoramento corporativo e simulações para a Copa 2026.
+              Visão geral de auditoria de apostas e monitoramento corporativo para a Copa 2026.
             </p>
           </div>
         </div>
@@ -196,16 +192,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             Adicionar Organização
           </button>
           
-          <button 
-            onClick={() => {
-              onTriggerMatchSimulation();
-              alert('Simulação ativada! Jogos da Copa foram simulados, placares gerados de forma randômica e pontos de participantes reprocessados.');
-            }}
-            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-primary to-secondary text-white font-headline text-[10px] font-black tracking-wider uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1 cursor-pointer font-bold"
-          >
-            <Sparkle size={12} className="animate-spin" style={{ animationDuration: '4s' }} />
-            <span>Simular Jogos da Copa</span>
-          </button>
+
         </div>
       </div>
 

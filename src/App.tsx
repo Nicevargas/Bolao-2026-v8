@@ -18,7 +18,6 @@ import {
   saveSupabaseBet,
   getSupabaseAuditLogs,
   createSupabaseAuditLog,
-  saveSupabaseOfficialMatchResult,
   syncOfficialMatchesToSupabase
 } from './supabaseService';
 import { MatchSyncService } from './matchSyncService';
@@ -362,58 +361,6 @@ export default function App() {
     syncDatabaseStates();
   };
 
-  // Simulated match results calculator
-  const handleTriggerMatchSimulation = async () => {
-    if (isDBConnected) {
-      // Find matches on Supabase with no results computed yet
-      const pendingMatch = matches.find(m => m.scoreA === undefined);
-      if (pendingMatch) {
-        const goalsA = Math.floor(Math.random() * 4);
-        const goalsB = Math.floor(Math.random() * 4);
-        const res = await saveSupabaseOfficialMatchResult(pendingMatch.id, goalsA, goalsB, 'encerrado');
-        if (res.success) {
-          alert(`Partida finalizada no Supabase: ${pendingMatch.teamA.name} ${goalsA} x ${goalsB} ${pendingMatch.teamB.name}! Ranking e palpites atualizados via RLS e processamento.`);
-          await syncDatabaseStates();
-        } else {
-          alert(res.message);
-        }
-      } else {
-        alert('Todas as partidas no Supabase já possuem placar oficial cadastrado.');
-      }
-    } else {
-      const activeMatches = getStoredMatches();
-      const updated = activeMatches.map((m: any) => {
-        // Simulate live or upcoming matches
-        if (m.status === 'ao_vivo') {
-          return { ...m, status: 'encerrado', gols_time_a: 3, gols_time_b: 1 };
-        }
-        if (m.status === 'aguardando' && m.id === 'm3') {
-          return { ...m, status: 'ao_vivo', gols_time_a: 1, gols_time_b: 0 };
-        }
-        return m;
-      });
-
-      saveStoredMatches(updated);
-
-      // Recalculate everyone's points dynamically and correctly based on new simulated statuses
-      recalculateEveryonePoints(updated);
-
-      // Audit logs trace update
-      const logs = JSON.parse(localStorage.getItem('bolao_audit_logs') || '[]');
-      logs.unshift({
-        id: `audit-${Date.now()}`,
-        type: 'system',
-        title: 'Eventos Analíticos Simulados',
-        detail: 'Rodada Oficial recalculada com sucesso! Placar atualizado na base de dados.',
-        timeLabel: 'Alguns instantes atrás',
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem('bolao_audit_logs', JSON.stringify(logs));
-
-      syncDatabaseStates();
-    }
-  };
-
   // Telemetry properties aggregates
   const rawInvitations = getStoredInvitations();
   const rawCompanies = getStoredCompanies();
@@ -498,7 +445,8 @@ export default function App() {
                   onAddCompany={handleAddCompany}
                   auditLogs={auditLogs}
                   matches={getMatchesWithParsedBets(activeUser.id)}
-                  onTriggerMatchSimulation={handleTriggerMatchSimulation}
+
+
                   onSyncComplete={syncDatabaseStates}
                 />
               ) : (

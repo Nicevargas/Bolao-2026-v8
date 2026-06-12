@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ActiveTab, Match, Participant, Company, AuditLog, AdminStats } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Header } from './components/Header';
-import { Sidebar } from './components/Sidebar';
+
 import { BottomNav } from './components/BottomNav';
 import { DashboardView } from './components/DashboardView';
 import { MatchesView } from './components/MatchesView';
@@ -49,7 +49,7 @@ export default function App() {
   // Navigation tabs routing state
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
-  const [adminSubView, setAdminSubView] = useState<string>('overview');
+
 
   // Load database entities dynamically from active state triggers
   const [matches, setMatches] = useState<Match[]>([]);
@@ -418,27 +418,8 @@ export default function App() {
 
           {/* Dashboard Stage Workspace */}
           <div className="flex-1 w-full max-w-7xl mx-auto px-6 relative z-10 flex">
-            {/* Admin Side Column toggles */}
-            {isAdminMode && (
-              <Sidebar 
-                currentSubView={adminSubView} 
-                setCurrentSubView={setAdminSubView}
-                onExportReport={() => {
-                  const blob = new Blob([JSON.stringify({ adminStats, rawUsers, rawPredictions }, null, 2)], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'copa_2026_bolao_relatorio.json';
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                }}
-                onLogout={handleLogout}
-              />
-            )}
-
             {/* Stage content frame */}
-            <div className={`flex-grow py-6 transition-all ${isAdminMode ? 'lg:ml-64' : ''}`}>
+            <div className="flex-grow py-6 transition-all">
               {isAdminMode && activeUser?.isAdmin ? (
                 <AdminView 
                   stats={adminStats}

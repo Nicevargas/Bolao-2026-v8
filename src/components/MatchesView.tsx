@@ -50,10 +50,16 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
   };
 
   const handleSave = (matchId: string) => {
-    const scoreAStr = predictions[matchId]?.scoreA;
-    const scoreBStr = predictions[matchId]?.scoreB;
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
 
-    if (scoreAStr === undefined || scoreBStr === undefined || scoreAStr === '' || scoreBStr === '') {
+    const pred = predictions[matchId] || {};
+    const existingBet = match.userBet;
+
+    const scoreAStr = pred.scoreA ?? (existingBet?.scoreA?.toString() ?? '');
+    const scoreBStr = pred.scoreB ?? (existingBet?.scoreB?.toString() ?? '');
+
+    if (scoreAStr === '' || scoreBStr === '') {
       alert('Por favor, insira o placar de ambas as seleções para salvar seu palpite!');
       return;
     }

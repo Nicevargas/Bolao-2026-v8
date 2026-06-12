@@ -12,6 +12,7 @@ import { AdminView } from './components/AdminView';
 import { SplashView } from './components/SplashView';
 import { LoginView } from './components/LoginView';
 import { InvitationView } from './components/InvitationView';
+import { TestApiView } from './components/TestApiView';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { 
   getSupabaseMatchesWithBets,
@@ -375,6 +376,11 @@ export default function App() {
     pendingResults: isDBConnected ? matches.filter(m => m.scoreA === undefined).length : getStoredMatches().filter((m: any) => m.status !== 'encerrado').length
   };
 
+
+  // Show test API page if ?api param is present
+  if (new URLSearchParams(window.location.search).has('api')) {
+    return <TestApiView />;
+  }
 
   // Main system renderer
   return (

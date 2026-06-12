@@ -7,17 +7,12 @@ import {
   Dribbble, 
   ShieldAlert, 
   TrendingUp, 
-  Radio, 
   X, 
   History,
   CheckCircle,
   Coins,
   Shield,
-  Layers,
-  RefreshCw,
-  Globe,
-  Database,
-  Key
+  Layers
 } from 'lucide-react';
 import { 
   getStoredUsers, 
@@ -26,7 +21,6 @@ import {
   getStoredInvitations,
   getStoredCompanies 
 } from '../db';
-import { MatchSyncService, syncProviders } from '../matchSyncService';
 import { saveSupabaseOfficialMatchResult, isSupabaseConfigured } from '../supabaseService';
 import { saveStoredMatches, getStoredMatches, recalculateEveryonePoints } from '../db';
 
@@ -60,16 +54,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
   // Broadcast message
   const [broadcastMsg, setBroadcastMsg] = useState('');
-
-  // Automated MatchSyncService integration states
-  const [activeProvider, setActiveProvider] = useState<string>(MatchSyncService.getActiveProviderName());
-  const [providerKey, setProviderKey] = useState<string>(
-    localStorage.getItem('match_sync_provider_key_' + MatchSyncService.getActiveProviderName()) || ''
-  );
-  const [isAutoSyncing, setIsAutoSyncing] = useState<boolean>(false);
-  const [autoSyncMsg, setAutoSyncMsg] = useState<string>('');
-  const [autoSyncStatus, setAutoSyncStatus] = useState<'success' | 'error' | ''>('');
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(MatchSyncService.getLastSyncTime());
 
   // Manual match result form state
   const [resultForm, setResultForm] = useState<Record<string, { goalsA: string; goalsB: string; status: string }>>({});
@@ -109,51 +93,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
       setResultMsg({ id: matchId, text: `Erro: ${err.message}`, ok: false });
     }
     setSavingResult(null);
-  };
-
-  const handleAutomatedSync = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsAutoSyncing(true);
-    setAutoSyncMsg(`Iniciando conexão e sincronia com o provedor esportivo...`);
-    setAutoSyncStatus('');
-    try {
-      // Persist chosen provider setting
-      MatchSyncService.setActiveProviderName(activeProvider);
-      
-      if (providerKey.trim()) {
-        localStorage.setItem('match_sync_provider_key_' + activeProvider, providerKey.trim());
-      } else {
-        localStorage.removeItem('match_sync_provider_key_' + activeProvider);
-      }
-
-      // Execute sync service
-      const result = await MatchSyncService.syncNow(activeProvider, providerKey.trim());
-      
-      setLastSyncTime(result.timestamp);
-      if (result.success) {
-        setAutoSyncStatus('success');
-        setAutoSyncMsg(result.message);
-        if (onSyncComplete) {
-          await onSyncComplete();
-        }
-      } else {
-        setAutoSyncStatus('error');
-        setAutoSyncMsg(result.message);
-      }
-    } catch (err: any) {
-      console.error(err);
-      setAutoSyncStatus('error');
-      setAutoSyncMsg(`Falha inesperada durante sincronização: ${err.message || 'Erro de rede ou autenticação'}`);
-    } finally {
-      setIsAutoSyncing(false);
-    }
-  };
-
-  // Adjust API Key field whenever provider selection changes
-  const handleProviderSelectionChange = (newProv: string) => {
-    setActiveProvider(newProv);
-    const stored = localStorage.getItem('match_sync_provider_key_' + newProv) || '';
-    setProviderKey(stored);
   };
 
   // 1. DYNAMIC CALCULATIONS FOR SECURE AND AUDITED STATS
@@ -501,117 +440,6 @@ export const AdminView: React.FC<AdminViewProps> = ({
             </div>
           )}
         </div>
-      </section>
-
-      {/* CADASTRO & INTEGRADOR DE SINCRONIA AUTOMÁTICA OFICIAL (match_sync_service) */}
-      <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl select-none text-left mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="font-headline text-sm font-black flex items-center gap-2 text-on-surface uppercase tracking-wide">
-              <span className="p-1.5 bg-primary/10 text-primary rounded-lg">
-                <RefreshCw size={16} className={isAutoSyncing ? "animate-spin text-[#66B82F]" : "text-[#66B82F]"} />
-              </span>
-              Integração e Sincronia Automática Copa 2026
-            </h3>
-            <p className="text-[10px] text-on-surface-variant mt-1.5 font-sans leading-relaxed">
-              Carregue confrontos, resultados, estádios e status das partidas em tempo real a partir das fontes de dados esportivas oficiais integradas.
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2 text-[10px] bg-black/30 py-1.5 px-3 rounded-full border border-white/5 font-mono">
-            <Globe size={11} className="text-[#66B82F]" />
-            <span className="text-[#9cb1cc] font-bold">API Gateway: <span className="text-white uppercase">{activeProvider}</span></span>
-          </div>
-        </div>
-
-        <div className="p-4 bg-primary/5 rounded-xl border border-primary/15 space-y-2 mb-6">
-          <h4 className="text-[10px] font-black text-[#66B82F] uppercase tracking-wider font-bold flex items-center gap-1.5">
-            <Database size={11} /> Ordem Oficial das Fontes de Prioridade:
-          </h4>
-          <p className="text-[10px] text-slate-300 font-sans leading-relaxed">
-            O principal alimentador é a <strong>FIFA (Fonte Principal)</strong> que busca os confrontos atualizados de nosso CDN Copa 2026. Em caso de necessidade corporativa ou APIs privadas, troque dinamicamente pelos gateways <strong>Football-Data</strong>, <strong>API-Football</strong> ou <strong>TheSportsDB</strong> abaixo.
-          </p>
-        </div>
-
-        <form onSubmit={handleAutomatedSync} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-          {/* Provedor Select */}
-          <div className="space-y-1">
-            <label className="text-[9px] text-[#9cb1cc] block uppercase tracking-widest font-bold flex items-center gap-1">
-              <Globe size={10} /> Provedor Oficial de Consulta
-            </label>
-            <select
-              value={activeProvider}
-              onChange={(e) => handleProviderSelectionChange(e.target.value)}
-              className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#66B82F] transition-all"
-            >
-              {Object.entries(syncProviders).map(([key, value]) => (
-                <option key={key} value={key} className="bg-neutral-900 text-white">
-                  {value.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Token Key Input (Opcional) */}
-          <div className="space-y-1">
-            <label className="text-[9px] text-[#9cb1cc] block uppercase tracking-widest font-bold flex items-center gap-1">
-              <Key size={10} /> Token ou Chave API do Gateway
-            </label>
-            <input
-              type="password"
-              placeholder={activeProvider === 'fifa' ? 'Não necessária para o CDN Oficial da FIFA' : 'Cole sua chave de desenvolvedor aqui...'}
-              disabled={activeProvider === 'fifa'}
-              value={providerKey || ''}
-              onChange={(e) => setProviderKey(e.target.value)}
-              className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/20 disabled:opacity-40 focus:outline-none focus:border-[#66B82F] transition-all"
-            />
-          </div>
-
-          {/* Sincronizar Button */}
-          <div>
-            <button
-              type="submit"
-              disabled={isAutoSyncing}
-              className="w-full py-2.5 px-4 bg-[#66B82F] hover:bg-[#529424] text-black font-bold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-            >
-              {isAutoSyncing ? (
-                <>
-                  <RefreshCw size={14} className="animate-spin" />
-                  Sincronizando...
-                </>
-              ) : (
-                <>
-                  <RefreshCw size={14} />
-                  Sincronizar Oficialmente agora
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-
-        {/* Sync logs feedback */}
-        {autoSyncMsg && (
-          <div className={`mt-4 p-3.5 rounded-xl border text-[10.5px] leading-relaxed flex items-start gap-2.5 transition-all ${
-            autoSyncStatus === 'success' 
-              ? 'bg-[#15341d] border-[#1f5a34]/40 text-[#2ecc71]' 
-              : autoSyncStatus === 'error'
-              ? 'bg-[#4c1d1d] border-[#6b2222]/40 text-[#ff4d4d]'
-              : 'bg-black/20 border-white/5 text-slate-300'
-          }`}>
-            <span className="mt-0.5">
-              {autoSyncStatus === 'success' ? '✓' : autoSyncStatus === 'error' ? '⚠' : 'ℹ'}
-            </span>
-            <div className="flex-1">
-              <span className="font-bold uppercase mr-1">Status:</span>
-              {autoSyncMsg}
-              {lastSyncTime && (
-                <div className="text-[9px] text-white/50 mt-1 font-mono">
-                  Última sincronia oficial bem-sucedida: {new Date(lastSyncTime).toLocaleString('pt-BR')}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </section>
 
       {/* Domain database tracking list container */}

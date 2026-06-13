@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AdminStats, Match } from '../types';
 import { motion } from 'motion/react';
 import { 
@@ -90,6 +90,31 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const completedMatchesCount = isDBConnected ? matches.filter(m => m.scoreA !== undefined).length : allMatches.filter(m => m.status === 'encerrado').length;
   const pendingMatchesCount = isDBConnected ? matches.filter(m => m.scoreA === undefined).length : allMatches.filter(m => m.status === 'aguardando' || m.status === 'ao_vivo').length;
   const usedInvitesCount = isDBConnected ? 2 : 0;
+
+  // Evolução dos Palpites — agrupa partidas por mês usando data existente
+  const evolutionData = useMemo(() => {
+    if (!matches || matches.length === 0) return null;
+    const monthMap: Record<string, { total: number; withBet: number }> = {};
+    for (const m of matches) {
+      if (!m.dateStr) continue;
+      const d = new Date(m.dateStr);
+      if (isNaN(d.getTime())) continue;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthMap[key]) monthMap[key] = { total: 0, withBet: 0 };
+      monthMap[key].total++;
+      if (m.userBet) monthMap[key].withBet++;
+    }
+    const entries = Object.entries(monthMap).sort(([a], [b]) => a.localeCompare(b));
+    if (entries.length === 0) return null;
+    const maxTotal = Math.max(...entries.map(([, v]) => v.total), 1);
+    return entries.map(([label, v]) => ({
+      label,
+      total: v.total,
+      withBet: v.withBet,
+      pct: Math.round((v.withBet / v.total) * 100),
+      height: Math.round((v.total / maxTotal) * 100),
+    }));
+  }, [matches]);
 
   return (
     <motion.div 
@@ -220,32 +245,43 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </div>
         </div>
 
-        {/* Chart 2: Usuários por Empresa */}
+        {/* Chart 2: Evolução dos Palpites (substitui Usuários por Empresa) */}
         <div className="glass-card rounded-2xl p-5 border border-white/5 space-y-4 shadow-lg flex flex-col justify-between">
           <div>
             <h3 className="font-headline text-xs font-black text-on-surface uppercase tracking-wider">
-              Usuários por Empresa Autorizada
+              Evolução dos Palpites
             </h3>
-            <p className="text-[10px] text-on-surface-variant">Domínios de e-mails corporativos com mais acessos ativos</p>
+            <p className="text-[10px] text-on-surface-variant">Palpites realizados por mês conforme dados carregados</p>
           </div>
 
-          <div className="h-44 w-full flex items-end justify-between gap-2.5 px-1 pt-4">
-            {[
-              { label: 'Natação C.', val: 'h-[95%]', count: '220' },
-              { label: 'Vargas Co.', val: 'h-[65%]', count: '150' },
-              { label: 'Tech Sol', val: 'h-[40%]', count: '80' },
-              { label: 'Alpha Corp', val: 'h-[50%]', count: '110' },
-              { label: 'Padrão', val: 'h-[25%]', count: '35' }
-            ].map((bar, idx) => (
-              <div key={idx} className="flex-1 flex flex-col items-center group relative cursor-pointer">
-                <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#D91C7A] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                  {bar.count}
+          {!evolutionData || evolutionData.length === 0 ? (
+            <div className="h-44 flex items-center justify-center text-[11px] text-on-surface-variant">
+              Sem dados suficientes
+            </div>
+          ) : (
+            <div className="h-44 w-full flex items-end justify-between gap-2.5 px-1 pt-4">
+              {evolutionData.map((bar, idx) => (
+                <div key={idx} className="flex-1 flex flex-col items-center group relative cursor-pointer">
+                  <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#D91C7A] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    {bar.withBet}/{bar.total}
+                  </div>
+                  <div
+                    className={`w-full bg-gradient-to-t from-[#D91C7A]/30 to-[#D91C7A]/10 group-hover:from-[#D91C7A]/50 group-hover:to-[#D91C7A]/25 border border-[#D91C7A]/25 rounded-t-md transition-all duration-500`}
+                    style={{ height: `${bar.height}%` }}
+                  />
+                  {bar.withBet > 0 && (
+                    <div
+                      className="absolute bottom-6 w-1.5 bg-[#F2C230]/70 group-hover:bg-[#F2C230] rounded-full transition-all duration-500 z-10"
+                      style={{ height: `${Math.round((bar.withBet / bar.total) * bar.height)}%` }}
+                    />
+                  )}
+                  <span className="text-[8px] text-[#9cb1cc] tracking-tight uppercase font-black mt-2">
+                    {bar.label.replace(/^\d{4}-/, '')}
+                  </span>
                 </div>
-                <div className={`w-full bg-[#D91C7A]/20 group-hover:bg-[#D91C7A]/45 border border-[#D91C7A]/25 rounded-t-md transition-all duration-500 ${bar.val}`} />
-                <span className="text-[8px] text-[#9cb1cc] tracking-tight truncate w-full text-center uppercase font-black mt-2">{bar.label}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Chart 3: Participação por Fase */}

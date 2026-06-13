@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminStats, Match } from '../types';
 import { motion } from 'motion/react';
 import { 
@@ -35,6 +35,12 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [resultForm, setResultForm] = useState<Record<string, { goalsA: string; goalsB: string; status: string }>>({});
   const [savingResult, setSavingResult] = useState<string | null>(null);
   const [resultMsg, setResultMsg] = useState<{ id: string; text: string; ok: boolean } | null>(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 16;
+  const totalPages = Math.ceil(matches.length / PAGE_SIZE);
+  const safePage = Math.min(page, Math.max(0, totalPages - 1));
+  const paginatedMatches = matches.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+  useEffect(() => { setPage(0); }, [matches.length]);
 
   const handleSaveResult = async (matchId: string) => {
     const form = resultForm[matchId];
@@ -298,7 +304,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-xs">
-              {matches.map((match) => {
+              {paginatedMatches.map((match) => {
                 const formKey = match.id;
                 const form = resultForm[formKey] || {};
                 return (
@@ -375,6 +381,29 @@ export const AdminView: React.FC<AdminViewProps> = ({
           {matches.length === 0 && (
             <div className="p-6 text-center text-[10px] text-[#9cb1cc]">
               Nenhuma partida disponível para configurar.
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 px-1">
+              <span className="text-[10px] text-on-surface-variant">
+                Página {safePage + 1} de {totalPages} ({matches.length} partidas)
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer disabled:cursor-default"
+                >
+                  Anterior
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer disabled:cursor-default"
+                >
+                  Próximo
+                </button>
+              </div>
             </div>
           )}
         </div>

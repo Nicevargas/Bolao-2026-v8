@@ -74,6 +74,8 @@ export default function App() {
         if (activeId && email) {
           // Retrieve real matches from Supabase
           const supMatches = await getSupabaseMatchesWithBets(activeId);
+          console.log('=== TRACE APP === supMatches length:', supMatches.length);
+          supMatches.forEach(m => console.log('=== TRACE APP === match:', { id: m.id, teamA: m.teamA?.name, teamB: m.teamB?.name, dateStr: m.dateStr }));
           // Retrieve real ranking
           const supLeaderboard = await getSupabaseLeaderboard(activeId);
           // Query live profiles to ensure active fields are synchronized
@@ -99,6 +101,7 @@ export default function App() {
           };
 
           setActiveUser(reconciledUserObj);
+          console.log('=== TRACE APP === calling setMatches with', supMatches.length, 'items');
           setMatches(supMatches);
           setParticipants(supLeaderboard);
           setCompanies([]); // Suppress local companies as requested (use exclusively real)

@@ -108,10 +108,18 @@ export async function getSupabaseMatchesWithBets(userId: string): Promise<Match[
 
     if (betsErr) throw betsErr;
 
-    return (dbMatches || []).map((m: any) => {
+    console.log('=== TRACE SUPA === raw matches from DB:', dbMatches?.length, 'items');
+    console.log('=== TRACE SUPA === raw bets from DB:', dbBets?.length, 'items');
+    console.log('=== TRACE SUPA === match IDs:', dbMatches?.map((m:any) => ({ id: m.id, team_a: m.team_a, team_b: m.team_b, source: m.source })));
+    console.log('=== TRACE SUPA === bet match_ids:', dbBets?.map((b:any) => b.match_id));
+
+    const result = (dbMatches || []).map((m: any) => {
       const userBet = (dbBets || []).find((b: any) => b.match_id === m.id);
       return mapDbMatchToModel(m, userBet);
     });
+
+    console.log('=== TRACE SUPA === result (Match[]) IDs:', result.map(r => r.id));
+    return result;
   } catch (err) {
     console.error('Failed to load matches from Supabase:', err);
     return [];

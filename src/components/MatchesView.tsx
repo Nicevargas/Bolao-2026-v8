@@ -28,6 +28,8 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
   onSavePrediction,
   xpPoints,
 }) => {
+  console.log('=== TRACE RENDER === MatchesView rendering with matches:', matches.length);
+  matches.forEach(m => console.log('=== TRACE RENDER === match card:', { id: m.id, teamA: m.teamA?.name, teamB: m.teamB?.name, stadium: m.stadium, dateStr: m.dateStr }));
   const activeUser = getActiveUser();
   const [selectedPhase, setSelectedPhase] = useState<string>('Todos');
   const [selectedRoundFilter, setSelectedRoundFilter] = useState<string>('Todos');

@@ -595,17 +595,18 @@ export class MatchSyncService {
               }
             }
           } else {
-            // Dedup: check by team_a + team_b only (unique pair per World Cup)
+            // Dedup: check if same teams + date already exist under a different ID
             const { data: existingDup } = await client
               .from('matches')
-              .select('id, team_a, team_b')
+              .select('id')
               .eq('team_a', officialMatch.team_a)
               .eq('team_b', officialMatch.team_b)
+              .eq('match_date', officialMatch.match_date)
               .maybeSingle();
 
             if (existingDup) {
-              // Update existing row — preserve its original ID so bets still link
-              await client.from('matches').update({ ...matchPayload, id: existingDup.id }).eq('id', existingDup.id);
+              // Update the existing row with the new ID and data
+              await client.from('matches').update(matchPayload).eq('id', existingDup.id);
             } else {
               await client.from('matches').insert(matchPayload);
             }

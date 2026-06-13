@@ -45,7 +45,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
     setSyncing(true);
     setSyncMsg('Sincronizando...');
     try {
-      const res = await MatchSyncService.syncNow('fifa');
+      const res = await MatchSyncService.syncNow('football-data');
       if (res.success) {
         setSyncMsg(`${res.count} jogos atualizados (estádios, datas, etc)`);
         if (onSyncComplete) onSyncComplete();

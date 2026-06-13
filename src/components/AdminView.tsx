@@ -234,7 +234,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               { label: 'Oitavas', val: 'h-[45%]', count: '27' },
               { label: 'Finais', val: 'h-[30%]', count: '18' }
             ].map((bar, idx) => (
-              <div key={idx} className="flex-1 flex flex-col items-center group relative cursor-pointer">
+              <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative cursor-pointer h-full">
                 <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#1670D8] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
                   {bar.count}
                 </div>
@@ -261,7 +261,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
           ) : (
             <div className="h-44 w-full flex items-end justify-between gap-2.5 px-1 pt-4">
               {evolutionData.map((bar, idx) => (
-                <div key={idx} className="flex-1 flex flex-col items-center group relative cursor-pointer">
+                <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative cursor-pointer h-full">
                   <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#D91C7A] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                     {bar.withBet}/{bar.total}
                   </div>
@@ -301,7 +301,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               { label: 'Semis', val: 'h-[55%]', percent: '56%' },
               { label: 'Disputa 3º', val: 'h-[45%]', percent: '46%' }
             ].map((bar, idx) => (
-              <div key={idx} className="flex-1 flex flex-col items-center group relative cursor-pointer">
+              <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative cursor-pointer h-full">
                 <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#66B82F] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
                   {bar.percent}
                 </div>

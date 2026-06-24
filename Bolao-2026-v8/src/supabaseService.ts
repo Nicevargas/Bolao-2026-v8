@@ -658,6 +658,55 @@ export function getTeamFlagEmoji(teamName: string): string {
 }
 
 // Admin updates a match's full data (teams, date, phase, etc.)
+export async function createSupabaseMatch(data: {
+  team_a: string;
+  team_b: string;
+  flag_a?: string;
+  flag_b?: string;
+  match_date: string;
+  stadium: string;
+  city?: string;
+  phase?: string;
+  group_name?: string;
+  round_number?: string;
+}): Promise<{ success: boolean; message: string; matchId?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, message: 'Supabase não configurado.' };
+  const client = supabase;
+
+  try {
+    const { data: newMatch, error } = await client
+      .from('matches')
+      .insert({
+        team_a: data.team_a,
+        team_b: data.team_b,
+        flag_a: data.flag_a || null,
+        flag_b: data.flag_b || null,
+        match_date: data.match_date,
+        stadium: data.stadium || 'TBD',
+        city: data.city || '',
+        phase: data.phase || 'Fase de Grupos',
+        group_name: data.group_name || '-',
+        round_number: data.round_number || '',
+        status: 'aguardando',
+        goals_a: null,
+        goals_b: null,
+        locked: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+
+    await createSupabaseAuditLog('system', 'match', `Partida ${data.team_a} x ${data.team_b} criada por administrador.`);
+    return { success: true, message: 'Partida criada com sucesso!', matchId: newMatch?.id };
+  } catch (err: any) {
+    console.error('Error creating match:', err);
+    return { success: false, message: err.message || 'Erro ao criar partida.' };
+  }
+}
+
 export async function updateSupabaseMatch(matchId: string, data: {
   team_a?: string;
   team_b?: string;

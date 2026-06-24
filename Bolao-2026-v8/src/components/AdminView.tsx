@@ -13,7 +13,8 @@ import {
   Trash2,
   X,
   Save,
-  AlertTriangle
+  AlertTriangle,
+  Plus
 } from 'lucide-react';
 import { 
   getStoredUsers, 
@@ -24,7 +25,7 @@ import {
   saveStoredMatches,
   recalculateEveryonePoints
 } from '../db';
-import { saveSupabaseOfficialMatchResult, getSupabaseAllBets, calculatePoints, updateSupabaseMatch, deleteSupabaseMatch } from '../supabaseService';
+import { saveSupabaseOfficialMatchResult, getSupabaseAllBets, calculatePoints, updateSupabaseMatch, deleteSupabaseMatch, createSupabaseMatch } from '../supabaseService';
 
 interface AdminViewProps {
   stats: AdminStats;
@@ -51,6 +52,21 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [savingEdit, setSavingEdit] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deletingMatch, setDeletingMatch] = useState(false);
+
+  // Create match modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    team_a: '',
+    team_b: '',
+    flag_a: '',
+    flag_b: '',
+    match_date: '',
+    stadium: '',
+    city: '',
+    phase: 'Fase de Grupos',
+  });
+  const [creatingMatch, setCreatingMatch] = useState(false);
+
   const PAGE_SIZE = 16;
   const totalPages = Math.ceil(matches.length / PAGE_SIZE);
   const safePage = Math.min(page, Math.max(0, totalPages - 1));
@@ -221,6 +237,45 @@ export const AdminView: React.FC<AdminViewProps> = ({
     }
   };
 
+  const handleCreateMatch = async () => {
+    if (!createForm.team_a || !createForm.team_b || !createForm.match_date) {
+      alert('Preencha pelo menos os times e a data da partida.');
+      return;
+    }
+    setCreatingMatch(true);
+    try {
+      if (isDBConnected) {
+        const res = await createSupabaseMatch(createForm);
+        if (!res.success) throw new Error(res.message);
+      } else {
+        const stored = getStoredMatches();
+        const newMatch = {
+          id: `match-${Date.now()}`,
+          time_a: createForm.team_a,
+          time_b: createForm.team_b,
+          bandeira_a: createForm.flag_a || null,
+          bandeira_b: createForm.flag_b || null,
+          data: createForm.match_date,
+          estadio: createForm.stadium || 'TBD',
+          cidade: createForm.city || '',
+          fase: createForm.phase,
+          status: 'aguardando',
+          gols_time_a: null,
+          gols_time_b: null,
+          grupo: '-',
+        };
+        saveStoredMatches([newMatch, ...stored]);
+      }
+      setShowCreateModal(false);
+      setCreateForm({ team_a: '', team_b: '', flag_a: '', flag_b: '', match_date: '', stadium: '', city: '', phase: 'Fase de Grupos' });
+      if (onSyncComplete) onSyncComplete();
+    } catch (err: any) {
+      alert(`Erro ao criar partida: ${err.message}`);
+    } finally {
+      setCreatingMatch(false);
+    }
+  };
+
   const allUsers = isDBConnected ? [] : getStoredUsers();
   const allPredictions = isDBConnected ? [] : getStoredPredictions();
   const allMatches = isDBConnected ? [] : getStoredMatches();
@@ -283,7 +338,15 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 shrink-0"></div>
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-5 py-3 rounded-xl font-headline text-xs font-black tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-md uppercase cursor-pointer"
+          >
+            <Plus size={14} />
+            <span>Incluir Jogo</span>
+          </button>
+        </div>
       </div>
 
       {/* Required Telemetry widgets grid following strict user requirements */}
@@ -790,6 +853,134 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 >
                   <Trash2 size={14} />
                   {deletingMatch ? 'Excluindo...' : 'Excluir'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Incluir Jogo */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={() => setShowCreateModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-surface-container border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-headline text-sm font-black text-on-surface uppercase tracking-wide">
+                  Incluir Nova Partida
+                </h3>
+                <button onClick={() => setShowCreateModal(false)} className="p-1 hover:bg-white/10 rounded-lg transition-all cursor-pointer">
+                  <X size={16} className="text-on-surface-variant" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Time A *</label>
+                  <input
+                    value={createForm.team_a}
+                    onChange={e => setCreateForm(p => ({ ...p, team_a: e.target.value }))}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+                    placeholder="Ex: Brasil"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Time B *</label>
+                  <input
+                    value={createForm.team_b}
+                    onChange={e => setCreateForm(p => ({ ...p, team_b: e.target.value }))}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+                    placeholder="Ex: Argentina"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Bandeira A</label>
+                  <input
+                    value={createForm.flag_a}
+                    onChange={e => setCreateForm(p => ({ ...p, flag_a: e.target.value }))}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+                    placeholder="Ex: 🇧🇷"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Bandeira B</label>
+                  <input
+                    value={createForm.flag_b}
+                    onChange={e => setCreateForm(p => ({ ...p, flag_b: e.target.value }))}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+                    placeholder="Ex: 🇦🇷"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Data do Jogo *</label>
+                  <input
+                    type="datetime-local"
+                    value={createForm.match_date}
+                    onChange={e => setCreateForm(p => ({ ...p, match_date: e.target.value }))}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Estádio</label>
+                  <input
+                    value={createForm.stadium}
+                    onChange={e => setCreateForm(p => ({ ...p, stadium: e.target.value }))}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+                    placeholder="Ex: Maracanã"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Cidade</label>
+                  <input
+                    value={createForm.city}
+                    onChange={e => setCreateForm(p => ({ ...p, city: e.target.value }))}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+                    placeholder="Ex: Rio de Janeiro"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Fase</label>
+                  <select
+                    value={createForm.phase}
+                    onChange={e => setCreateForm(p => ({ ...p, phase: e.target.value }))}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+                  >
+                    <option value="Fase de Grupos">Fase de Grupos</option>
+                    <option value="Oitavas">Oitavas de Final</option>
+                    <option value="Quartas">Quartas de Final</option>
+                    <option value="Semifinal">Semifinal</option>
+                    <option value="Final">Final</option>
+                    <option value="Disputa de Terceiro Lugar">Disputa de 3º Lugar</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-on-surface rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCreateMatch}
+                  disabled={creatingMatch}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  <Plus size={14} />
+                  {creatingMatch ? 'Criando...' : 'Criar Partida'}
                 </button>
               </div>
             </motion.div>

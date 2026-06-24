@@ -1,0 +1,731 @@
+{
+    "nodes": [
+        {
+            "parameters": {
+                "content": "## Envio da mensagem\nEnvia mensagem pelo Evolution",
+                "height": 520,
+                "width": 268,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                1440,
+                -144
+            ],
+            "id": "35c65c3d-4dc4-4f52-8af3-f83786abb95b",
+            "name": "Sticky Note13"
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "documentId": {
+                    "__rl": true,
+                    "value": "1vzXHiRuh3IL3gczMQDo9NttjmOeI1BIOnCRob116lX8",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": 1627912242,
+                    "mode": "list",
+                    "cachedResultName": "verificados",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vzXHiRuh3IL3gczMQDo9NttjmOeI1BIOnCRob116lX8/edit#gid=1627912242"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "status": "={{ $json.success }}",
+                        "contact": "={{ $('Dados1').item.json.phone }}"
+                    },
+                    "matchingColumns": [
+                        "contact"
+                    ],
+                    "schema": [
+                        {
+                            "id": "name ",
+                            "displayName": "name ",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": true
+                        },
+                        {
+                            "id": "contact",
+                            "displayName": "contact",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "status",
+                            "displayName": "status",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.6,
+            "position": [
+                1840,
+                544
+            ],
+            "id": "503adc61-6122-4b1e-9fda-77bc01cdac7c",
+            "name": "Atualizar Status",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "WhDE2Ti6pk7EDX1w",
+                    "name": "curtatche"
+                }
+            },
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "content": "## Atualização de status\nAtualiza a planilha que a mensagem foi enviada",
+                "height": 280,
+                "width": 276,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                1760,
+                416
+            ],
+            "id": "a489d060-b950-486a-bc56-95e30130ba40",
+            "name": "Sticky Note5"
+        },
+        {
+            "parameters": {
+                "content": "## Debounce\n\nIntervalo de tempo entre um disparo e outro",
+                "height": 280,
+                "width": 276,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                2080,
+                416
+            ],
+            "id": "fffe300d-d92f-40eb-8e33-aa3ea9afd3a6",
+            "name": "Sticky Note6"
+        },
+        {
+            "parameters": {
+                "amount": "={{ Math.floor(Math.random() * 3) + 2 }}",
+                "unit": "minutes"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                2176,
+                544
+            ],
+            "id": "fec0c226-2679-4289-93c9-53a9161fce63",
+            "name": "debounce",
+            "webhookId": "b75bb0d7-9894-4ae0-8c23-a003c774fa8a",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "content": "## Envio da mensagem\nEnvia mensagem pelo Evolution",
+                "height": 520,
+                "width": 268,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                1760,
+                -144
+            ],
+            "id": "244f2957-5bfd-4d66-9430-3afc690d488c",
+            "name": "Sticky Note14"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "6f59e6df-cd46-4023-b3a4-a4e03187e78e",
+                            "leftValue": "={{ $json.data[0].exists }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                1856,
+                -32
+            ],
+            "id": "dbdd28c8-181a-494a-b2e3-197303df6774",
+            "name": "If"
+        },
+        {
+            "parameters": {
+                "resource": "messages-api",
+                "instanceName": "natacaocriativa",
+                "remoteJid": "={{ $json.data[0].number }}",
+                "messageText": "={{ $json.message }}",
+                "text": "={{ $json.message }}",
+                "options_message": {}
+            },
+            "type": "n8n-nodes-evolution-api.evolutionApi",
+            "typeVersion": 1,
+            "position": [
+                1840,
+                192
+            ],
+            "id": "34fb626c-fc31-4dd9-92d1-81653e313564",
+            "name": "Enviar texto1",
+            "credentials": {
+                "evolutionApi": {
+                    "id": "53zKua5yLB70b3ii",
+                    "name": "natacaocriativa"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "chat-api",
+                "instanceName": "Curtatche",
+                "numbers": "=55{{ $json.phone }}"
+            },
+            "id": "6574acc1-c58e-4c61-b545-77dc2e6b65f5",
+            "name": "Verificar WhatsApp1",
+            "type": "n8n-nodes-evolution-api.evolutionApi",
+            "typeVersion": 1,
+            "position": [
+                1520,
+                48
+            ],
+            "credentials": {
+                "evolutionApi": {
+                    "id": "yCKqq3bDimUQ8Djy",
+                    "name": "curtatche"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "content": "## Trigger\n\nInicia o fluxo de maneira manual ou programável",
+                "height": 520,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -64,
+                -144
+            ],
+            "id": "e62fa2ee-749c-41f5-adbf-a1bb0153f9bc",
+            "name": "Sticky Note7"
+        },
+        {
+            "parameters": {
+                "content": "## Dados\n\nBusca tabela de dados no Google Sheets",
+                "height": 520,
+                "width": 244,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                224,
+                -144
+            ],
+            "id": "8bf4ecb8-796d-442a-ac8d-aa09ed613adf",
+            "name": "Sticky Note8"
+        },
+        {
+            "parameters": {
+                "content": "## Condicional\n\nFiltra apenas os contatos que ainda não foram disparados",
+                "height": 520,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                512,
+                -144
+            ],
+            "id": "4ad6ebd2-cfd8-44e8-a648-a01ff89fa16b",
+            "name": "Sticky Note9"
+        },
+        {
+            "parameters": {
+                "content": "## Loop\n\nDispara mensagens uma a uma até finalizar",
+                "height": 520,
+                "width": 256,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                800,
+                -144
+            ],
+            "id": "242cb69b-4c0b-48d0-b144-bd2f402d9d53",
+            "name": "Sticky Note10"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "n8n-nodes-base.splitInBatches",
+            "typeVersion": 3,
+            "position": [
+                880,
+                96
+            ],
+            "id": "4327687a-0407-4164-88ef-809036cbfeb6",
+            "name": "Processar Contatos1",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "content": "## Tratamento de Dados\nPreenche a mensagem para disparo + captura de telefone\n\n",
+                "height": 520,
+                "width": 270,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                1104,
+                -144
+            ],
+            "id": "8d4e602c-9ddd-4faa-ab3e-701bd535d36b",
+            "name": "Sticky Note11"
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "1vzXHiRuh3IL3gczMQDo9NttjmOeI1BIOnCRob116lX8",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": 1627912242,
+                    "mode": "list",
+                    "cachedResultName": "verificados",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vzXHiRuh3IL3gczMQDo9NttjmOeI1BIOnCRob116lX8/edit#gid=1627912242"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.6,
+            "position": [
+                304,
+                96
+            ],
+            "id": "741b2ef4-6fe2-4f77-bc10-6c2cdcca17ce",
+            "name": "Listar Contatos1",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "WhDE2Ti6pk7EDX1w",
+                    "name": "curtatche"
+                }
+            },
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "=0 12 * * *"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                0,
+                176
+            ],
+            "id": "088ea600-870d-41a8-836d-6f5333cd1e81",
+            "name": "Agendamento1",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.noOp",
+            "name": "Terminou envio1",
+            "typeVersion": 1,
+            "position": [
+                1184,
+                -16
+            ],
+            "id": "5322dd6e-814c-40df-a328-41d63da92809",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                576,
+                240
+            ],
+            "id": "927fce1b-f152-494f-b1b3-e850eb5d667d",
+            "name": "Sem contatos1",
+            "retryOnFail": true,
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "8ad9bd09-c4fe-49f2-9c3a-2a2e2f116dbb",
+                            "name": "phone",
+                            "value": "={{ $json.contact }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "e5894c3c-fe19-42e4-b932-5e9cdc73e880",
+                            "name": "message",
+                            "value": "={{ [`Ol\u00e1, ${$json['name '] || \"professor\"}! Voc\u00ea trabalha muito, entrega resultado, mas sente que sua renda ainda n\u00e3o acompanha o seu valor? Professores da nossa P\u00f3s j\u00e1 aumentaram cerca de 30% na renda \u2014 alguns at\u00e9 dobraram os ganhos. Quer ver as entrevistas? Escreva ENTREVISTA. Quer uma aula gratuita da P\u00f3s? Escreva P\u00d3S-GRADUA\u00c7\u00c3O.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! Existe um ponto em que s\u00f3 trabalhar mais n\u00e3o resolve. \u00c9 preciso se posicionar melhor, entregar mais valor e dominar novos conhecimentos. Alunos da nossa P\u00f3s j\u00e1 aumentaram a renda colocando isso em pr\u00e1tica. Para ver as entrevistas, escreva ENTREVISTA. Para conhecer a P\u00f3s, escreva P\u00d3S-GRADUA\u00c7\u00c3O.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! Voc\u00ea ama ensinar nata\u00e7\u00e3o, mas sente que poderia ganhar muito mais com o seu conhecimento? Na nossa P\u00f3s, professores j\u00e1 relataram aumento de renda de 30% e at\u00e9 ganhos dobrados. Quer entender como? Escreva ENTREVISTA. Quer assistir uma aula gratuita? Escreva P\u00d3S-GRADUA\u00c7\u00c3O.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! O mercado valoriza quem se especializa. Professores que aplicaram os conhecimentos da nossa P\u00f3s j\u00e1 tiveram crescimento real na renda. Quer assistir aos relatos? Escreva ENTREVISTA. Quer conhecer a P\u00f3s presencial ou digital? Escreva P\u00d3S-GRADUA\u00c7\u00c3O.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! Talvez o problema n\u00e3o seja falta de esfor\u00e7o. Talvez falte estrat\u00e9gia, especializa\u00e7\u00e3o e posicionamento profissional. Alunos da nossa P\u00f3s j\u00e1 aumentaram cerca de 30% na renda \u2014 alguns dobraram seus ganhos. Quer ver como? Escreva ENTREVISTA.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! A diferen\u00e7a entre ser apenas mais um professor e ser um especialista valorizado est\u00e1 na forma\u00e7\u00e3o. Na nossa P\u00f3s, professores j\u00e1 transformaram conhecimento em aumento de renda. Quer ver os depoimentos? Escreva ENTREVISTA. Quer conhecer a P\u00f3s? Escreva P\u00d3S-GRADUA\u00c7\u00c3O.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! Trabalhar com nata\u00e7\u00e3o pode ser muito mais valorizado quando voc\u00ea sabe aplicar o conhecimento certo. Alunos da nossa P\u00f3s j\u00e1 aumentaram a renda e reposicionaram sua carreira. Quer assistir \u00e0s entrevistas? Escreva ENTREVISTA. Quer uma aula gratuita? Escreva P\u00d3S-GRADUA\u00c7\u00c3O.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! Voc\u00ea n\u00e3o precisa aceitar uma renda abaixo do seu potencial. Com especializa\u00e7\u00e3o, m\u00e9todo e aplica\u00e7\u00e3o pr\u00e1tica, nossos alunos j\u00e1 tiveram crescimento financeiro expressivo. Quer ver os relatos? Escreva ENTREVISTA. Quer conhecer a P\u00f3s? Escreva P\u00d3S-GRADUA\u00c7\u00c3O.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! Voc\u00ea ensina, se dedica, estuda\u2026 mas sua renda ainda n\u00e3o reflete tudo isso? Na nossa P\u00f3s, professores aprenderam a transformar conhecimento t\u00e9cnico em valoriza\u00e7\u00e3o profissional. Alguns cresceram 30%, outros dobraram seus ganhos. Quer assistir \u00e0s entrevistas? Escreva ENTREVISTA.`, `Ol\u00e1, ${$json['name '] || \"professor\"}! Voc\u00ea sente que trabalha demais para ganhar menos do que merece? Nossos alunos colocaram o conhecimento da P\u00f3s em pr\u00e1tica e j\u00e1 colheram resultados financeiros reais. Para assistir \u00e0s entrevistas, escreva ENTREVISTA. Para ganhar uma aula gratuita, escreva P\u00d3S-GRADUA\u00c7\u00c3O.`][Math.floor(Math.random() * 10)] }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "30704881-a280-4c54-a011-6a3e3f902510",
+                            "name": "nome",
+                            "value": "={{ $json['name '] }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                1184,
+                176
+            ],
+            "id": "896e09ec-8a3f-4608-9f3f-881f3dc3433f",
+            "name": "Dados1",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "975edb01-d63d-4c4e-9a18-2f93e0dda23d",
+                            "leftValue": "={{ $json.status?.toString() }}",
+                            "rightValue": "TRUE",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEquals"
+                            }
+                        },
+                        {
+                            "id": "cfb9bc3b-85ca-47a4-a648-f4a56b54731c",
+                            "leftValue": "={{ $json.contact?.toString() }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEmpty",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                592,
+                0
+            ],
+            "id": "d20d46be-3b6a-474f-bce4-2493fdc16102",
+            "name": "Condicional",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "documentId": {
+                    "__rl": true,
+                    "value": "1vzXHiRuh3IL3gczMQDo9NttjmOeI1BIOnCRob116lX8",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": 1627912242,
+                    "mode": "list",
+                    "cachedResultName": "verificados",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vzXHiRuh3IL3gczMQDo9NttjmOeI1BIOnCRob116lX8/edit#gid=1627912242"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "status": "incompleto",
+                        "contact": "={{ $('Dados1').item.json.phone }}"
+                    },
+                    "matchingColumns": [
+                        "contact"
+                    ],
+                    "schema": [
+                        {
+                            "id": "name ",
+                            "displayName": "name ",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": true
+                        },
+                        {
+                            "id": "contact",
+                            "displayName": "contact",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        },
+                        {
+                            "id": "status",
+                            "displayName": "status",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true,
+                            "removed": false
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.6,
+            "position": [
+                2160,
+                96
+            ],
+            "id": "93eccdc8-ffad-4d4c-9238-2d53d46724eb",
+            "name": "Atualizar Status (Numero Invalido)",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "WhDE2Ti6pk7EDX1w",
+                    "name": "curtatche"
+                }
+            },
+            "notes": "Marca como TRUE contatos cujo número não existe no WhatsApp, evitando reprocessamento."
+        },
+        {
+            "parameters": {
+                "content": "## Número inválido\nQuando a Evolution API confirma que o número não tem WhatsApp, marca status TRUE na planilha para não tentar de novo",
+                "height": 200,
+                "width": 276,
+                "color": 4
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                2160,
+                -160
+            ],
+            "id": "2781d963-adbf-463c-aa4e-5eeb52eaae7e",
+            "name": "Sticky Note15"
+        }
+    ],
+    "connections": {
+        "Atualizar Status": {
+            "main": [
+                [
+                    {
+                        "node": "debounce",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "debounce": {
+            "main": [
+                [
+                    {
+                        "node": "Processar Contatos1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar texto1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Atualizar Status (Numero Invalido)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Enviar texto1": {
+            "main": [
+                [
+                    {
+                        "node": "Atualizar Status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Verificar WhatsApp1": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Processar Contatos1": {
+            "main": [
+                [
+                    {
+                        "node": "Terminou envio1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Dados1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Listar Contatos1": {
+            "main": [
+                [
+                    {
+                        "node": "Condicional",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Agendamento1": {
+            "main": [
+                [
+                    {
+                        "node": "Listar Contatos1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Dados1": {
+            "main": [
+                [
+                    {
+                        "node": "Verificar WhatsApp1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Condicional": {
+            "main": [
+                [
+                    {
+                        "node": "Processar Contatos1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Sem contatos1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Atualizar Status (Numero Invalido)": {
+            "main": [
+                [
+                    {
+                        "node": "debounce",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "meta": {
+        "instanceId": "8b19efb901dfb4af79d7f8257f1ef21bf4515701ba90c949dec380b4023707b8"
+    }
+}

@@ -1,6 +1,0 @@
-{
-  "rootDirectory": "Bolao-2026-v8",
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "installCommand": "npm install"
-}

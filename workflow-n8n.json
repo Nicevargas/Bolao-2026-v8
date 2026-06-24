@@ -1,0 +1,745 @@
+{
+    "nodes": [
+        {
+            "parameters": {
+                "content": "## Envio da mensagem\nEnvia mensagem pelo Evolution",
+                "height": 520,
+                "width": 268,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1136,
+                -128
+            ],
+            "id": "da099fc5-30ea-493a-8d0c-b02a28086fc6",
+            "name": "Sticky Note13"
+        },
+        {
+            "parameters": {
+                "content": "## Atualização de status\nAtualiza a planilha que a mensagem foi enviada",
+                "height": 280,
+                "width": 276,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -544,
+                464
+            ],
+            "id": "b2789b68-1c4c-40ce-aff1-6ef064d07594",
+            "name": "Sticky Note5"
+        },
+        {
+            "parameters": {
+                "content": "## Debounce\n\nIntervalo de tempo entre um disparo e outro",
+                "height": 280,
+                "width": 276,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -256,
+                464
+            ],
+            "id": "ebe140fd-a03f-4ad1-8550-f6bfeb6a3a78",
+            "name": "Sticky Note6"
+        },
+        {
+            "parameters": {
+                "amount": "={{ Math.floor(Math.random() * 4) + 2 }}",
+                "unit": "minutes"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                -176,
+                560
+            ],
+            "id": "dfb0bc47-2e9b-4b0b-bf1b-4f1bccf8053d",
+            "name": "debounce",
+            "webhookId": "b75bb0d7-9894-4ae0-8c23-a003c774fa8a",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "content": "## Envio da mensagem\nEnvia mensagem pelo Evolution",
+                "height": 520,
+                "width": 268,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -832,
+                -128
+            ],
+            "id": "45263e86-7254-4572-a7f9-41a0d79d6dcc",
+            "name": "Sticky Note14"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "6f59e6df-cd46-4023-b3a4-a4e03187e78e",
+                            "leftValue": "={{ $json.data[0].exists }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                -480,
+                -64
+            ],
+            "id": "bd803c52-d8b2-47d6-890b-e2003e58e82d",
+            "name": "If"
+        },
+        {
+            "parameters": {
+                "resource": "messages-api",
+                "instanceName": "natacaocriativa",
+                "remoteJid": "={{ $json.data[0].number }}",
+                "messageText": "={{ $('Dados1').item.json.message }}",
+                "options_message": {}
+            },
+            "type": "n8n-nodes-evolution-api.evolutionApi",
+            "typeVersion": 1,
+            "position": [
+                -464,
+                208
+            ],
+            "id": "7fb6f05a-b2b3-4c3d-bad0-8cbe025e38a3",
+            "name": "Enviar texto1",
+            "credentials": {
+                "evolutionApi": {
+                    "id": "53zKua5yLB70b3ii",
+                    "name": "natacaocriativa"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "chat-api",
+                "instanceName": "natacaocriativa",
+                "numbers": "={{ $('Processar Contatos1').item.json.contact }}"
+            },
+            "id": "3ae62fef-e042-4d67-9f9a-3df2c4fec00f",
+            "name": "Verificar WhatsApp1",
+            "type": "n8n-nodes-evolution-api.evolutionApi",
+            "typeVersion": 1,
+            "position": [
+                -752,
+                96
+            ],
+            "credentials": {
+                "evolutionApi": {
+                    "id": "53zKua5yLB70b3ii",
+                    "name": "natacaocriativa"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "content": "## Trigger\n\nInicia o fluxo de maneira manual ou programável",
+                "height": 520,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -2640,
+                -128
+            ],
+            "id": "b778aa8a-b5aa-4433-8fea-4a0f64589c2e",
+            "name": "Sticky Note7"
+        },
+        {
+            "parameters": {
+                "content": "## Dados\n\nBusca tabela de dados no Google Sheets",
+                "height": 520,
+                "width": 244,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -2352,
+                -128
+            ],
+            "id": "5328580d-fd20-497d-a575-21c0f8105603",
+            "name": "Sticky Note8"
+        },
+        {
+            "parameters": {
+                "content": "## Condicional\n\nFiltra apenas os contatos que ainda não foram disparados",
+                "height": 520,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -2064,
+                -128
+            ],
+            "id": "178d2a13-bbf9-425b-979d-a7d18066f9b3",
+            "name": "Sticky Note9"
+        },
+        {
+            "parameters": {
+                "content": "## Loop\n\nDispara mensagens uma a uma até finalizar",
+                "height": 520,
+                "width": 256,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1776,
+                -128
+            ],
+            "id": "97b1d5e4-70b3-438b-9bbf-ecffa9f7c70f",
+            "name": "Sticky Note10"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "n8n-nodes-base.splitInBatches",
+            "typeVersion": 3,
+            "position": [
+                -1696,
+                48
+            ],
+            "id": "33dc6ec4-d506-48c6-9e3b-a4b940fa7e87",
+            "name": "Processar Contatos1",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "content": "## Tratamento de Dados\nPreenche a mensagem para disparo + captura de telefone\n\n",
+                "height": 520,
+                "width": 270,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1472,
+                -128
+            ],
+            "id": "b67da336-1429-48eb-87c8-43143de370a1",
+            "name": "Sticky Note11"
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "=0 12 * * *"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                -2576,
+                96
+            ],
+            "id": "4c982170-6bd1-43cb-a3f6-b0e0dc2e4d55",
+            "name": "Agendamento1",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.noOp",
+            "name": "Terminou envio1",
+            "typeVersion": 1,
+            "position": [
+                -1392,
+                16
+            ],
+            "id": "64472d77-259a-4d1c-bf45-2a5bb743f74a",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                -1984,
+                256
+            ],
+            "id": "42de5ce7-41ee-4a55-aba5-ca8455645903",
+            "name": "Sem contatos1",
+            "retryOnFail": true,
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "8ad9bd09-c4fe-49f2-9c3a-2a2e2f116dbb",
+                            "name": "phone",
+                            "value": "={{ $json.telefone }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "e5894c3c-fe19-42e4-b932-5e9cdc73e880",
+                            "name": "message",
+                            "value": "=return items.map(item => {\n  const messages = [\n    `Olá, ${item.json.name || \"professor\"}! Você trabalha muito, entrega resultado, mas sente que sua renda ainda não acompanha o seu valor?\n\nProfessores da nossa Pós já aumentaram cerca de 30% na renda — alguns até dobraram os ganhos.\n\nQuer ver as entrevistas? Escreva ENTREVISTA.\n\nQuer uma aula gratuita da Pós? Escreva PÓS-GRADUAÇÃO.`,\n\n    `Olá, ${item.json.name || \"professor\"}! Existe um ponto em que só trabalhar mais não resolve.\n\nÉ preciso se posicionar melhor, entregar mais valor e dominar novos conhecimentos.\n\nAlunos da nossa Pós já aumentaram a renda colocando isso em prática.\nPara ver as entrevistas, escreva ENTREVISTA.\n\nPara conhecer a Pós, escreva PÓS-GRADUAÇÃO.`,\n\n    `Olá, ${item.json.name || \"professor\"}! Você ama ensinar natação, mas sente que poderia ganhar muito mais com o seu conhecimento?\n\nNa nossa Pós, professores já relataram aumento de renda de 30% e até ganhos dobrados.\n\nQuer entender como? Escreva ENTREVISTA.\n\nQuer assistir uma aula gratuita? Escreva PÓS-GRADUAÇÃO.`,\n\n    `Olá, ${item.json.name || \"professor\"}! O mercado valoriza quem se especializa.\nProfessores que aplicaram os conhecimentos da nossa Pós já tiveram crescimento real na renda.\n\nQuer assistir aos relatos? Escreva ENTREVISTA.\n\nQuer conhecer a Pós presencial ou digital? Escreva PÓS-GRADUAÇÃO.`,\n\n    `Olá, ${item.json.name || \"professor\"}! Talvez o problema não seja falta de esforço.\nTalvez falte estratégia, especialização e posicionamento profissional.\n\nAlunos da nossa Pós já aumentaram cerca de 30% na renda — alguns dobraram seus ganhos.\n\nQuer ver como? Escreva ENTREVISTA.`,\n\n    `Olá, ${item.json.name || \"professor\"}! A diferença entre ser apenas mais um professor e ser um especialista valorizado está na formação.\n\nNa nossa Pós, professores já transformaram conhecimento em aumento de renda.\n\nQuer ver os depoimentos? Escreva ENTREVISTA.\n\nQuer conhecer a Pós? Escreva PÓS-GRADUAÇÃO.`,\n\n    `Olá, ${item.json.name || \"professor\"}! Trabalhar com natação pode ser muito mais valorizado quando você sabe aplicar o conhecimento certo.\n\nAlunos da nossa Pós já aumentaram a renda e reposicionaram sua carreira.\nQuer assistir às entrevistas? Escreva ENTREVISTA.\n\nQuer uma aula gratuita? Escreva PÓS-GRADUAÇÃO.`,\n\n    `Olá, ${item.json.name || \"professor\"}! Você não precisa aceitar uma renda abaixo do seu potencial.\n\nCom especialização, método e aplicação prática, nossos alunos já tiveram crescimento financeiro expressivo.\n\nQuer ver os relatos? Escreva ENTREVISTA.\n\nQuer conhecer a Pós? Escreva PÓS-GRADUAÇÃO.`,\n\n    `Olá, ${item.json.name || \"professor\"}! Você ensina, se dedica, estuda… mas sua renda ainda não reflete tudo isso?\n\nNa nossa Pós, professores aprenderam a transformar conhecimento técnico em valorização profissional.\n\nAlguns cresceram 30%, outros dobraram seus ganhos.\n\nQuer assistir às entrevistas? Escreva ENTREVISTA.`,\n\n    `Olá, ${item.json.name || \"professor\"}! Você sente que trabalha demais para ganhar menos do que merece?\n\nNossos alunos colocaram o conhecimento da Pós em prática e já colheram resultados financeiros reais.\n\nPara assistir às entrevistas, escreva ENTREVISTA.\n\nPara ganhar uma aula gratuita, escreva PÓS-GRADUAÇÃO.`\n  ];\n\n  let telefone = String(item.json.contact || '').replace(/\\D/g, '');\n  const ddi = telefone.slice(0, 2);\n  const ddd = telefone.slice(2, 4);\n  const numero = telefone.slice(4);\n\n  if (numero.length === 8) {\n    telefone = ddi + ddd + '9' + numero;\n  }\n\n  item.json.phone = telefone;\n  item.json.message = messages[item.json.indice_mensagem % 10];\n  item.json.nome = item.json.name;\n\n  return item;\n});",
+                            "type": "string"
+                        },
+                        {
+                            "id": "30704881-a280-4c54-a011-6a3e3f902510",
+                            "name": "nome",
+                            "value": "={{ $json['name '] }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                -1376,
+                240
+            ],
+            "id": "e4d7904f-60ad-4da1-8baa-cff34bd7dbd7",
+            "name": "Dados1",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "975edb01-d63d-4c4e-9a18-2f93e0dda23d",
+                            "leftValue": "={{ $json.status?.toString() }}",
+                            "rightValue": "TRUE",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEquals"
+                            }
+                        },
+                        {
+                            "id": "cfb9bc3b-85ca-47a4-a648-f4a56b54731c",
+                            "leftValue": "={{ $json.phone?.toString() }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEmpty",
+                                "singleValue": true
+                            }
+                        },
+                        {
+                            "id": "5ece7912-c1c1-4bea-8c4b-62a751c30bff",
+                            "leftValue": "={{ $json.status }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notExists",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "or"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                -1984,
+                32
+            ],
+            "id": "5455bb09-e02d-46f5-8017-cb2110eba23c",
+            "name": "Condicional",
+            "notes": "Encontre mais em:\nlinks.dnnr.dev ou\nhttps://www.youtube.com/@devdenegociosmg"
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "tableId": "recipients",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "contact",
+                            "condition": "eq",
+                            "keyValue": "={{ $('Dados1').item.json.phone }}"
+                        }
+                    ]
+                },
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "status",
+                            "fieldValue": "FALSE"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                -208,
+                208
+            ],
+            "id": "778d4679-e1b2-45e3-ae09-6771a97fff51",
+            "name": "Update a row",
+            "credentials": {
+                "supabaseApi": {
+                    "id": "vuzUbziQKj5gXjTO",
+                    "name": "dba_sheets"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "tableId": "recipients",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "contact",
+                            "condition": "eq",
+                            "keyValue": "={{ $('Dados1').item.json.phone }}"
+                        }
+                    ]
+                },
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "status",
+                            "fieldValue": "TRUE"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                -448,
+                560
+            ],
+            "id": "bcc4119e-e388-4f16-98e2-695dc1e9425f",
+            "name": "Update a row1",
+            "credentials": {
+                "supabaseApi": {
+                    "id": "vuzUbziQKj5gXjTO",
+                    "name": "dba_sheets"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": false,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "990574f5-117e-4997-a3f0-25dd97010a0d",
+                            "leftValue": "={{ $('Processar Contatos1').item.json.name }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "exists",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "looseTypeValidation": true,
+                "options": {
+                    "ignoreCase": true
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                -1088,
+                -16
+            ],
+            "id": "22e2f375-df32-4175-880e-1f2708ec6f29",
+            "name": "If1"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "1347a0cc-7da9-4f1a-babe-8f8d6a4336e7",
+                            "name": "name",
+                            "value": "={{ $now.hour < 12 ? 'Bom dia' : ($now.hour < 18 ? 'Boa tarde' : 'Boa noite') }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                -1072,
+                224
+            ],
+            "id": "32b37afd-2f7e-42ef-99ea-0fd693045b7b",
+            "name": "Edit Fields"
+        },
+        {
+            "parameters": {
+                "jsCode": "return items.map(item => {\n  let telefone = String(item.json.contact || '').replace(/\\D/g, '');\n\n  const ddi = telefone.slice(0, 2);\n  const ddd = telefone.slice(2, 4);\n  const numero = telefone.slice(4);\n\n  if (numero.length === 8) {\n    telefone = ddi + ddd + '9' + numero;\n  }\n\n  item.json.telefone = telefone;\n\n  return item;\n});"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -1680,
+                256
+            ],
+            "id": "b7b538a9-0c62-44d6-b02a-7b223469fdf1",
+            "name": "Code in JavaScript"
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "https://docs.google.com/spreadsheets/d/17UoikDddMxlaiizz861WgKRlRnZt9fMPHh68S8DKxik/edit?usp=sharing",
+                    "mode": "url"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": 712888605,
+                    "mode": "list",
+                    "cachedResultName": "teste",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17UoikDddMxlaiizz861WgKRlRnZt9fMPHh68S8DKxik/edit#gid=712888605"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                -2272,
+                96
+            ],
+            "id": "98728a69-610f-4d1b-a46b-a651f88405c8",
+            "name": "Get row(s) in sheet",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "WhDE2Ti6pk7EDX1w",
+                    "name": "curtatche"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "debounce": {
+            "main": [
+                [
+                    {
+                        "node": "Processar Contatos1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar texto1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Update a row",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Enviar texto1": {
+            "main": [
+                [
+                    {
+                        "node": "Update a row1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Verificar WhatsApp1": {
+            "main": [
+                []
+            ]
+        },
+        "Processar Contatos1": {
+            "main": [
+                [
+                    {
+                        "node": "Terminou envio1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Code in JavaScript",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Agendamento1": {
+            "main": [
+                [
+                    {
+                        "node": "Get row(s) in sheet",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Dados1": {
+            "main": [
+                []
+            ]
+        },
+        "Condicional": {
+            "main": [
+                [
+                    {
+                        "node": "Processar Contatos1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Sem contatos1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update a row": {
+            "main": [
+                [
+                    {
+                        "node": "debounce",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update a row1": {
+            "main": [
+                [
+                    {
+                        "node": "debounce",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "If1": {
+            "main": [
+                [
+                    {
+                        "node": "Verificar WhatsApp1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "Verificar WhatsApp1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code in JavaScript": {
+            "main": [
+                [
+                    {
+                        "node": "Dados1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get row(s) in sheet": {
+            "main": [
+                [
+                    {
+                        "node": "Condicional",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "8b19efb901dfb4af79d7f8257f1ef21bf4515701ba90c949dec380b4023707b8"
+    }
+}

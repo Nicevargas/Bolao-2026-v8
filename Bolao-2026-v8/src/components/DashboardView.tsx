@@ -64,21 +64,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const userRankIndex = sortedParticipants.findIndex(p => p.isUser);
   const userRank = userRankIndex >= 0 ? userRankIndex + 1 : '1';
 
-  // Get live or prominent upcoming matches (priority: live > today > upcoming > recent completed)
+  // Get today's matches (live + scheduled), or fallback to upcoming/recent completed
   const featuredMatches = (() => {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 86400000);
-
-    const live = matches.filter(m => m.type === 'live');
-    if (live.length > 0) return live.slice(0, 3);
 
     const today = matches.filter(m => {
       if (!m.dateStr) return false;
       const d = new Date(m.dateStr);
       return d >= todayStart && d < todayEnd;
     });
-    if (today.length > 0) return today.slice(0, 3);
+
+    if (today.length > 0) return today;
 
     const upcoming = matches
       .filter(m => m.type === 'upcoming')

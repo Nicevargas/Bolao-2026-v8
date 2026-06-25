@@ -691,8 +691,7 @@ export async function createSupabaseMatch(data: {
         goals_a: null,
         goals_b: null,
         locked: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_at: new Date().toISOString()
       })
       .select('id')
       .single();
@@ -728,10 +727,7 @@ export async function updateSupabaseMatch(matchId: string, data: {
   try {
     const { error } = await client
       .from('matches')
-      .update({
-        ...data,
-        updated_at: new Date().toISOString()
-      })
+      .update(data)
       .eq('id', matchId);
 
     if (error) throw error;

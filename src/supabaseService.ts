@@ -677,6 +677,7 @@ export async function createSupabaseMatch(data: {
     const { data: newMatch, error } = await client
       .from('matches')
       .insert({
+        id: `match_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
         team_a: data.team_a,
         team_b: data.team_b,
         flag_a: data.flag_a || null,

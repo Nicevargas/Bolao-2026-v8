@@ -110,13 +110,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="space-y-3 max-w-xl text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2.5">
               <img 
-                src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+                src="/logo.png" 
                 alt="Logo Natação Criativa" 
                 className="w-8 h-8 rounded-full object-cover border border-primary/50"
                 referrerPolicy="no-referrer"
               />
               <span className="font-headline text-xs font-black tracking-widest text-secondary uppercase">
-                Bolão Copa do Mundo 2026
+                Bolão Brasileirão 2026
               </span>
             </div>
             
@@ -146,7 +146,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Large Brand Icon Frame */}
           <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full p-1 bg-gradient-to-tr from-[#1670D8] via-[#D91C7A] to-[#F28C28] shadow-[0_0_40px_rgba(22,112,216,0.25)] flex items-center justify-center">
             <img 
-              src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+              src="/logo.png" 
               alt="Crest" 
               className="w-full h-full object-cover rounded-full"
               referrerPolicy="no-referrer"
@@ -228,7 +228,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Dynamic Official Point Rules Panel */}
       <section className="glass-card rounded-2xl p-6 border border-white/5 bg-gradient-to-r from-primary/5 via-secondary/5 to-transparent select-none leading-none">
         <h3 className="font-headline text-xs font-black text-on-surface uppercase tracking-wider mb-4 flex items-center gap-1.5">
-          <Award size={14} className="text-[#F28C28]" /> Regulamento de Pontuação Oficial (Copa 2026)
+          <Award size={14} className="text-[#F28C28]" /> Regulamento de Pontuação Oficial (Brasileirão 2026)
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="p-4 bg-black/25 rounded-xl border border-white/5 space-y-2">

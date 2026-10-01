@@ -53,13 +53,13 @@ export const Header: React.FC<HeaderProps> = ({
           id="logo-container"
         >
           <img 
-            src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+            src="/logo.png" 
             alt="Natação Criativa Logo" 
             className="w-10 h-10 rounded-full object-cover border border-primary/40 group-hover:scale-105 transition-transform"
             referrerPolicy="no-referrer"
           />
           <span className="font-headline font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary group-hover:brightness-110 transition-all font-extrabold uppercase">
-            Bolão Copa 2026
+            Bolão Brasileirão 2026
           </span>
           {isAdminMode && (
             <span className="ml-2 text-[9px] bg-red-500 text-white font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider glow-secondary">

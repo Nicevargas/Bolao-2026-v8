@@ -115,7 +115,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ participants, 
         className="space-y-4 text-center py-16"
       >
         <img 
-          src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+          src="/logo.png" 
           alt="Logo Oficial Natação Criativa" 
           className="w-16 h-16 rounded-full object-cover border border-primary/40 mx-auto opacity-75 mb-4 shadow"
           referrerPolicy="no-referrer"
@@ -158,7 +158,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ participants, 
 
     setTimeout(() => {
       const text = encodeURIComponent(
-         "Estou desafiando meus colegas no BOLÃO DA COPA 2026 oficial da Natação Criativa! Quem acertará mais resultados? 🏆⚽"
+         "Estou desafiando meus colegas no BOLÃO DO BRASILEIRÃO 2026 oficial da Natação Criativa! Quem acertará mais resultados? 🏆⚽"
       );
       window.open(`https://wa.me/?text=${text}`, '_blank');
       setToastMessage('Redirecionando para compartilhar no WhatsApp!');
@@ -178,7 +178,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ participants, 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-gradient-to-r from-primary/10 via-secondary/15 to-transparent rounded-2xl border border-white/5 shadow-md">
         <div className="flex items-center gap-4">
           <img 
-            src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+            src="/logo.png" 
             alt="Logo Oficial Natação Criativa" 
             className="w-12 h-12 rounded-full object-cover border border-primary/40 shadow-lg"
             referrerPolicy="no-referrer"

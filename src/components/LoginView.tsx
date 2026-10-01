@@ -96,14 +96,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         <div className="text-center space-y-3 select-none">
           <div className="mx-auto w-24 h-24 rounded-full p-0.5 bg-gradient-to-tr from-primary to-secondary">
             <img 
-              src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+              src="/logo.png" 
               alt="Natação Criativa Logo" 
               className="w-full h-full object-cover rounded-full"
               referrerPolicy="no-referrer"
             />
           </div>
           <h2 className="font-headline text-2xl font-black text-on-surface uppercase tracking-tight">
-            Bolão da Copa 2026
+            Bolão do Brasileirão 2026
           </h2>
           <p className="text-xs text-[#9cb1cc] font-medium leading-normal">
             Faça seu palpite e vença prêmios incríveis com a Natação Criativa!
@@ -266,7 +266,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         )}
 
         <div className="pt-2 text-center text-[10px] text-on-surface-variant font-sans select-none opacity-60">
-          Bolão Oficial • Copa do Mundo 2026
+          Bolão Oficial • Brasileirão 2026
         </div>
       </motion.div>
     </div>

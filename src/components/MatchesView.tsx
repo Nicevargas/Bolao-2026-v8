@@ -73,25 +73,13 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
   };
 
   // Groupings requested by user
-  const phases = [
-    'Todos',
-    'Fase de Grupos',
-    'Oitavas de Final',
-    'Quartas de Final',
-    'Semifinal',
-    'Disputa de Terceiro Lugar',
-    'Final'
-  ];
+  const phases = ['Todos', ...Array.from({ length: 38 }, (_, i) => `Rodada ${i + 1}`)];
 
   // Filter matches matching selections
   const filteredMatches = matches.filter(match => {
     // Phase filtering
-    if (selectedPhase !== 'Todos' && match.teamA.info !== selectedPhase && !match.id.includes(selectedPhase)) {
-      // Custom heuristic match
-      const label = match.teamA.info || '';
-      if (!label.toLowerCase().includes(selectedPhase.toLowerCase())) {
-        return false;
-      }
+    if (selectedPhase !== 'Todos' && match.teamA.info !== selectedPhase) {
+      return false;
     }
 
     // Round filtering
@@ -122,7 +110,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-gradient-to-r from-primary/15 via-secondary/10 to-transparent rounded-2xl border border-white/5 shadow-md">
         <div className="flex items-center gap-4 select-none">
           <img 
-            src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+            src="/logo.png" 
             alt="Logo Oficial Natação Criativa" 
             className="w-14 h-14 rounded-full object-cover border border-primary/40 shadow-lg"
             referrerPolicy="no-referrer"
@@ -132,7 +120,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
               Grade de Partidas & Apostas
             </h1>
             <p className="text-on-surface-variant text-xs font-sans">
-              As partidas estão organizadas por fases oficiais da Copa 2026. Fechamento automático no horário correspondente!
+              As partidas estão organizadas pelas rodadas oficiais do Brasileirão 2026. Fechamento automático no horário correspondente!
             </p>
           </div>
         </div>
@@ -166,7 +154,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
         {/* Phase Filter selector */}
         <div className="md:col-span-4">
           <label className="text-[10px] font-black uppercase tracking-wider text-primary block mb-2 font-bold">
-            Filtrar por Fase da Copa
+            Filtrar por Rodada
           </label>
           <div className="relative">
             <select 
@@ -227,14 +215,14 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
       {matches.length === 0 ? (
         <div className="p-12 text-center glass-card border border-white/5 rounded-2xl space-y-4 max-w-lg mx-auto py-16">
           <img 
-            src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+            src="/logo.png" 
             alt="Logo Oficial Natação Criativa" 
             className="w-16 h-16 rounded-full object-cover border border-primary/40 mx-auto opacity-75 shadow"
             referrerPolicy="no-referrer"
           />
           <h2 className="font-headline text-lg font-black text-on-surface uppercase tracking-tight">Nenhuma partida cadastrada</h2>
           <p className="text-xs text-on-surface-variant font-sans leading-relaxed">
-            Não existem partidas ou confrontos programados no momento. As rodadas oficiais da Copa do Mundo 2026 serão sincronizadas automaticamente.
+            Não existem partidas ou confrontos programados no momento. As rodadas oficiais do Brasileirão 2026 serão sincronizadas automaticamente.
           </p>
         </div>
       ) : (
@@ -249,7 +237,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                 <th className="py-3 px-2 md:px-4">MANDANTE</th>
                 <th className="py-3 px-2 md:px-4 text-center">PLACAR</th>
                 <th className="py-3 px-2 md:px-4">VISITANTE</th>
-                <th className="py-3 px-2 md:px-4 hidden sm:table-cell">FASE</th>
+                <th className="py-3 px-2 md:px-4 hidden sm:table-cell">RODADA</th>
                 <th className="py-3 px-2 md:px-4 hidden md:table-cell">ESTÁDIO</th>
                 <th className="py-3 px-2 md:px-4 text-center">STATUS</th>
               </tr>
@@ -346,7 +334,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
 
                     <td className="py-3 px-2 md:py-4 md:px-4 hidden sm:table-cell whitespace-nowrap">
                       <span className="font-bold text-slate-300 font-headline uppercase text-[9px] md:text-[10px]">
-                        {match.teamA.info || 'COPA 2026'}
+                        {match.teamA.info || 'BRASILEIRÃO 2026'}
                       </span>
                     </td>
 
@@ -406,7 +394,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Clock size={10} className="shrink-0 hidden md:block" />
                     <Clock size={9} className="shrink-0 md:hidden" />
-                    <span className="truncate">{match.teamA.info || 'Fase de Grupos'}</span>
+                    <span className="truncate">{match.teamA.info || 'Rodada 1'}</span>
                   </div>
                   <span className="text-on-surface-variant truncate max-w-[40%] md:max-w-[50%] text-right">{match.stadium}</span>
                 </div>

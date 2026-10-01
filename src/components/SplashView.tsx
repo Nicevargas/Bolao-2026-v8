@@ -40,7 +40,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onDismiss }) => {
           <div className="absolute inset-0 rounded-full bg-primary/25 animate-ping opacity-75"></div>
           <div className="w-full h-full rounded-full overflow-hidden bg-[#0c0f14] p-1 flex items-center justify-center relative">
             <img 
-              src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+              src="/logo.png" 
               alt="Natação Criativa Logo" 
               className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
               referrerPolicy="no-referrer"
@@ -51,7 +51,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onDismiss }) => {
         {/* Title */}
         <div className="space-y-3">
           <h1 className="font-headline text-4xl md:text-5xl font-black tracking-tighter leading-none">
-            BOLÃO DA COPA <br />
+            BOLÃO DO BRASILEIRÃO <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-yellow to-secondary">
               2026
             </span>

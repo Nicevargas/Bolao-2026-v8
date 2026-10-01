@@ -1,6 +1,6 @@
 {
-  "name": "Bolão da Copa",
-  "description": "Uma plataforma moderna e interativa de palpites da Copa do Brasil com gamificação e painel administrativo.",
+  "name": "Bolão do Brasileirão",
+  "description": "Uma plataforma moderna e interativa de palpites do Brasileirão com gamificação e painel administrativo.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

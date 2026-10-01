@@ -63,7 +63,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
     match_date: '',
     stadium: '',
     city: '',
-    phase: 'Primeira Fase',
+    phase: 'Rodada 1',
   });
   const [creatingMatch, setCreatingMatch] = useState(false);
 
@@ -179,7 +179,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
       match_date: match.dateStr || '',
       stadium: match.stadium.split(',')[0].trim(),
       city: match.stadium.includes(',') ? match.stadium.split(',')[1].trim() : '',
-      phase: match.teamA.info || 'Primeira Fase',
+      phase: match.teamA.info || 'Rodada 1',
       round_number: ''
     });
   };
@@ -267,7 +267,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         saveStoredMatches([newMatch, ...stored]);
       }
       setShowCreateModal(false);
-      setCreateForm({ team_a: '', team_b: '', flag_a: '', flag_b: '', match_date: '', stadium: '', city: '', phase: 'Primeira Fase' });
+      setCreateForm({ team_a: '', team_b: '', flag_a: '', flag_b: '', match_date: '', stadium: '', city: '', phase: 'Rodada 1' });
       if (onSyncComplete) onSyncComplete();
     } catch (err: any) {
       alert(`Erro ao criar partida: ${err.message}`);
@@ -333,7 +333,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               Painel Administrativo Geral
             </h1>
             <p className="text-on-surface-variant text-xs font-sans">
-              Visão geral de auditoria de apostas e monitoramento corporativo para a Copa do Brasil 2026.
+              Visão geral de auditoria de apostas e monitoramento corporativo para a Brasileirão 2026.
             </p>
           </div>
         </div>
@@ -397,7 +397,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <h2 className="font-headline text-lg font-black text-white">
               {completedMatchesCount} <span className="text-xs text-on-surface-variant font-sans font-medium">/ {pendingMatchesCount}</span>
             </h2>
-            <div className="text-[9px] text-on-surface-variant font-mono">Primeira Fase à Final</div>
+            <div className="text-[9px] text-on-surface-variant font-mono">38 rodadas</div>
           </div>
           <div className="w-10 h-10 bg-[#F2C230]/10 rounded-lg flex items-center justify-center text-[#F2C230]">
             <Layers size={18} />
@@ -425,18 +425,18 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <div className="glass-card rounded-2xl p-5 border border-white/5 space-y-4 shadow-lg flex flex-col justify-between">
           <div>
             <h3 className="font-headline text-xs font-black text-on-surface uppercase tracking-wider">
-              Palpites por Rodada (Copa do Brasil 2026)
+              Palpites por Rodada (Brasileirão 2026)
             </h3>
-            <p className="text-[10px] text-on-surface-variant">Proporção de palpites de colaboradores por fase do campeonato</p>
+            <p className="text-[10px] text-on-surface-variant">Proporção de palpites de colaboradores por rodada do campeonato</p>
           </div>
           
           <div className="h-44 w-full flex items-end justify-between gap-2.5 px-1 pt-4">
             {[
-              { label: '3ª Fase', val: 'h-[75%]', count: '45' },
-              { label: 'Oitavas', val: 'h-[90%]', count: '54' },
-              { label: 'Quartas', val: 'h-[60%]', count: '36' },
-              { label: 'Semis', val: 'h-[45%]', count: '27' },
-              { label: 'Final', val: 'h-[30%]', count: '18' }
+              { label: 'Rodada 1', val: 'h-[75%]', count: '45' },
+              { label: 'Rodada 2', val: 'h-[90%]', count: '54' },
+              { label: 'Rodada 3', val: 'h-[60%]', count: '36' },
+              { label: 'Rodada 4', val: 'h-[45%]', count: '27' },
+              { label: 'Rodada 5', val: 'h-[30%]', count: '18' }
             ].map((bar, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative cursor-pointer h-full">
                 <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#1670D8] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -488,22 +488,22 @@ export const AdminView: React.FC<AdminViewProps> = ({
           )}
         </div>
 
-        {/* Chart 3: Participação por Fase */}
+        {/* Chart 3: Participação por Rodada */}
         <div className="glass-card rounded-2xl p-5 border border-white/5 space-y-4 shadow-lg flex flex-col justify-between">
           <div>
             <h3 className="font-headline text-xs font-black text-on-surface uppercase tracking-wider">
-              Participação por Fase Oficial
+              Participação por Rodada
             </h3>
             <p className="text-[10px] text-on-surface-variant">Taxa de engajamento do total da empresa no bolão</p>
           </div>
 
           <div className="h-44 w-full flex items-end justify-between gap-3 px-1 pt-4">
             {[
-              { label: '3ª Fase', val: 'h-[95%]', percent: '98%' },
-              { label: 'Oitavas', val: 'h-[80%]', percent: '82%' },
-              { label: 'Quartas', val: 'h-[70%]', percent: '71%' },
-              { label: 'Semis', val: 'h-[55%]', percent: '56%' },
-              { label: 'Final', val: 'h-[45%]', percent: '46%' }
+              { label: 'R1–8', val: 'h-[95%]', percent: '98%' },
+              { label: 'R9–16', val: 'h-[80%]', percent: '82%' },
+              { label: 'R17–24', val: 'h-[70%]', percent: '71%' },
+              { label: 'R25–32', val: 'h-[55%]', percent: '56%' },
+              { label: 'R33–38', val: 'h-[45%]', percent: '46%' }
             ].map((bar, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative cursor-pointer h-full">
                 <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#66B82F] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -778,19 +778,15 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Fase</label>
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Rodada</label>
                   <select
-                    value={editForm.phase || 'Primeira Fase'}
+                    value={editForm.phase || 'Rodada 1'}
                     onChange={e => setEditForm(p => ({ ...p, phase: e.target.value }))}
                     className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
                   >
-                    <option value="Primeira Fase">Primeira Fase</option>
-                    <option value="Segunda Fase">Segunda Fase</option>
-                    <option value="Terceira Fase">Terceira Fase</option>
-                    <option value="Oitavas de Final">Oitavas de Final</option>
-                    <option value="Quartas de Final">Quartas de Final</option>
-                    <option value="Semifinal">Semifinal</option>
-                    <option value="Final">Final</option>
+                    {Array.from({ length: 38 }, (_, i) => (
+                      <option key={i + 1} value={`Rodada ${i + 1}`}>Rodada {i + 1}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -952,19 +948,15 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Fase</label>
+                  <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Rodada</label>
                   <select
                     value={createForm.phase}
                     onChange={e => setCreateForm(p => ({ ...p, phase: e.target.value }))}
                     className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
                   >
-                    <option value="Primeira Fase">Primeira Fase</option>
-                    <option value="Segunda Fase">Segunda Fase</option>
-                    <option value="Terceira Fase">Terceira Fase</option>
-                    <option value="Oitavas de Final">Oitavas de Final</option>
-                    <option value="Quartas de Final">Quartas de Final</option>
-                    <option value="Semifinal">Semifinal</option>
-                    <option value="Final">Final</option>
+                    {Array.from({ length: 38 }, (_, i) => (
+                      <option key={i + 1} value={`Rodada ${i + 1}`}>Rodada {i + 1}</option>
+                    ))}
                   </select>
                 </div>
               </div>

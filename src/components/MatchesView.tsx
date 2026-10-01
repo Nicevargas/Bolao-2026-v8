@@ -73,26 +73,13 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
   };
 
   // Groupings requested by user
-  const phases = [
-    'Todos',
-    'Primeira Fase',
-    'Segunda Fase',
-    'Terceira Fase',
-    'Oitavas de Final',
-    'Quartas de Final',
-    'Semifinal',
-    'Final'
-  ];
+  const phases = ['Todos', ...Array.from({ length: 38 }, (_, i) => `Rodada ${i + 1}`)];
 
   // Filter matches matching selections
   const filteredMatches = matches.filter(match => {
     // Phase filtering
-    if (selectedPhase !== 'Todos' && match.teamA.info !== selectedPhase && !match.id.includes(selectedPhase)) {
-      // Custom heuristic match
-      const label = match.teamA.info || '';
-      if (!label.toLowerCase().includes(selectedPhase.toLowerCase())) {
-        return false;
-      }
+    if (selectedPhase !== 'Todos' && match.teamA.info !== selectedPhase) {
+      return false;
     }
 
     // Round filtering
@@ -133,7 +120,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
               Grade de Partidas & Apostas
             </h1>
             <p className="text-on-surface-variant text-xs font-sans">
-              As partidas estão organizadas por fases oficiais da Copa do Brasil 2026. Fechamento automático no horário correspondente!
+              As partidas estão organizadas pelas rodadas oficiais do Brasileirão 2026. Fechamento automático no horário correspondente!
             </p>
           </div>
         </div>
@@ -167,7 +154,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
         {/* Phase Filter selector */}
         <div className="md:col-span-4">
           <label className="text-[10px] font-black uppercase tracking-wider text-primary block mb-2 font-bold">
-            Filtrar por Fase da Copa do Brasil
+            Filtrar por Rodada
           </label>
           <div className="relative">
             <select 
@@ -235,7 +222,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
           />
           <h2 className="font-headline text-lg font-black text-on-surface uppercase tracking-tight">Nenhuma partida cadastrada</h2>
           <p className="text-xs text-on-surface-variant font-sans leading-relaxed">
-            Não existem partidas ou confrontos programados no momento. As rodadas oficiais da Copa do Brasil 2026 serão sincronizadas automaticamente.
+            Não existem partidas ou confrontos programados no momento. As rodadas oficiais do Brasileirão 2026 serão sincronizadas automaticamente.
           </p>
         </div>
       ) : (
@@ -250,7 +237,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                 <th className="py-3 px-2 md:px-4">MANDANTE</th>
                 <th className="py-3 px-2 md:px-4 text-center">PLACAR</th>
                 <th className="py-3 px-2 md:px-4">VISITANTE</th>
-                <th className="py-3 px-2 md:px-4 hidden sm:table-cell">FASE</th>
+                <th className="py-3 px-2 md:px-4 hidden sm:table-cell">RODADA</th>
                 <th className="py-3 px-2 md:px-4 hidden md:table-cell">ESTÁDIO</th>
                 <th className="py-3 px-2 md:px-4 text-center">STATUS</th>
               </tr>
@@ -347,7 +334,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
 
                     <td className="py-3 px-2 md:py-4 md:px-4 hidden sm:table-cell whitespace-nowrap">
                       <span className="font-bold text-slate-300 font-headline uppercase text-[9px] md:text-[10px]">
-                        {match.teamA.info || 'COPA DO BRASIL 2026'}
+                        {match.teamA.info || 'BRASILEIRÃO 2026'}
                       </span>
                     </td>
 
@@ -407,7 +394,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Clock size={10} className="shrink-0 hidden md:block" />
                     <Clock size={9} className="shrink-0 md:hidden" />
-                    <span className="truncate">{match.teamA.info || 'Primeira Fase'}</span>
+                    <span className="truncate">{match.teamA.info || 'Rodada 1'}</span>
                   </div>
                   <span className="text-on-surface-variant truncate max-w-[40%] md:max-w-[50%] text-right">{match.stadium}</span>
                 </div>

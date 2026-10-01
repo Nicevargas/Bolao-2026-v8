@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
             referrerPolicy="no-referrer"
           />
           <span className="font-headline font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary group-hover:brightness-110 transition-all font-extrabold uppercase">
-            Bolão Copa do Brasil 2026
+            Bolão Brasileirão 2026
           </span>
           {isAdminMode && (
             <span className="ml-2 text-[9px] bg-red-500 text-white font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider glow-secondary">

@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="px-6 mb-8 select-none">
         <h2 className="font-headline text-lg font-black text-on-surface">Painel de Admin</h2>
         <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">
-          Edição Copa do Brasil 2026
+          Edição Brasileirão 2026
         </p>
       </div>
 

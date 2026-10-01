@@ -158,7 +158,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ participants, 
 
     setTimeout(() => {
       const text = encodeURIComponent(
-         "Estou desafiando meus colegas no BOLÃO DA COPA DO BRASIL 2026 oficial da Natação Criativa! Quem acertará mais resultados? 🏆⚽"
+         "Estou desafiando meus colegas no BOLÃO DO BRASILEIRÃO 2026 oficial da Natação Criativa! Quem acertará mais resultados? 🏆⚽"
       );
       window.open(`https://wa.me/?text=${text}`, '_blank');
       setToastMessage('Redirecionando para compartilhar no WhatsApp!');

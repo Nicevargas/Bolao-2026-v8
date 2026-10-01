@@ -51,7 +51,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onDismiss }) => {
         {/* Title */}
         <div className="space-y-3">
           <h1 className="font-headline text-4xl md:text-5xl font-black tracking-tighter leading-none">
-            BOLÃO DA COPA DO BRASIL <br />
+            BOLÃO DO BRASILEIRÃO <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-yellow to-secondary">
               2026
             </span>

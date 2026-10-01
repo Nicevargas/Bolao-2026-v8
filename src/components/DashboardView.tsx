@@ -116,7 +116,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 referrerPolicy="no-referrer"
               />
               <span className="font-headline text-xs font-black tracking-widest text-secondary uppercase">
-                Bolão Copa do Brasil 2026
+                Bolão Brasileirão 2026
               </span>
             </div>
             
@@ -228,7 +228,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Dynamic Official Point Rules Panel */}
       <section className="glass-card rounded-2xl p-6 border border-white/5 bg-gradient-to-r from-primary/5 via-secondary/5 to-transparent select-none leading-none">
         <h3 className="font-headline text-xs font-black text-on-surface uppercase tracking-wider mb-4 flex items-center gap-1.5">
-          <Award size={14} className="text-[#F28C28]" /> Regulamento de Pontuação Oficial (Copa do Brasil 2026)
+          <Award size={14} className="text-[#F28C28]" /> Regulamento de Pontuação Oficial (Brasileirão 2026)
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="p-4 bg-black/25 rounded-xl border border-white/5 space-y-2">

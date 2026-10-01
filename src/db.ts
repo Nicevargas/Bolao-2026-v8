@@ -79,7 +79,7 @@ export const INITIAL_INVITATIONS: Invitation[] = [
 
 export const INITIAL_PREDICTIONS: Prediction[] = [];
 
-// New dynamic point scoring calculation algorithm as per Copa 2026 guidelines
+// New dynamic point scoring calculation algorithm as per Brasileirão 2026 guidelines
 export function calculatePredictionPoints(
   realA: number,
   realB: number,

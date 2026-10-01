@@ -205,7 +205,7 @@ export const InvitationView: React.FC = () => {
 
                     <button
                       onClick={() => {
-                        const message = `Ei! Junte-se ao Bolão da Copa 2026 da Natação Criativa! Registre sua conta usando o código de convite corporativo: ${invite.code} 🏆⚽`;
+                        const message = `Ei! Junte-se ao Bolão da Copa do Brasil 2026 da Natação Criativa! Registre sua conta usando o código de convite corporativo: ${invite.code} 🏆⚽`;
                         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
                       }}
                       className="px-4 py-2 bg-gradient-to-r from-secondary-container to-secondary text-white rounded-xl font-headline text-[11px] font-black tracking-wider hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold"

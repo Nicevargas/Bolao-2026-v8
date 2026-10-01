@@ -103,7 +103,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             />
           </div>
           <h2 className="font-headline text-2xl font-black text-on-surface uppercase tracking-tight">
-            Bolão da Copa 2026
+            Bolão da Copa do Brasil 2026
           </h2>
           <p className="text-xs text-[#9cb1cc] font-medium leading-normal">
             Faça seu palpite e vença prêmios incríveis com a Natação Criativa!
@@ -266,7 +266,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         )}
 
         <div className="pt-2 text-center text-[10px] text-on-surface-variant font-sans select-none opacity-60">
-          Bolão Oficial • Copa do Mundo 2026
+          Bolão Oficial • Copa do Brasil 2026
         </div>
       </motion.div>
     </div>

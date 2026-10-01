@@ -63,7 +63,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
     match_date: '',
     stadium: '',
     city: '',
-    phase: 'Fase de Grupos',
+    phase: 'Primeira Fase',
   });
   const [creatingMatch, setCreatingMatch] = useState(false);
 
@@ -179,7 +179,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
       match_date: match.dateStr || '',
       stadium: match.stadium.split(',')[0].trim(),
       city: match.stadium.includes(',') ? match.stadium.split(',')[1].trim() : '',
-      phase: (match.teamA.info || '').includes('Grupo') || (match.teamA.info || '').includes('Oitavas') || (match.teamA.info || '').includes('Quartas') || (match.teamA.info || '').includes('Semifinal') || (match.teamA.info || '').includes('Final') ? match.teamA.info || '' : 'Fase de Grupos',
+      phase: match.teamA.info || 'Primeira Fase',
       round_number: ''
     });
   };
@@ -267,7 +267,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         saveStoredMatches([newMatch, ...stored]);
       }
       setShowCreateModal(false);
-      setCreateForm({ team_a: '', team_b: '', flag_a: '', flag_b: '', match_date: '', stadium: '', city: '', phase: 'Fase de Grupos' });
+      setCreateForm({ team_a: '', team_b: '', flag_a: '', flag_b: '', match_date: '', stadium: '', city: '', phase: 'Primeira Fase' });
       if (onSyncComplete) onSyncComplete();
     } catch (err: any) {
       alert(`Erro ao criar partida: ${err.message}`);
@@ -333,7 +333,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               Painel Administrativo Geral
             </h1>
             <p className="text-on-surface-variant text-xs font-sans">
-              Visão geral de auditoria de apostas e monitoramento corporativo para a Copa 2026.
+              Visão geral de auditoria de apostas e monitoramento corporativo para a Copa do Brasil 2026.
             </p>
           </div>
         </div>
@@ -397,7 +397,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <h2 className="font-headline text-lg font-black text-white">
               {completedMatchesCount} <span className="text-xs text-on-surface-variant font-sans font-medium">/ {pendingMatchesCount}</span>
             </h2>
-            <div className="text-[9px] text-on-surface-variant font-mono">Fase de Grupos & Finais</div>
+            <div className="text-[9px] text-on-surface-variant font-mono">Primeira Fase à Final</div>
           </div>
           <div className="w-10 h-10 bg-[#F2C230]/10 rounded-lg flex items-center justify-center text-[#F2C230]">
             <Layers size={18} />
@@ -425,18 +425,18 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <div className="glass-card rounded-2xl p-5 border border-white/5 space-y-4 shadow-lg flex flex-col justify-between">
           <div>
             <h3 className="font-headline text-xs font-black text-on-surface uppercase tracking-wider">
-              Palpites por Rodada (Copa 2026)
+              Palpites por Rodada (Copa do Brasil 2026)
             </h3>
             <p className="text-[10px] text-on-surface-variant">Proporção de palpites de colaboradores por fase do campeonato</p>
           </div>
           
           <div className="h-44 w-full flex items-end justify-between gap-2.5 px-1 pt-4">
             {[
-              { label: 'Rodada 1', val: 'h-[75%]', count: '45' },
-              { label: 'Rodada 2', val: 'h-[90%]', count: '54' },
-              { label: 'Rodada 3', val: 'h-[60%]', count: '36' },
-              { label: 'Oitavas', val: 'h-[45%]', count: '27' },
-              { label: 'Finais', val: 'h-[30%]', count: '18' }
+              { label: '3ª Fase', val: 'h-[75%]', count: '45' },
+              { label: 'Oitavas', val: 'h-[90%]', count: '54' },
+              { label: 'Quartas', val: 'h-[60%]', count: '36' },
+              { label: 'Semis', val: 'h-[45%]', count: '27' },
+              { label: 'Final', val: 'h-[30%]', count: '18' }
             ].map((bar, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative cursor-pointer h-full">
                 <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#1670D8] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -499,11 +499,11 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
           <div className="h-44 w-full flex items-end justify-between gap-3 px-1 pt-4">
             {[
-              { label: 'Grupos', val: 'h-[95%]', percent: '98%' },
+              { label: '3ª Fase', val: 'h-[95%]', percent: '98%' },
               { label: 'Oitavas', val: 'h-[80%]', percent: '82%' },
               { label: 'Quartas', val: 'h-[70%]', percent: '71%' },
               { label: 'Semis', val: 'h-[55%]', percent: '56%' },
-              { label: 'Disputa 3º', val: 'h-[45%]', percent: '46%' }
+              { label: 'Final', val: 'h-[45%]', percent: '46%' }
             ].map((bar, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative cursor-pointer h-full">
                 <div className="absolute -top-6 text-[9px] font-bold bg-black/40 text-[#66B82F] px-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -780,16 +780,17 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 <div className="col-span-2">
                   <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Fase</label>
                   <select
-                    value={editForm.phase || 'Fase de Grupos'}
+                    value={editForm.phase || 'Primeira Fase'}
                     onChange={e => setEditForm(p => ({ ...p, phase: e.target.value }))}
                     className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
                   >
-                    <option value="Fase de Grupos">Fase de Grupos</option>
-                    <option value="Oitavas">Oitavas de Final</option>
-                    <option value="Quartas">Quartas de Final</option>
+                    <option value="Primeira Fase">Primeira Fase</option>
+                    <option value="Segunda Fase">Segunda Fase</option>
+                    <option value="Terceira Fase">Terceira Fase</option>
+                    <option value="Oitavas de Final">Oitavas de Final</option>
+                    <option value="Quartas de Final">Quartas de Final</option>
                     <option value="Semifinal">Semifinal</option>
                     <option value="Final">Final</option>
-                    <option value="Disputa de Terceiro Lugar">Disputa de 3º Lugar</option>
                   </select>
                 </div>
               </div>
@@ -957,12 +958,13 @@ export const AdminView: React.FC<AdminViewProps> = ({
                     onChange={e => setCreateForm(p => ({ ...p, phase: e.target.value }))}
                     className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
                   >
-                    <option value="Fase de Grupos">Fase de Grupos</option>
-                    <option value="Oitavas">Oitavas de Final</option>
-                    <option value="Quartas">Quartas de Final</option>
+                    <option value="Primeira Fase">Primeira Fase</option>
+                    <option value="Segunda Fase">Segunda Fase</option>
+                    <option value="Terceira Fase">Terceira Fase</option>
+                    <option value="Oitavas de Final">Oitavas de Final</option>
+                    <option value="Quartas de Final">Quartas de Final</option>
                     <option value="Semifinal">Semifinal</option>
                     <option value="Final">Final</option>
-                    <option value="Disputa de Terceiro Lugar">Disputa de 3º Lugar</option>
                   </select>
                 </div>
               </div>

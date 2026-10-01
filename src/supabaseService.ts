@@ -11,13 +11,13 @@ export function mapDbMatchToModel(dbMatch: any, userBet?: any): Match {
     teamA: {
       name: dbMatch.team_a,
       code: dbMatch.team_a.length > 3 ? dbMatch.team_a.substring(0, 3).toUpperCase() : dbMatch.team_a,
-      logo: dbMatch.flag_a || '🏳️',
+      logo: dbMatch.flag_a || '⚽',
       info: dbMatch.group_name !== '-' ? dbMatch.group_name : dbMatch.phase
     },
     teamB: {
       name: dbMatch.team_b,
       code: dbMatch.team_b.length > 3 ? dbMatch.team_b.substring(0, 3).toUpperCase() : dbMatch.team_b,
-      logo: dbMatch.flag_b || '🏳️',
+      logo: dbMatch.flag_b || '⚽',
       info: dbMatch.group_name !== '-' ? dbMatch.group_name : dbMatch.phase
     },
     scoreA: dbMatch.goals_a !== null ? dbMatch.goals_a : undefined,
@@ -37,7 +37,7 @@ export function mapDbMatchToModel(dbMatch: any, userBet?: any): Match {
   };
 }
 
-// 1. DYNAMIC POINT SCORING CALCULATOR (Copa 2026 Guidelines)
+// 1. DYNAMIC POINT SCORING CALCULATOR (Copa do Brasil 2026 Guidelines)
 export function calculatePoints(realA: number, realB: number, predA: number, predB: number) {
   let points_result = 0;
   let points_goals_a = 0;
@@ -508,7 +508,7 @@ export async function loginOrCreateSupabaseUser(email: string, fullName: string,
         role: finalRole === 'admin' ? 'Coordenador Oficial' : 'Participante'
       };
 
-      await createSupabaseAuditLog(rawUserId, 'security', `Bem-vindo ao Bolão da Copa 2026: ${fullName} registrado.`);
+      await createSupabaseAuditLog(rawUserId, 'security', `Bem-vindo ao Bolão da Copa do Brasil 2026: ${fullName} registrado.`);
 
       return { success: true, user: userObject, message: 'Sucesso!' };
     } else {
@@ -600,7 +600,7 @@ export async function loginOrCreateSupabaseUser(email: string, fullName: string,
 
 // Map a team name to flag emoji dynamically
 export function getTeamFlagEmoji(teamName: string): string {
-  if (!teamName) return '🏳️';
+  if (!teamName) return '⚽';
   const clean = teamName.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   
   const flagMap: Record<string, string> = {
@@ -654,7 +654,7 @@ export function getTeamFlagEmoji(teamName: string): string {
       return flagMap[key];
     }
   }
-  return '🏳️';
+  return '⚽';
 }
 
 // Admin updates a match's full data (teams, date, phase, etc.)
@@ -685,7 +685,7 @@ export async function createSupabaseMatch(data: {
         match_date: data.match_date,
         stadium: data.stadium || 'TBD',
         city: data.city || '',
-        phase: data.phase || 'Fase de Grupos',
+        phase: data.phase || 'Primeira Fase',
         group_name: data.group_name || '-',
         round_number: data.round_number || '',
         status: 'aguardando',

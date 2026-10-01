@@ -286,7 +286,7 @@ export default function App() {
           id: `audit-${Date.now()}`,
           type: 'match',
           title: 'Novo Palpite Salvo',
-          detail: `${activeUser.name} cadastrou palpite para Copa 2026: ${teamAStr} ${scoreA} x ${scoreB} ${teamBStr}.`,
+          detail: `${activeUser.name} cadastrou palpite para Copa do Brasil 2026: ${teamAStr} ${scoreA} x ${scoreB} ${teamBStr}.`,
           timeLabel: 'Agora mesmo',
           timestamp: new Date().toISOString()
         });

@@ -110,7 +110,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="space-y-3 max-w-xl text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2.5">
               <img 
-                src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
+                src="/logo.png" 
                 alt="Logo Natação Criativa" 
                 className="w-8 h-8 rounded-full object-cover border border-primary/50"
                 referrerPolicy="no-referrer"
@@ -146,7 +146,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Large Brand Icon Frame */}
           <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full p-1 bg-gradient-to-tr from-[#1670D8] via-[#D91C7A] to-[#F28C28] shadow-[0_0_40px_rgba(22,112,216,0.25)] flex items-center justify-center">
             <img 
-              src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
+              src="/logo.png" 
               alt="Crest" 
               className="w-full h-full object-cover rounded-full"
               referrerPolicy="no-referrer"

@@ -40,7 +40,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onDismiss }) => {
           <div className="absolute inset-0 rounded-full bg-primary/25 animate-ping opacity-75"></div>
           <div className="w-full h-full rounded-full overflow-hidden bg-[#0c0f14] p-1 flex items-center justify-center relative">
             <img 
-              src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
+              src="/logo.png" 
               alt="Natação Criativa Logo" 
               className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
               referrerPolicy="no-referrer"

@@ -96,7 +96,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         <div className="text-center space-y-3 select-none">
           <div className="mx-auto w-24 h-24 rounded-full p-0.5 bg-gradient-to-tr from-primary to-secondary">
             <img 
-              src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
+              src="/logo.png" 
               alt="Natação Criativa Logo" 
               className="w-full h-full object-cover rounded-full"
               referrerPolicy="no-referrer"

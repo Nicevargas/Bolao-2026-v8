@@ -49,7 +49,7 @@ export const InvitationView: React.FC = () => {
           <div className="space-y-3 max-w-xl">
             <div className="flex items-center gap-2">
               <img 
-                src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
+                src="/logo.png" 
                 alt="Logo Natação Criativa" 
                 className="w-8 h-8 rounded-full object-cover border border-primary"
                 referrerPolicy="no-referrer"

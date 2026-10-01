@@ -123,7 +123,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-gradient-to-r from-primary/15 via-secondary/10 to-transparent rounded-2xl border border-white/5 shadow-md">
         <div className="flex items-center gap-4 select-none">
           <img 
-            src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
+            src="/logo.png" 
             alt="Logo Oficial Natação Criativa" 
             className="w-14 h-14 rounded-full object-cover border border-primary/40 shadow-lg"
             referrerPolicy="no-referrer"
@@ -228,7 +228,7 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
       {matches.length === 0 ? (
         <div className="p-12 text-center glass-card border border-white/5 rounded-2xl space-y-4 max-w-lg mx-auto py-16">
           <img 
-            src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
+            src="/logo.png" 
             alt="Logo Oficial Natação Criativa" 
             className="w-16 h-16 rounded-full object-cover border border-primary/40 mx-auto opacity-75 shadow"
             referrerPolicy="no-referrer"

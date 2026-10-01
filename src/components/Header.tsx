@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
           id="logo-container"
         >
           <img 
-            src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
+            src="/logo.png" 
             alt="Natação Criativa Logo" 
             className="w-10 h-10 rounded-full object-cover border border-primary/40 group-hover:scale-105 transition-transform"
             referrerPolicy="no-referrer"

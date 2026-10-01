@@ -323,7 +323,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-transparent rounded-2xl border border-white/5 shadow-md">
         <div className="flex items-center gap-4 select-none">
           <img 
-            src="https://iowmvvoeecybxleoipfc.supabase.co/storage/v1/object/public/imagens/1000529284.jpg" 
+            src="https://yvdmddquuptldambfalu.supabase.co/storage/v1/object/public/images/logo.png" 
             alt="Logo Natação Criativa" 
             className="w-14 h-14 rounded-full object-cover border border-primary/40 shadow-lg"
             referrerPolicy="no-referrer"
